@@ -20,9 +20,27 @@
 
 ## 连接与绑定方式
 
-ProgID、早绑定还是晚绑定、怎么取得进程号、怎么退出。由阶段 0A 写，任务 5 和任务 6 完成后填。
+ProgID、早绑定还是晚绑定、怎么取得进程号、怎么退出。由阶段 0A 写，任务 5 和任务 6 完成后填。**目前只写了 E1 第一次运行（run1）和只读勘查得到的部分，其余标"待测"。**
 
-（待填）
+**ProgID（注册表实测，`HKCR`）。**
+
+| ProgID | CLSID | 服务器登记（`LocalServer32`） | 说明 |
+|---|---|---|---|
+| `HYSYS.Application`（等同 `HYSYS.Application.Latest`，CurVer 为 `HYSYS.Application.V15.0`） | `{0963D456-4B58-4A20-A4B0-B1372D4DA588}` | `aspenhysys.exe /Automation` | 通用写法，已用它连接成功。带版本号的是 `HYSYS.Application.V15.0`（未测） |
+| `HYSYS.Application.NewInstance`（另有 `.V15.0`、`.Latest`） | `{824AD71C-1A11-42CD-8A9E-912E73F4C91A}` | `aspenhysys.exe /AutomationSingleUse` | 从登记看每次新开进程（待测） |
+| `HYSYS.Application.NewInstance.RTO`、`.Runtime` | `{6326FC09-6814-4B85-8E7A-C3AEA6FE324D}`、`{5393F4CF-F3A8-4AAD-A16F-F90488E1091D}` | 参数 `/RTOHYSYS`、`/RuntimeHYSYS` | 未探测 |
+
+**已确认（E1 run1）。**
+
+- 晚绑定 `Dispatch("HYSYS.Application")` 可用。进程是 `AspenHysys.exe`（安装目录 `C:\Program Files\AspenTech\Aspen HYSYS V15.0`），没有单独的 COM 服务进程。
+- 取进程号：枚举可见的顶层窗口，标题含 `hysys` 的窗口，用 `win32process.GetWindowThreadProcessId` 取进程号，与 `tasklist` 里的 `AspenHysys.exe` 一致。窗口标题是 `<No Document> - Aspen HYSYS V15 - aspenONE`。
+- `Visible` 初值为 False，设为 True 后读回 True。
+
+**待测，下一个会话继续：**
+
+- 已有实例是否被 `HYSYS.Application` 复用，`NewInstance` 是否确实新开进程。
+- `app.Quit()`、释放 COM 引用、`taskkill /PID` 各自的效果。命令是 `.\.venv\Scripts\python.exe spikes\e1_connect.py --exit quit|release|kill --tag <名字>`。
+- 早绑定：类型库是 `hysys.tlb`，GUID `{DFC1C58B-AE9F-11CF-8EB2-0020AF119B90}` v3.2，`gencache.EnsureModule` 或 `EnsureDispatch` 是否可用，是否需要 `CastTo`。
 
 ---
 
@@ -32,7 +50,7 @@ ProgID、早绑定还是晚绑定、怎么取得进程号、怎么退出。由�
 
 | 编号 | 能力 | 状态 | 实际可用的调用形式 | 证据（脚本、日期） | 备注 |
 |---|---|---|---|---|---|
-| H1 | COM 连接 | 未测试 | | | 计划假设：`Dispatch("HYSYS.Application")`，另有带版本号的 ProgID。计划状态：形式有官方文档，V15 的 ProgID 字符串待验证。探针 E1 |
+| H1 | COM 连接 | 部分确认 | `win32com.client.Dispatch("HYSYS.Application")`（晚绑定）得到 Application 对象；`Version`、`Name`、`FullName`、`Path`、`ActiveDocument` 可读，`Visible` 可读写 | `spikes/e1_connect.py`，2026-10-03，输出 `spikes/out/e1_connect_run1_launch_keep.txt` | 只在"通用 ProgID、晚绑定、HYSYS 事先没有运行"的条件下实测：冷启动 35.2 秒，随后只有一个 `AspenHysys.exe` 进程，没有弹窗，`Version` 读出 `Aspen HYSYS Version 15 (41.0)`。未测：带版本号的 `HYSYS.Application.V15.0`、`HYSYS.Application.NewInstance`、早绑定 `EnsureDispatch`、已有实例是否复用、退出方式（`Quit`、释放引用、`taskkill`）。计划假设的 `Dispatch("HYSYS.Application")` 形式成立 |
 | H2 | 打开 Case、取活动 Case | 未测试 | | | 计划假设：`SimulationCases.Open(path)`、`ActiveDocument`。计划状态：官方文档确认（V7.3 版）。探针 E2 |
 | H3 | 新建空白 Case | 未测试 | | | 计划假设：`SimulationCases.Add()`。探针 E4 |
 | H4 | 保存、另存、关闭 | 未测试 | | | 计划假设：`Save`、`SaveAs`、`Close`。探针 E4、E12 |
@@ -87,7 +105,15 @@ ProgID、早绑定还是晚绑定、怎么取得进程号、怎么退出。由�
 
 类型库里看起来能用来创建反应、反应集、反应器的接口和方法，按可能性排序。这是阶段 0B 的起点。由阶段 0A 写。
 
-（待填）
+**初稿。来自类型库的只读勘查（`pythoncom.LoadTypeLib` 载入 `hysys.tlb`，见探索日志 L0），一条都没有运行验证。** 任务 6 和任务 9 完成后按实测重排。
+
+| 序 | 线索 | 依据 | 下一步 |
+|---|---|---|---|
+| 1 | `Reactions.Add(name, Type)`，`Type` 的取值枚举待查 | `Reactions` 集合有 `Add(name, Type)`、`Remove(index)`、`RemoveAll()`、`Count`、`Item(index)`、`Names`、`index(name)`；`ReactionPackageManager` 有 `Reactions`、`ReactionSets`、`Components`、`BasisManager` 属性 | 先找到 `ReactionPackageManager` 从哪里取得（`BasisManager` 下？），再试 `Add`。属性枚举 `ReactionProperty_enum`（`rpBaseReactant`、`rpBasisConversion`、`rpStoichiometricCoefficients` 等）和 `ReactionBasis_enum` 对应反应的设置项 |
+| 2 | `ReactionSets.Add(name, Type)`，再 `ReactionSet.AssociateFluidPackage(fluidPkg)` | `ReactionSets` 同样有 `Add`；`ReactionSet` 有 `AssociateFluidPackage`、`ActiveReactions`、`InactiveReactions`、`Operations`、`SolverMethod` | 同上。成员加入反应集的方式要看 `ActiveReactions` 的类型 |
+| 3 | `Operations.Add(name, typeName)` 建反应器 | 类型库有 `ConversionReactor`、`EquilibriumReactor`、`GibbsReactor`、`KineticReactor`（CSTR）、`PFReactor`、`YieldReactor`。`GibbsReactorType_enum`：`gr_NoReactions=0`、`gr_SpecdRxnsOnly=2`、`gr_GibbsRxnsOnly=3` | `typeName` 字符串由 E3 反向探测获得，不要凭记忆写 |
+| 4 | 具体的反应对象类型：`ConversionReaction`、`EquilibriumReaction`、`KineticReaction`、`SimpleRateReaction` | 类型库有这些接口，估计是 `Reactions.Item(i)` 取出的对象应有的类型，只暴露基类 `_IReaction` 时需要 `CastTo` | E3 |
+| 5 | 降级：内部变量通道、脚本、XML | `Support\*.rdf`、`*.sgxml` 给出内部变量名；`ExtSDK\hysys.hh` 可 grep 签名；`BackDoor`、`XML`、`Script` 的命中待任务 6 检索 | 只在 1 至 4 受阻时 |
 
 ---
 
@@ -160,4 +186,27 @@ ProgID、早绑定还是晚绑定、怎么取得进程号、怎么退出。由�
 - **结论**：对台账哪几项有什么影响
 - **脚本与输出**：文件路径
 
-（还没有条目）
+### L0 只读勘查：注册表、类型库、安装目录（2026-10-03）
+
+- **目的**：动手写探针之前，先弄清这台机器上有什么：ProgID、类型库、示例 Case、帮助、定义文件。
+- **做法**：用 `winreg` 枚举 `HKCR` 里含 `hysys` 的键；`pythoncom.LoadTypeLib` 载入 `hysys.tlb`，只在内存里列类型名和成员，没有生成包装文件；列安装目录；对 212 个示例 `.hsc` 扫描反应器类型字符串。
+- **结果**：
+  - ProgID 见"连接与绑定方式"。
+  - 类型库注册为 `HYSYS 15.0 Type Library`，GUID `{DFC1C58B-AE9F-11CF-8EB2-0020AF119B90}` v3.2，路径 `hysys.tlb`（64 位）、`hysys32.tlb`（32 位）。共 1140 个类型：726 dispatch、377 enum、22 coclass。另有 `HysysSvr 41.0 Type Library`（`{8F00838C-4B87-4C32-B377-80DDF3E010AD}` v29.0，在 `HysysSvr.exe` 里），未查看。
+  - 反应相关的接口和 `Add` 方法见"创建反应的线索"。
+  - 安装目录里有：`ExtSDK\hysys.hh`（23 MB 的 C++ 头文件，可以 grep 方法签名）；`Support\*.rdf` 和 `*.sgxml`（单元操作的界面和变量定义，如 `convrxn.rdf`、`equirxn.rdf`、`rxnset.rdf`、`rxnop.rdf`，操作对象名 `ConversionReactorOpObject`、`EquilibriumReactorOpObject`、`GibbsReactorOpObject`）；四个帮助文件 `ww10_com.chm`、`xhysys.chm`、`ww10_cxx.chm`、`ww10_000.chm`；`C:\Windows\hh.exe`。
+  - **走不通的尝试**：直接扫示例 `.hsc` 的字节找反应器类型字符串，0 个文件命中。文件是压缩格式，只能用 COM 打开才能看到单元操作。
+  - 名字上最可能含反应器的示例：`Samples\Synthesis Gas Production.hsc`、`Samples\Ammonia Synthesis.hsc`、`Samples\Refining Cases\MB Examples\Toluene_Disproportionation_Example.hsc`、`Samples\Sustainability\Alkaline Electrolysis\Green Ammonia Process.hsc`、`Samples\CSTR - Dynamic Model.hsc`（都在 `C:\Program Files\AspenTech\Aspen HYSYS V15.0\` 下）。
+- **结论**：创建反应、反应集的入口在类型库层面存在，但没有运行验证，H9 至 H11、H15、H16 仍是"未测试"。
+- **脚本与输出**：无脚本，交互式只读命令。
+
+### L1 E1：连接 HYSYS，第一次运行（2026-10-03）
+
+- **目的**：Q1 ProgID 是什么；Q2 HYSYS 已在运行时取得的是已有实例还是新实例；Q3 怎样得到进程号；Q4 脚本结束时怎样退出或保留实例。这次运行只覆盖 Q1、Q3，以及"HYSYS 未运行时 Dispatch 做了什么"。
+- **做法**：HYSYS 未运行，执行 `.\.venv\Scripts\python.exe spikes\e1_connect.py --exit keep --tag run1_launch_keep`：枚举 `HKCR`，`tasklist` 取连接前后的进程，`Dispatch("HYSYS.Application")`，读成员，设 `Visible=True`，用窗口取进程号，不退出实例。
+- **结果**：
+  - `Dispatch` 用时 35.2 秒，连接后出现新进程 `AspenHysys.exe`（PID 2092）。
+  - `app.Version = 'Aspen HYSYS Version 15 (41.0)'`，`Name = 'Aspen HYSYS'`，`FullName` 为 `...\aspenhysys.exe`，`Visible` 初值 False、设置后读回 True，`ActiveDocument` 为 None。
+  - 可见窗口 `<No Document> - Aspen HYSYS V15 - aspenONE` 属于 PID 2092，与 `tasklist` 一致。没有弹窗。
+- **结论**：H1 在"通用 ProgID、晚绑定、HYSYS 未运行"的条件下通过，记为部分确认。Q2 和 Q4 待测，见"连接与绑定方式"。
+- **脚本与输出**：`spikes/e1_connect.py`，`spikes/out/e1_connect_run1_launch_keep.txt`。
