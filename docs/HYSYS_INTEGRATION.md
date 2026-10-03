@@ -20,7 +20,7 @@
 
 ## 连接与绑定方式
 
-ProgID、早绑定还是晚绑定、怎么取得进程号、怎么退出。由阶段 0A 写，任务 5 和任务 6 完成后填。**目前只写了 E1 第一次运行（run1）和只读勘查得到的部分，其余标"待测"。**
+ProgID、早绑定还是晚绑定、怎么取得进程号、怎么退出。由阶段 0A 写，任务 5 和任务 6 完成后填。**目前只写了 E1 的两次运行（run1、run2）和只读勘查得到的部分，其余标"待测"。**
 
 **ProgID（注册表实测，`HKCR`）。**
 
@@ -30,16 +30,19 @@ ProgID、早绑定还是晚绑定、怎么取得进程号、怎么退出。由�
 | `HYSYS.Application.NewInstance`（另有 `.V15.0`、`.Latest`） | `{824AD71C-1A11-42CD-8A9E-912E73F4C91A}` | `aspenhysys.exe /AutomationSingleUse` | 从登记看每次新开进程（待测） |
 | `HYSYS.Application.NewInstance.RTO`、`.Runtime` | `{6326FC09-6814-4B85-8E7A-C3AEA6FE324D}`、`{5393F4CF-F3A8-4AAD-A16F-F90488E1091D}` | 参数 `/RTOHYSYS`、`/RuntimeHYSYS` | 未探测 |
 
-**已确认（E1 run1）。**
+**已确认（E1 run1、run2）。**
 
 - 晚绑定 `Dispatch("HYSYS.Application")` 可用。进程是 `AspenHysys.exe`（安装目录 `C:\Program Files\AspenTech\Aspen HYSYS V15.0`），没有单独的 COM 服务进程。
 - 取进程号：枚举可见的顶层窗口，标题含 `hysys` 的窗口，用 `win32process.GetWindowThreadProcessId` 取进程号，与 `tasklist` 里的 `AspenHysys.exe` 一致。窗口标题是 `<No Document> - Aspen HYSYS V15 - aspenONE`。
 - `Visible` 初值为 False，设为 True 后读回 True。
+- **已有实例会被复用**（run2）：HYSYS 已在运行时，`Dispatch("HYSYS.Application")` 用时 0.0 秒，进程清单不变（仍是 PID 2092），`Visible` 保持上一次设的 True。所以脚本不能假定拿到的是全新实例，也不能假定实例里没有别人的 Case。
+- **退出**：`app.Quit()` 有效，进程在 3.5 秒内消失，`tasklist` 里没有残留。这次实例没有打开任何 Case，有 Case 时是否弹保存对话框未测。
+- **保留**：脚本结束时不调用 `Quit()`，实例继续运行（run1）。
 
 **待测，下一个会话继续：**
 
-- 已有实例是否被 `HYSYS.Application` 复用，`NewInstance` 是否确实新开进程。
-- `app.Quit()`、释放 COM 引用、`taskkill /PID` 各自的效果。命令是 `.\.venv\Scripts\python.exe spikes\e1_connect.py --exit quit|release|kill --tag <名字>`。
+- `HYSYS.Application.NewInstance` 是否确实新开进程，新开的实例能否单独 `Quit()`（`--progid HYSYS.Application.NewInstance`）。
+- 释放 COM 引用、`taskkill /PID` 各自的效果；`Quit()` 在有打开的 Case 时是否弹窗。命令是 `.\.venv\Scripts\python.exe spikes\e1_connect.py --exit release|kill --tag <名字>`。
 - 早绑定：类型库是 `hysys.tlb`，GUID `{DFC1C58B-AE9F-11CF-8EB2-0020AF119B90}` v3.2，`gencache.EnsureModule` 或 `EnsureDispatch` 是否可用，是否需要 `CastTo`。
 
 ---
@@ -50,7 +53,7 @@ ProgID、早绑定还是晚绑定、怎么取得进程号、怎么退出。由�
 
 | 编号 | 能力 | 状态 | 实际可用的调用形式 | 证据（脚本、日期） | 备注 |
 |---|---|---|---|---|---|
-| H1 | COM 连接 | 部分确认 | `win32com.client.Dispatch("HYSYS.Application")`（晚绑定）得到 Application 对象；`Version`、`Name`、`FullName`、`Path`、`ActiveDocument` 可读，`Visible` 可读写 | `spikes/e1_connect.py`，2026-10-03，输出 `spikes/out/e1_connect_run1_launch_keep.txt` | 只在"通用 ProgID、晚绑定、HYSYS 事先没有运行"的条件下实测：冷启动 35.2 秒，随后只有一个 `AspenHysys.exe` 进程，没有弹窗，`Version` 读出 `Aspen HYSYS Version 15 (41.0)`。未测：带版本号的 `HYSYS.Application.V15.0`、`HYSYS.Application.NewInstance`、早绑定 `EnsureDispatch`、已有实例是否复用、退出方式（`Quit`、释放引用、`taskkill`）。计划假设的 `Dispatch("HYSYS.Application")` 形式成立 |
+| H1 | COM 连接 | 部分确认 | `win32com.client.Dispatch("HYSYS.Application")`（晚绑定）得到 Application 对象；`Version`、`Name`、`FullName`、`Path`、`ActiveDocument` 可读，`Visible` 可读写 | `spikes/e1_connect.py`，2026-10-03，输出 `spikes/out/e1_connect_run1_launch_keep.txt`、`e1_connect_run2_attach_quit.txt` | 只在"通用 ProgID、晚绑定、HYSYS 事先没有运行"的条件下实测：冷启动 35.2 秒，随后只有一个 `AspenHysys.exe` 进程，没有弹窗，`Version` 读出 `Aspen HYSYS Version 15 (41.0)`。run2：HYSYS 已在运行时，`Dispatch` 用时 0.0 秒、没有新进程，取得的是已有实例，`Visible` 保持 True；`app.Quit()` 后进程在 3.5 秒内消失，没有残留（当时实例没有打开任何 Case）。未测：带版本号的 `HYSYS.Application.V15.0`、`HYSYS.Application.NewInstance`、早绑定 `EnsureDispatch`、`Quit` 时有打开 Case 的行为、释放引用和 `taskkill` 的效果。计划假设的 `Dispatch("HYSYS.Application")` 形式成立 |
 | H2 | 打开 Case、取活动 Case | 未测试 | | | 计划假设：`SimulationCases.Open(path)`、`ActiveDocument`。计划状态：官方文档确认（V7.3 版）。探针 E2 |
 | H3 | 新建空白 Case | 未测试 | | | 计划假设：`SimulationCases.Add()`。探针 E4 |
 | H4 | 保存、另存、关闭 | 未测试 | | | 计划假设：`Save`、`SaveAs`、`Close`。探针 E4、E12 |
@@ -210,3 +213,13 @@ ProgID、早绑定还是晚绑定、怎么取得进程号、怎么退出。由�
   - 可见窗口 `<No Document> - Aspen HYSYS V15 - aspenONE` 属于 PID 2092，与 `tasklist` 一致。没有弹窗。
 - **结论**：H1 在"通用 ProgID、晚绑定、HYSYS 未运行"的条件下通过，记为部分确认。Q2 和 Q4 待测，见"连接与绑定方式"。
 - **脚本与输出**：`spikes/e1_connect.py`，`spikes/out/e1_connect_run1_launch_keep.txt`。
+
+### L2 E1：复用已有实例，并用 Quit 退出（2026-10-03，run2）
+
+- **目的**：Q2 HYSYS 已在运行时 `Dispatch` 得到的是已有实例还是新实例；Q4 `app.Quit()` 能否让实例退出。
+- **做法**：run1 留下的实例（PID 2092，窗口标题 `<No Document>`，没有打开任何 Case）还开着，先确认标题仍是 `<No Document>`，再执行 `.\.venv\Scripts\python.exe spikes\e1_connect.py --exit quit --tag run2_attach_quit`。
+- **结果**：
+  - `Dispatch('HYSYS.Application')` 用时 0.0 秒，连接前后进程清单都是 `{2092: 'AspenHysys.exe'}`，没有新进程：取得的是已有实例。`Visible` 读出 True（run1 设的），`ActiveDocument` 为 None。
+  - `app.Quit()` 之后进程 2092 在 3.5 秒内消失，随后 `tasklist` 和 `Get-Process` 里都没有 HYSYS 进程。
+- **结论**：`HYSYS.Application` 复用已有实例；`Quit()` 可用于结束实例。`NewInstance`、释放引用、`taskkill` 和早绑定仍未测，见"连接与绑定方式"。
+- **脚本与输出**：`spikes/e1_connect.py`，`spikes/out/e1_connect_run2_attach_quit.txt`。

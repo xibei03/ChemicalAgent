@@ -4,7 +4,7 @@
 
 ## 当前状态
 
-- 阶段：0A 进行中，**因用量上限在任务 5（E1）中途停止**。首次开始于 2026-10-03 09:50（UTC+8），当时命令在别的机器上执行，在任务 1 暂停；10:25 在装有 HYSYS 的工作站（主机名 myWin10VM）上恢复。任务 1 至 3 已完成，任务 5 只做了第一次运行，任务 4、6 至 11 未开始。
+- 阶段：0A 进行中，**因用量上限在任务 5（E1）中途停止**。首次开始于 2026-10-03 09:50（UTC+8），当时命令在别的机器上执行，在任务 1 暂停；10:25 在装有 HYSYS 的工作站（主机名 myWin10VM）上恢复。任务 1 至 3 已完成；任务 5 已有 run1、run2 两次运行（复用已有实例、`Quit()` 退出都有结论），`NewInstance`、`release`、`kill`、早绑定未测；任务 4、6 至 11 未开始。当前没有残留的 HYSYS 进程。
 - 最近通过的闸门：无（质量工具在任务 2 全绿；本次未改 `src/`）
 - 最近一次更新：2026-10-03 10:50
 - 时间记法：本机时钟是 UTC，进度文件里的时间一律换算成 UTC+8（加 8 小时）。
@@ -40,8 +40,8 @@
 | 0A | 1 确认能执行 Windows 程序 | 无代码改动 | `python --version` 得 3.12.4；`platform.architecture()` 得 64bit、WindowsPE；`HKLM\SOFTWARE\AspenTech` 存在，`C:\Program Files\AspenTech\Aspen HYSYS V15.0` 存在 |
 | 0A | 2 仓库和工具 | fbfc7bf | `ruff check .` 通过；`ruff format --check .` 3 个文件已格式化；`mypy src` 无问题；`pytest` 13 passed；`PYTHONUTF8` 的实测见"环境事实" |
 | 0A | 3 建台账 | 029bbe7 | `docs/HYSYS_INTEGRATION.md` 有 10 个固定节名，接口事实表有 H1 至 H26 共 26 行，状态均为"未测试" |
-| 0A | 5 连接 HYSYS（E1），**只完成第一次运行** | 本次提交 | `spikes/e1_connect.py --exit keep` 运行成功：`Dispatch("HYSYS.Application")` 冷启动 35.2 秒，`Version` 为 `Aspen HYSYS Version 15 (41.0)`，进程 `AspenHysys.exe`（PID 2092），窗口所属进程与 `tasklist` 一致。H1 记为部分确认。"已有实例是否复用"和"退出方式"未验证 |
-| 0A | 只读勘查（计划模式下完成，无脚本） | 本次提交 | 注册表 ProgID、`hysys.tlb` 的接口名与集合的 `Add` 签名、安装目录里的 `hysys.hh`、定义文件、帮助文件，写入台账 L0 和"创建反应的线索"初稿（均未运行验证） |
+| 0A | 5 连接 HYSYS（E1），run1 和 run2，未全部完成 | 2427c43（run1），本次提交（run2） | `spikes/e1_connect.py --exit keep` 运行成功：`Dispatch("HYSYS.Application")` 冷启动 35.2 秒，`Version` 为 `Aspen HYSYS Version 15 (41.0)`，进程 `AspenHysys.exe`（PID 2092），窗口所属进程与 `tasklist` 一致。run2 又证明：已有实例会被 `Dispatch("HYSYS.Application")` 复用（0.0 秒，无新进程），`app.Quit()` 后进程 3.5 秒内消失，`tasklist` 无残留。H1 记为部分确认。`NewInstance`、`release`、`kill`、早绑定未验证 |
+| 0A | 只读勘查（计划模式下完成，无脚本） | 2427c43 | 注册表 ProgID、`hysys.tlb` 的接口名与集合的 `Add` 签名、安装目录里的 `hysys.hh`、定义文件、帮助文件，写入台账 L0 和"创建反应的线索"初稿（均未运行验证） |
 
 ## 进行中
 
@@ -62,7 +62,7 @@
 
 先重读 `CLAUDE.md`、本文件和 `docs/prompts/phase-0a.md`，然后按顺序做本阶段剩下的工作：
 
-1. **收完任务 5（E1）。** 先查 `tasklist` 有没有残留的 `AspenHysys.exe`（E1 第一次运行留下 PID 2092，窗口里没有 Case，可以退出）。再做对照运行：对已有实例 `--exit keep` 连一次，看有没有新进程；`--progid HYSYS.Application.NewInstance`；`--exit quit`、`--exit release`、`--exit kill` 各一次，用 `tasklist` 核对。结果写进台账 H1、"连接与绑定方式"和探索日志。
+1. **收完任务 5（E1）。** run1、run2 已经回答了"复用已有实例"和"`Quit()` 退出"，当前没有残留的 HYSYS 进程。还差：`--progid HYSYS.Application.NewInstance`（是否新开进程，能否单独 `Quit()`）；`--exit release`、`--exit kill` 各一次，用 `tasklist` 核对；早绑定（`--binding early`，和任务 6 一起做）。结果写进台账 H1、"连接与绑定方式"和探索日志。
 2. **任务 6。** 写 `spikes/typelib_dump.py`：`gencache.EnsureModule` 生成早绑定包装，整理接口和成员到 `spikes/out/typelib_members.txt`（小于 1 MB），检索 `Reaction`、`ReactionSet`、`Equilibrium`、`Conversion`、`Gibbs`、`Reactor`、`Add`、`BackDoor`、`XML`、`Script`；用 `ExtSDK\hysys.hh` 核对 `Add` 的参数类型；弄清早绑定是否需要 `CastTo`。
 3. **任务 7。** 把候选示例复制到临时目录再用 COM 打开，列单元操作类型名，最多 20 分钟（候选见台账 L0）。凑不齐三种反应器就把阶段提示词里的清单发给用户，同时继续任务 8。
 4. **任务 8（E2）、任务 9（E3）**，然后任务 10（帮助文件，时间不够可推后）、任务 4（E0，等用户给出 LLM 信息）、任务 11（收尾）。
@@ -102,7 +102,7 @@
 | 2026-10-03 | 阶段 0A 任务 1：助手执行命令的机器（主机名 WIN-607I4J4LV6S）不是装有 HYSYS 的工作站 | 在这台机器上查：注册表 HKCR 里没有 HYSYS/Aspen 的 ProgID，HKLM 下没有 AspenTech 键，没有 HYSYS 进程。这台机器上的 `mstsc.exe` 已经连着工作站的 3389 端口，所以远程桌面是通的，但助手的工具不经过这条连接，命令仍然在本机执行。本机的 `python` 是 Microsoft Store 占位程序，可用的解释器在 Anaconda（3.12，64 位），这只是本机的情况 | 暂停，等用户决定：在工作站上运行助手（推荐），或者用共享文件夹中转。**已解决**：用户改在工作站（myWin10VM，装有 Aspen HYSYS V15.0）上重开会话，2026-10-03 10:25 恢复，任务 1 重新核对通过 |
 | 2026-10-03 | 输出被管道接走的 Python 进程打印中文报 `UnicodeEncodeError`（任务 2） | 去掉 `PYTHONIOENCODING` 和 `PYTHONUTF8` 复现：默认 cp1252。设 `PYTHONUTF8=1` 后正常 | `setx PYTHONUTF8 1`；探针脚本自己 `sys.stdout.reconfigure(encoding="utf-8")`。详见"环境事实" |
 | 2026-10-03 | 想靠扫描示例 `.hsc` 的字节找出含反应器的 Case（任务 7 的预案） | 对 212 个文件按 ASCII 和 UTF-16 查 `conreactor`、`eqreactor`、`gibbsreactor` 等字符串，0 个命中 | 走不通：`.hsc` 是压缩格式，只能用 COM 打开并枚举单元操作。见台账 L0 |
-| 2026-10-03 | 会话在 E1 第一次运行之后因用量上限中断 | E1 run1 按 `--exit keep` 留下了 HYSYS 实例 | 见"下一步"第 1 条 |
+| 2026-10-03 | 会话在 E1 之后因用量上限中断 | run1 按 `--exit keep` 留下了 HYSYS 实例；确认它没有打开 Case 后，run2 用 `--exit quit` 退出了它 | 无残留进程。剩余工作见"下一步" |
 
 ## 与计划的偏差
 
