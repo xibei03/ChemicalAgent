@@ -1,0 +1,21 @@
+# 运行产物
+runs/
+
+# 探针输出是探索证据，要提交。只排除解包出来的帮助文件，它们太大
+spikes/out/help_html/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+
+# 密钥与本地配置
+.env
+
+# 工作站的远程桌面连接文件和起始包，不属于仓库
+*.rdp
+Claude outputs/

@@ -1,0 +1,134 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "reactor-agent"
+version = "0.1.0"
+description = "自然语言驱动的 Aspen HYSYS 反应器建模系统"
+requires-python = ">=3.11"
+dependencies = [
+    "pydantic>=2.6",
+    "pyyaml>=6.0",
+    "pywin32>=306; sys_platform == 'win32'",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.6",
+    "mypy>=1.10",
+    "types-PyYAML",
+    "types-pywin32",
+]
+# 只有运行 evals/oracle/ 下的独立参照值脚本时才需要
+oracle = ["numpy", "scipy"]
+
+[project.scripts]
+reactor-agent = "reactor_agent.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+# ---------------------------------------------------------------- ruff
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests"]
+# 新版 ruff 会格式化 Markdown 里的 Python 代码块。文档不是代码，所以排除。
+extend-exclude = ["spikes/out", "runs", "*.md"]
+
+[tool.ruff.lint]
+select = [
+    "E", "W", "F",          # 基本错误与风格
+    "I",                    # import 排序
+    "N",                    # 命名
+    "UP",                   # 使用当前版本的语法
+    "B",                    # 常见缺陷
+    "C4", "SIM", "RET",     # 可以写得更简单的地方
+    "PTH",                  # 用 pathlib 处理路径
+    "C90", "PLR",           # 圈复杂度、参数个数、分支数、语句数
+    "ANN",                  # 类型标注
+    "D",                    # docstring
+    "BLE", "TRY",           # 异常处理
+    "ARG",                  # 未使用的参数
+    "ERA",                  # 注释掉的代码
+    "T20",                  # print
+    "RUF",
+    "PGH003", "PGH004",     # noqa 和 type: ignore 必须写出规则码
+    "TID251",               # 禁用的 API，清单见下面的 banned-api
+    "TD002",                # TODO 要写负责人：# TODO(阶段编号): ...
+    "PLW0603",              # 不用 global 语句
+]
+ignore = [
+    "D100", "D104", "D107",         # 模块、包、__init__ 的 docstring 不强制
+    "D105",                         # 魔术方法的含义由语言规定，不要求 docstring
+    "D403", "D415",                 # 中文 docstring：没有首字母大写，也不以英文句号结尾
+    "TRY003",                       # 允许异常携带完整的消息
+    "TRY004",                       # pydantic 校验器里必须抛 ValueError，抛 TypeError 不会被包成校验错误
+    "SIM105",                       # 不建议 contextlib.suppress：被忽略的异常要用 try/except 明写
+    "ARG002",                       # 实现接口的方法要照接口的签名写，用不到的参数不是多余的
+    "PLR0917",                      # 与 PLR0913 重复
+    "RUF001", "RUF002", "RUF003",   # 允许字符串、docstring、注释中的中文标点
+]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
+
+[tool.ruff.lint.pylint]
+max-args = 6
+max-branches = 10
+max-statements = 40
+max-returns = 10    # 与圈复杂度的上限一致：规范要求用提前返回代替嵌套
+
+[tool.ruff.lint.flake8-tidy-imports.banned-api]
+"typing.Any".msg = "Any 只允许出现在 backends/hysys_com/ 里。别处需要任意值时用 object，再用 isinstance 收窄"
+"contextlib.suppress".msg = "被忽略的异常用 try/except 明写，并用注释说明为什么可以忽略"
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.per-file-ignores]
+# COM 边界：COM 对象没有静态类型，只在这里允许 Any
+"src/reactor_agent/backends/hysys_com/**" = ["ANN401", "TID251"]
+# 命令行的输出层是唯一允许 print 的地方
+"src/reactor_agent/cli.py" = ["T20"]
+"tests/**" = ["D", "ANN", "PLR2004", "ARG", "PLR0913", "N802", "TID251"]
+"evals/**" = ["D", "T20", "PLR2004"]
+# 探针脚本是一次性的探索记录，只保留基本错误检查
+"spikes/**" = ["D", "ANN", "T20", "ERA", "PLR", "C90", "BLE", "TRY", "N", "PTH", "ARG", "TID251", "TD002"]
+
+[tool.ruff.lint.isort]
+split-on-trailing-comma = false
+
+[tool.ruff.format]
+# 排版只由代码内容决定，不受有没有尾逗号影响。体检测试按排版后的行数计，这样同一段代码只有一个行数。
+skip-magic-trailing-comma = true
+
+# ---------------------------------------------------------------- mypy
+[tool.mypy]
+python_version = "3.11"
+strict = true
+plugins = ["pydantic.mypy"]
+files = ["src"]
+enable_error_code = ["ignore-without-code"]
+
+[tool.pydantic-mypy]
+init_typed = true
+init_forbid_extra = true
+warn_required_dynamic_aliases = true
+
+[[tool.mypy.overrides]]
+module = ["win32com.*", "pythoncom", "pywintypes"]
+ignore_missing_imports = true
+
+# ---------------------------------------------------------------- pytest
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+markers = [
+    "hysys: 需要本机的 Aspen HYSYS",
+    "llm: 需要调用 LLM 接口",
+]
+# --strict-markers：标记拼错时直接报错，而不是悄悄把需要 HYSYS 的测试跑起来
+addopts = "--strict-markers -m 'not hysys and not llm'"
