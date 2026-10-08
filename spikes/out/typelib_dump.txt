@@ -1,0 +1,34 @@
+== 类型库 {DFC1C58B-AE9F-11CF-8EB2-0020AF119B90} v3.2，类型数 1140 ==
+  各种类的数量: {'enum': 377, 'dispatch': 726, 'coclass': 22, 'kind6': 2, 'record': 1, 'interface': 12}
+  typelib_reaction_api.txt 写了 111 个接口
+  有 Add 成员的接口共 42 个
+  关键词 'Reaction': 189 行命中
+  关键词 'ReactionSet': 37 行命中
+  关键词 'Equilibrium': 91 行命中
+  关键词 'Conversion': 200 行命中
+  关键词 'Gibbs': 80 行命中
+  关键词 'Reactor': 21 行命中
+  关键词 'Add': 138 行命中
+  关键词 'BackDoor': 41 行命中
+  关键词 'XML': 122 行命中
+  关键词 'Script': 113 行命中
+  typelib_dump.txt: 1 KB
+  typelib_enums.txt: 54 KB
+  typelib_hits.txt: 72 KB
+  typelib_members.txt: 614 KB
+  typelib_reaction_api.txt: 207 KB
+== 早绑定包装 ==
+  gencache.EnsureModule -> <module 'win32com.gen_py.DFC1C58B-AE9F-11CF-8EB2-0020AF119B90x0x3x2' from 'C:\\Users\\AZUREU~1\\AppData\\Local\\Temp\\gen_py\\3.12\\DFC1C58B-AE9F-11CF-8EB2-0020AF119B90x0x3x2.py'>
+  用时 2.3 秒；gen_py 目录 C:\Users\AZUREU~1\AppData\Local\Temp\gen_py\3.12
+  模块 win32com.gen_py.DFC1C58B-AE9F-11CF-8EB2-0020AF119B90x0x3x2，文件 C:\Users\AZUREU~1\AppData\Local\Temp\gen_py\3.12\DFC1C58B-AE9F-11CF-8EB2-0020AF119B90x0x3x2.py
+  CLSIDToClassMap 758 个，CLSIDToPackageMap 0 个，VTablesToClassMap 728 个
+  包装类 ReactionSets: 存在，公开成员 7 个
+      含 Add: True；成员: ['Add', 'CLSID', 'Item', 'Remove', 'RemoveAll', 'coclass_clsid', 'index']
+  包装类 Reactions: 存在，公开成员 7 个
+      含 Add: True；成员: ['Add', 'CLSID', 'Item', 'Remove', 'RemoveAll', 'coclass_clsid', 'index']
+  包装类 Operations: 存在，公开成员 7 个
+      含 Add: True；成员: ['Add', 'CLSID', 'Item', 'Remove', 'RemoveAll', 'coclass_clsid', 'index']
+  包装类 FluidPackages: 存在，公开成员 7 个
+      含 Add: True；成员: ['Add', 'CLSID', 'Item', 'Remove', 'RemoveAll', 'coclass_clsid', 'index']
+  包装类 SimulationCases: 存在，公开成员 11 个
+      含 Add: True；成员: ['Add', 'CLSID', 'Close', 'Item', 'Open', 'OpenLockedOLEWithPassword', 'OpenWithPassword', 'Remove', 'RemoveAll', 'coclass_clsid', 'index']

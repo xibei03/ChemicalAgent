@@ -1,0 +1,1042 @@
+===== Reaction（189 行，最多写 400 行）=====
+[dispatch] ReactionPackage : IDispatch
+    ReactionPackage.get ReactionSets -> ReactionSets*
+    ReactionPackage.get ReactionPackageManager -> ReactionPackageManager*
+    FluidPackage.get ReactionPackage -> ReactionPackage*
+    _FluidPackage5.get ReactionPackage -> ReactionPackage*
+    _FluidPackage4.get ReactionPackage -> ReactionPackage*
+    _FluidPackage3.get ReactionPackage -> ReactionPackage*
+    _FluidPackage2.get ReactionPackage -> ReactionPackage*
+[dispatch] ReactionSets : IDispatch
+[dispatch] ReactionPackageManager : IDispatch
+    ReactionPackageManager.get ReactionSets -> ReactionSets*
+    ReactionPackageManager.get Reactions -> Reactions*
+    BasisManager.get ReactionPackageManager -> ReactionPackageManager*
+    _BasisManager1.get ReactionPackageManager -> ReactionPackageManager*
+[dispatch] Reactions : IDispatch
+[dispatch] _IReaction : IDispatch
+    _IReaction.get ReactionPackageManager -> ReactionPackageManager*
+    _IReaction.get HeatOfReaction -> RealVariable*
+    _IReaction.get HeatOfReactionValue -> double
+[dispatch] ReactionSet : IDispatch
+    ReactionSet.get ReactionPackage -> ReactionPackage*
+    ReactionSet.get ActiveReactions -> Reactions*
+    ReactionSet.get InactiveReactions -> Reactions*
+[enum] ReactionSetSolverMethodEnum_enum
+[enum] ReactionSetTraceLevelEnum_enum
+[enum] ReactionBasis_enum
+[dispatch] _IStoichiometricReaction : IDispatch
+    _IStoichiometricReaction.get ReactionPackageManager -> ReactionPackageManager*
+    _IStoichiometricReaction.get HeatOfReaction -> RealVariable*
+    _IStoichiometricReaction.get HeatOfReactionValue -> double
+    _IStoichiometricReaction.get ReactionPhase -> PhaseType_enum
+    _IStoichiometricReaction.put ReactionPhase(arg0: PhaseType_enum) -> void
+[dispatch] _ConversionReaction : IDispatch
+    _ConversionReaction.get ReactionPackageManager -> ReactionPackageManager*
+    _ConversionReaction.get HeatOfReaction -> RealVariable*
+    _ConversionReaction.get HeatOfReactionValue -> double
+    _ConversionReaction.get ReactionPhase -> PhaseType_enum
+    _ConversionReaction.put ReactionPhase(arg0: PhaseType_enum) -> void
+[dispatch] ConversionReaction : IDispatch
+    ConversionReaction.get ReactionPackageManager -> ReactionPackageManager*
+    ConversionReaction.get HeatOfReaction -> RealVariable*
+    ConversionReaction.get HeatOfReactionValue -> double
+    ConversionReaction.get ReactionPhase -> PhaseType_enum
+    ConversionReaction.put ReactionPhase(arg0: PhaseType_enum) -> void
+[dispatch] _EquilibriumReaction : IDispatch
+    _EquilibriumReaction.get ReactionPackageManager -> ReactionPackageManager*
+    _EquilibriumReaction.get HeatOfReaction -> RealVariable*
+    _EquilibriumReaction.get HeatOfReactionValue -> double
+    _EquilibriumReaction.get ReactionPhase -> PhaseType_enum
+    _EquilibriumReaction.put ReactionPhase(arg0: PhaseType_enum) -> void
+[dispatch] _EquilibriumReaction2 : IDispatch
+    _EquilibriumReaction2.get ReactionPackageManager -> ReactionPackageManager*
+    _EquilibriumReaction2.get HeatOfReaction -> RealVariable*
+    _EquilibriumReaction2.get HeatOfReactionValue -> double
+    _EquilibriumReaction2.get ReactionPhase -> PhaseType_enum
+    _EquilibriumReaction2.put ReactionPhase(arg0: PhaseType_enum) -> void
+[dispatch] EquilibriumReaction : IDispatch
+    EquilibriumReaction.get ReactionPackageManager -> ReactionPackageManager*
+    EquilibriumReaction.get HeatOfReaction -> RealVariable*
+    EquilibriumReaction.get HeatOfReactionValue -> double
+    EquilibriumReaction.get ReactionPhase -> PhaseType_enum
+    EquilibriumReaction.put ReactionPhase(arg0: PhaseType_enum) -> void
+[dispatch] _KineticReaction : IDispatch
+    _KineticReaction.get ReactionPackageManager -> ReactionPackageManager*
+    _KineticReaction.get HeatOfReaction -> RealVariable*
+    _KineticReaction.get HeatOfReactionValue -> double
+    _KineticReaction.get ReactionPhase -> PhaseType_enum
+    _KineticReaction.put ReactionPhase(arg0: PhaseType_enum) -> void
+[dispatch] _KineticReaction2 : IDispatch
+    _KineticReaction2.get ReactionPackageManager -> ReactionPackageManager*
+    _KineticReaction2.get HeatOfReaction -> RealVariable*
+    _KineticReaction2.get HeatOfReactionValue -> double
+    _KineticReaction2.get ReactionPhase -> PhaseType_enum
+    _KineticReaction2.put ReactionPhase(arg0: PhaseType_enum) -> void
+[dispatch] KineticReaction : IDispatch
+    KineticReaction.get ReactionPackageManager -> ReactionPackageManager*
+    KineticReaction.get HeatOfReaction -> RealVariable*
+    KineticReaction.get HeatOfReactionValue -> double
+    KineticReaction.get ReactionPhase -> PhaseType_enum
+    KineticReaction.put ReactionPhase(arg0: PhaseType_enum) -> void
+[dispatch] _SimpleRateReaction : IDispatch
+    _SimpleRateReaction.get ReactionPackageManager -> ReactionPackageManager*
+    _SimpleRateReaction.get HeatOfReaction -> RealVariable*
+    _SimpleRateReaction.get HeatOfReactionValue -> double
+    _SimpleRateReaction.get ReactionPhase -> PhaseType_enum
+    _SimpleRateReaction.put ReactionPhase(arg0: PhaseType_enum) -> void
+[dispatch] _SimpleRateReaction2 : IDispatch
+    _SimpleRateReaction2.get ReactionPackageManager -> ReactionPackageManager*
+    _SimpleRateReaction2.get HeatOfReaction -> RealVariable*
+    _SimpleRateReaction2.get HeatOfReactionValue -> double
+    _SimpleRateReaction2.get ReactionPhase -> PhaseType_enum
+    _SimpleRateReaction2.put ReactionPhase(arg0: PhaseType_enum) -> void
+[dispatch] SimpleRateReaction : IDispatch
+    SimpleRateReaction.get ReactionPackageManager -> ReactionPackageManager*
+    SimpleRateReaction.get HeatOfReaction -> RealVariable*
+    SimpleRateReaction.get HeatOfReactionValue -> double
+    SimpleRateReaction.get ReactionPhase -> PhaseType_enum
+    SimpleRateReaction.put ReactionPhase(arg0: PhaseType_enum) -> void
+[dispatch] LHKineticReaction : IDispatch
+    LHKineticReaction.get ReactionPackageManager -> ReactionPackageManager*
+    LHKineticReaction.get HeatOfReaction -> RealVariable*
+    LHKineticReaction.get HeatOfReactionValue -> double
+    LHKineticReaction.get ReactionPhase -> PhaseType_enum
+    LHKineticReaction.put ReactionPhase(arg0: PhaseType_enum) -> void
+[dispatch] RYieldReactionTerm : IDispatch
+[dispatch] RYieldReactionTerms : IDispatch
+[enum] LumpDelumpReactionType_enum
+[dispatch] RYieldLumpOrDeLumpReaction : IDispatch
+    RYieldLumpOrDeLumpReaction.get ReactionTypeSel -> LumpDelumpReactionType_enum
+    RYieldLumpOrDeLumpReaction.put ReactionTypeSel(arg0: LumpDelumpReactionType_enum) -> void
+[dispatch] RYieldLumpOrDeLumpReactions : IDispatch
+    _ExtnUnitOperationContainer4.call AttachReactionSet(rxnSet: ReactionSet*) -> void
+    _ExtnUnitOperationContainer5.call AttachReactionSet(rxnSet: ReactionSet*) -> void
+    ExtnUnitOperationContainer.call AttachReactionSet(rxnSet: ReactionSet*) -> void
+[enum] ReactionProperty_enum
+[dispatch] _ExtnKineticReactionContainer1 : IDispatch
+    _ExtnKineticReactionContainer1.get ReactionBasis -> ReactionBasis_enum
+    _ExtnKineticReactionContainer1.put ReactionBasis(arg0: ReactionBasis_enum) -> void
+    _ExtnKineticReactionContainer1.call SetReactionPropertyState(Property: ReactionProperty_enum, State: VariableStatus_enum) -> void
+[dispatch] _ExtnKineticReactionContainer2 : IDispatch
+    _ExtnKineticReactionContainer2.get ReactionBasis -> ReactionBasis_enum
+    _ExtnKineticReactionContainer2.put ReactionBasis(arg0: ReactionBasis_enum) -> void
+    _ExtnKineticReactionContainer2.call SetReactionPropertyState(Property: ReactionProperty_enum, State: VariableStatus_enum) -> void
+[dispatch] _ExtnKineticReactionContainer3 : IDispatch
+    _ExtnKineticReactionContainer3.get ReactionBasis -> ReactionBasis_enum
+    _ExtnKineticReactionContainer3.put ReactionBasis(arg0: ReactionBasis_enum) -> void
+    _ExtnKineticReactionContainer3.call SetReactionPropertyState(Property: ReactionProperty_enum, State: VariableStatus_enum) -> void
+[dispatch] ExtnKineticReactionContainer : IDispatch
+    ExtnKineticReactionContainer.get ReactionBasis -> ReactionBasis_enum
+    ExtnKineticReactionContainer.put ReactionBasis(arg0: ReactionBasis_enum) -> void
+    ExtnKineticReactionContainer.call SetReactionPropertyState(Property: ReactionProperty_enum, State: VariableStatus_enum) -> void
+[dispatch] _ExtnKineticReaction : IDispatch
+    _ExtnKineticReaction.call ReactionRate(Fluid: Fluid*, RxnTemperatureInC: double, RxnVolumeInM3: double, rate: double* [out]) -> bool
+    _ExtnKineticReaction.call ReactionRate2(Fluid: Fluid*, RxnTemperatureInC: double, RxnVolumeInM3: double, RateType: KineticRateDerivativeType_enum, rate: double* [out], drdt: double* [out], drdx: VARIANT* [out]) -> bool
+[dispatch] ExtnKineticReaction : IDispatch
+    ExtnKineticReaction.call ReactionRate(Fluid: Fluid*, RxnTemperatureInC: double, RxnVolumeInM3: double, rate: double* [out]) -> bool
+    ExtnKineticReaction.call ReactionRate2(Fluid: Fluid*, RxnTemperatureInC: double, RxnVolumeInM3: double, RateType: KineticRateDerivativeType_enum, rate: double* [out], drdt: double* [out], drdx: VARIANT* [out]) -> bool
+    _KineticReactor.get ReactionSet -> ReactionSet*
+    _KineticReactor.put ReactionSet(arg0: ReactionSet*) -> void
+    _KineticReactor.get HeatOfReaction -> RealFlexVariable*
+    _KineticReactor.get HeatOfReactionValue -> VARIANT
+    __KineticReactor.get ReactionSet -> ReactionSet*
+    __KineticReactor.put ReactionSet(arg0: ReactionSet*) -> void
+    __KineticReactor.get HeatOfReaction -> RealFlexVariable*
+    __KineticReactor.get HeatOfReactionValue -> VARIANT
+    _KineticReactor3.get ReactionSet -> ReactionSet*
+    _KineticReactor3.put ReactionSet(arg0: ReactionSet*) -> void
+    _KineticReactor3.get HeatOfReaction -> RealFlexVariable*
+    _KineticReactor3.get HeatOfReactionValue -> VARIANT
+    KineticReactor.get ReactionSet -> ReactionSet*
+    KineticReactor.put ReactionSet(arg0: ReactionSet*) -> void
+    KineticReactor.get HeatOfReaction -> RealFlexVariable*
+    KineticReactor.get HeatOfReactionValue -> VARIANT
+    _PFReactor.get ReactionSet -> ReactionSet*
+    _PFReactor.put ReactionSet(arg0: ReactionSet*) -> void
+    PFReactor.get ReactionSet -> ReactionSet*
+    PFReactor.put ReactionSet(arg0: ReactionSet*) -> void
+    _GibbsReactor.get ReactionSet -> ReactionSet*
+    _GibbsReactor.put ReactionSet(arg0: ReactionSet*) -> void
+    GibbsReactor.get ReactionSet -> ReactionSet*
+    GibbsReactor.put ReactionSet(arg0: ReactionSet*) -> void
+    _EquilibriumReactor.get ReactionSet -> ReactionSet*
+    _EquilibriumReactor.put ReactionSet(arg0: ReactionSet*) -> void
+    _EquilibriumReactor.get HeatOfReaction -> RealFlexVariable*
+    _EquilibriumReactor.get HeatOfReactionValue -> VARIANT
+    _EquilibriumReactor2.get ReactionSet -> ReactionSet*
+    _EquilibriumReactor2.put ReactionSet(arg0: ReactionSet*) -> void
+    _EquilibriumReactor2.get HeatOfReaction -> RealFlexVariable*
+    _EquilibriumReactor2.get HeatOfReactionValue -> VARIANT
+    EquilibriumReactor.get ReactionSet -> ReactionSet*
+    EquilibriumReactor.put ReactionSet(arg0: ReactionSet*) -> void
+    EquilibriumReactor.get HeatOfReaction -> RealFlexVariable*
+    EquilibriumReactor.get HeatOfReactionValue -> VARIANT
+    _ConversionReactor.get ReactionSet -> ReactionSet*
+    _ConversionReactor.put ReactionSet(arg0: ReactionSet*) -> void
+    _ConversionReactor.get HeatOfReaction -> RealFlexVariable*
+    _ConversionReactor.get HeatOfReactionValue -> VARIANT
+    _ConversionReactor2.get ReactionSet -> ReactionSet*
+    _ConversionReactor2.put ReactionSet(arg0: ReactionSet*) -> void
+    _ConversionReactor2.get HeatOfReaction -> RealFlexVariable*
+    _ConversionReactor2.get HeatOfReactionValue -> VARIANT
+    ConversionReactor.get ReactionSet -> ReactionSet*
+    ConversionReactor.put ReactionSet(arg0: ReactionSet*) -> void
+    ConversionReactor.get HeatOfReaction -> RealFlexVariable*
+    ConversionReactor.get HeatOfReactionValue -> VARIANT
+    SRUAirDemandAnalyzer.get ReactionFurnace -> SRURF*
+    SRUAirDemandAnalyzer.put ReactionFurnace(arg0: SRURF*) -> void
+    SRUWasteHeatExchanger.get ReactionsPermitted -> bool
+    SRUWasteHeatExchanger.put ReactionsPermitted(arg0: bool) -> void
+===== ReactionSet（37 行，最多写 400 行）=====
+    ReactionPackage.get ReactionSets -> ReactionSets*
+[dispatch] ReactionSets : IDispatch
+    ReactionPackageManager.get ReactionSets -> ReactionSets*
+[dispatch] ReactionSet : IDispatch
+[enum] ReactionSetSolverMethodEnum_enum
+[enum] ReactionSetTraceLevelEnum_enum
+    _ExtnUnitOperationContainer4.call AttachReactionSet(rxnSet: ReactionSet*) -> void
+    _ExtnUnitOperationContainer5.call AttachReactionSet(rxnSet: ReactionSet*) -> void
+    ExtnUnitOperationContainer.call AttachReactionSet(rxnSet: ReactionSet*) -> void
+    _KineticReactor.get ReactionSet -> ReactionSet*
+    _KineticReactor.put ReactionSet(arg0: ReactionSet*) -> void
+    __KineticReactor.get ReactionSet -> ReactionSet*
+    __KineticReactor.put ReactionSet(arg0: ReactionSet*) -> void
+    _KineticReactor3.get ReactionSet -> ReactionSet*
+    _KineticReactor3.put ReactionSet(arg0: ReactionSet*) -> void
+    KineticReactor.get ReactionSet -> ReactionSet*
+    KineticReactor.put ReactionSet(arg0: ReactionSet*) -> void
+    _PFReactor.get ReactionSet -> ReactionSet*
+    _PFReactor.put ReactionSet(arg0: ReactionSet*) -> void
+    PFReactor.get ReactionSet -> ReactionSet*
+    PFReactor.put ReactionSet(arg0: ReactionSet*) -> void
+    _GibbsReactor.get ReactionSet -> ReactionSet*
+    _GibbsReactor.put ReactionSet(arg0: ReactionSet*) -> void
+    GibbsReactor.get ReactionSet -> ReactionSet*
+    GibbsReactor.put ReactionSet(arg0: ReactionSet*) -> void
+    _EquilibriumReactor.get ReactionSet -> ReactionSet*
+    _EquilibriumReactor.put ReactionSet(arg0: ReactionSet*) -> void
+    _EquilibriumReactor2.get ReactionSet -> ReactionSet*
+    _EquilibriumReactor2.put ReactionSet(arg0: ReactionSet*) -> void
+    EquilibriumReactor.get ReactionSet -> ReactionSet*
+    EquilibriumReactor.put ReactionSet(arg0: ReactionSet*) -> void
+    _ConversionReactor.get ReactionSet -> ReactionSet*
+    _ConversionReactor.put ReactionSet(arg0: ReactionSet*) -> void
+    _ConversionReactor2.get ReactionSet -> ReactionSet*
+    _ConversionReactor2.put ReactionSet(arg0: ReactionSet*) -> void
+    ConversionReactor.get ReactionSet -> ReactionSet*
+    ConversionReactor.put ReactionSet(arg0: ReactionSet*) -> void
+===== Equilibrium（91 行，最多写 400 行）=====
+    Fluid.call EquilibriumFlash -> FlashStatus_enum
+    _Fluid9.call EquilibriumFlash -> FlashStatus_enum
+    _Fluid8.call EquilibriumFlash -> FlashStatus_enum
+    _Fluid7.call EquilibriumFlash -> FlashStatus_enum
+    _Fluid6.call EquilibriumFlash -> FlashStatus_enum
+    _Fluid5.call EquilibriumFlash -> FlashStatus_enum
+    _Fluid4.call EquilibriumFlash -> FlashStatus_enum
+    _Fluid3.call EquilibriumFlash -> FlashStatus_enum
+    _Fluid2.call EquilibriumFlash -> FlashStatus_enum
+    _Fluid.call EquilibriumFlash -> FlashStatus_enum
+    FluidPhase.get IsAtEquilibrium -> bool
+    _FluidPhase2.get IsAtEquilibrium -> bool
+    _FluidPhase.get IsAtEquilibrium -> bool
+[dispatch] _EquilibriumReaction : IDispatch
+    _EquilibriumReaction.get EquilibriumConstant -> double
+    _EquilibriumReaction.put EquilibriumConstant(arg0: double) -> void
+[dispatch] _EquilibriumReaction2 : IDispatch
+    _EquilibriumReaction2.get EquilibriumConstant -> double
+    _EquilibriumReaction2.put EquilibriumConstant(arg0: double) -> void
+    _EquilibriumReaction2.get EquilibriumConstantParameterArray -> RealFlexVariable*
+    _EquilibriumReaction2.get EquilibriumConstantParameterArrayValue -> VARIANT
+    _EquilibriumReaction2.put EquilibriumConstantParameterArrayValue(arg0: VARIANT) -> void
+    _EquilibriumReaction2.get EquilibriumTemperatureApproachParameterArray -> RealFlexVariable*
+    _EquilibriumReaction2.get EquilibriumTemperatureApproachParameterArrayValue -> VARIANT
+    _EquilibriumReaction2.put EquilibriumTemperatureApproachParameterArrayValue(arg0: VARIANT) -> void
+    _EquilibriumReaction2.get EquilibriumFractionalApproachParameterArray -> RealFlexVariable*
+    _EquilibriumReaction2.get EquilibriumFractionalApproachParameterArrayValue -> VARIANT
+    _EquilibriumReaction2.put EquilibriumFractionalApproachParameterArrayValue(arg0: VARIANT) -> void
+[dispatch] EquilibriumReaction : IDispatch
+    EquilibriumReaction.get EquilibriumConstant -> double
+    EquilibriumReaction.put EquilibriumConstant(arg0: double) -> void
+    EquilibriumReaction.get EquilibriumConstantParameterArray -> RealFlexVariable*
+    EquilibriumReaction.get EquilibriumConstantParameterArrayValue -> VARIANT
+    EquilibriumReaction.put EquilibriumConstantParameterArrayValue(arg0: VARIANT) -> void
+    EquilibriumReaction.get EquilibriumTemperatureApproachParameterArray -> RealFlexVariable*
+    EquilibriumReaction.get EquilibriumTemperatureApproachParameterArrayValue -> VARIANT
+    EquilibriumReaction.put EquilibriumTemperatureApproachParameterArrayValue(arg0: VARIANT) -> void
+    EquilibriumReaction.get EquilibriumFractionalApproachParameterArray -> RealFlexVariable*
+    EquilibriumReaction.get EquilibriumFractionalApproachParameterArrayValue -> VARIANT
+    EquilibriumReaction.put EquilibriumFractionalApproachParameterArrayValue(arg0: VARIANT) -> void
+    _Separator.get EquilibriumConstant -> RealFlexVariable*
+    _Separator.get EquilibriumConstantValue -> VARIANT
+    _Separator.put EquilibriumConstantValue(arg0: VARIANT) -> void
+    Separator1.get EquilibriumConstant -> RealFlexVariable*
+    Separator1.get EquilibriumConstantValue -> VARIANT
+    Separator1.put EquilibriumConstantValue(arg0: VARIANT) -> void
+    Separator.get EquilibriumConstant -> RealFlexVariable*
+    Separator.get EquilibriumConstantValue -> VARIANT
+    Separator.put EquilibriumConstantValue(arg0: VARIANT) -> void
+[enum] EquilibriumPhaseEnum_enum
+[enum] EquilibriumPhaseAtStreamPressureEnum_enum
+[enum] EquilibriumPhaseAtStreamTemperatureEnum_enum
+    HydrateUtility.get EquilibriumPhase -> EquilibriumPhaseEnum_enum
+    HydrateUtility.put EquilibriumPhase(arg0: EquilibriumPhaseEnum_enum) -> void
+    HydrateUtility.get EquilibriumPhaseAtStreamPressure -> EquilibriumPhaseAtStreamPressureEnum_enum
+    HydrateUtility.put EquilibriumPhaseAtStreamPressure(arg0: EquilibriumPhaseAtStreamPressureEnum_enum) -> void
+    HydrateUtility.get EquilibriumPhaseAtStreamTemperature -> EquilibriumPhaseAtStreamTemperatureEnum_enum
+    HydrateUtility.put EquilibriumPhaseAtStreamTemperature(arg0: EquilibriumPhaseAtStreamTemperatureEnum_enum) -> void
+    _ColumnFlowsheet.get EquilibriumError -> double
+    _ColumnFlowsheet.get EquilibriumErrorTolerance -> double
+    _ColumnFlowsheet.put EquilibriumErrorTolerance(arg0: double) -> void
+    _ColumnFlowsheet2.get EquilibriumError -> double
+    _ColumnFlowsheet2.get EquilibriumErrorTolerance -> double
+    _ColumnFlowsheet2.put EquilibriumErrorTolerance(arg0: double) -> void
+    _ColumnFlowsheet3.get EquilibriumError -> double
+    _ColumnFlowsheet3.get EquilibriumErrorTolerance -> double
+    _ColumnFlowsheet3.put EquilibriumErrorTolerance(arg0: double) -> void
+    ColumnFlowsheet.get EquilibriumError -> double
+    ColumnFlowsheet.get EquilibriumErrorTolerance -> double
+    ColumnFlowsheet.put EquilibriumErrorTolerance(arg0: double) -> void
+[dispatch] _EquilibriumReactor : IDispatch
+[dispatch] _EquilibriumReactor2 : IDispatch
+    _EquilibriumReactor2.get EquilibriumConstantParameterArray -> RealFlexVariable*
+    _EquilibriumReactor2.get EquilibriumConstantParameterArrayValue -> VARIANT
+    _EquilibriumReactor2.put EquilibriumConstantParameterArrayValue(arg0: VARIANT) -> void
+    _EquilibriumReactor2.get EquilibriumTemperatureApproachParameterArray -> RealFlexVariable*
+    _EquilibriumReactor2.get EquilibriumTemperatureApproachParameterArrayValue -> VARIANT
+    _EquilibriumReactor2.put EquilibriumTemperatureApproachParameterArrayValue(arg0: VARIANT) -> void
+    _EquilibriumReactor2.get EquilibriumFractionalApproachParameterArray -> RealFlexVariable*
+    _EquilibriumReactor2.get EquilibriumFractionalApproachParameterArrayValue -> VARIANT
+    _EquilibriumReactor2.put EquilibriumFractionalApproachParameterArrayValue(arg0: VARIANT) -> void
+[dispatch] EquilibriumReactor : IDispatch
+    EquilibriumReactor.get EquilibriumConstantParameterArray -> RealFlexVariable*
+    EquilibriumReactor.get EquilibriumConstantParameterArrayValue -> VARIANT
+    EquilibriumReactor.put EquilibriumConstantParameterArrayValue(arg0: VARIANT) -> void
+    EquilibriumReactor.get EquilibriumTemperatureApproachParameterArray -> RealFlexVariable*
+    EquilibriumReactor.get EquilibriumTemperatureApproachParameterArrayValue -> VARIANT
+    EquilibriumReactor.put EquilibriumTemperatureApproachParameterArrayValue(arg0: VARIANT) -> void
+    EquilibriumReactor.get EquilibriumFractionalApproachParameterArray -> RealFlexVariable*
+    EquilibriumReactor.get EquilibriumFractionalApproachParameterArrayValue -> VARIANT
+    EquilibriumReactor.put EquilibriumFractionalApproachParameterArrayValue(arg0: VARIANT) -> void
+===== Conversion（200 行，最多写 400 行）=====
+[enum] UnitConversionType_enum
+[dispatch] UnitConversion : IDispatch
+[dispatch] _UnitConversionSet : IDispatch
+    _UnitConversionSet.get UnitConversionType -> UnitConversionType_enum
+[dispatch] UnitConversionSet : IDispatch
+    UnitConversionSet.get UnitConversionType -> UnitConversionType_enum
+[dispatch] UnitConversionSetManager : IDispatch
+    UnitConversionSetManager.call GetUnitConversionSet(Type: UnitConversionType_enum) -> UnitConversionSet*
+    RealVariable.get UnitConversionType -> UnitConversionType_enum
+    RealFlexVariable.get UnitConversionType -> VARIANT
+    _InternalRealVariable.get UnitConversionType -> UnitConversionType_enum
+    InternalRealVariable.get UnitConversionType -> UnitConversionType_enum
+    _InternalRealFlexVariable1.get UnitConversionType -> VARIANT
+    _InternalRealFlexVariable2.get UnitConversionType -> VARIANT
+    _InternalRealFlexVariable3.get UnitConversionType -> VARIANT
+    InternalRealFlexVariable.get UnitConversionType -> VARIANT
+[enum] AssayD86ConversionType_enum
+[enum] AssayASTM_D2887ConversionType_enum
+    _AssayD86.get ConversionType -> AssayD86ConversionType_enum
+    _AssayD86.put ConversionType(arg0: AssayD86ConversionType_enum) -> void
+    AssayD86.get ConversionType -> AssayD86ConversionType_enum
+    AssayD86.put ConversionType(arg0: AssayD86ConversionType_enum) -> void
+    _AssayD86_D1160.get ConversionType -> AssayD86ConversionType_enum
+    _AssayD86_D1160.put ConversionType(arg0: AssayD86ConversionType_enum) -> void
+    AssayD86_D1160.get ConversionType -> AssayD86ConversionType_enum
+    AssayD86_D1160.put ConversionType(arg0: AssayD86ConversionType_enum) -> void
+    _AssayASTM_D2887.get ConversionType -> AssayASTM_D2887ConversionType_enum
+    _AssayASTM_D2887.put ConversionType(arg0: AssayASTM_D2887ConversionType_enum) -> void
+    AssayASTM_D2887.get ConversionType -> AssayASTM_D2887ConversionType_enum
+    AssayASTM_D2887.put ConversionType(arg0: AssayASTM_D2887ConversionType_enum) -> void
+[dispatch] _ConversionReaction : IDispatch
+    _ConversionReaction.get Conversion -> double
+    _ConversionReaction.put Conversion(arg0: double) -> void
+[dispatch] ConversionReaction : IDispatch
+    ConversionReaction.get Conversion -> double
+    ConversionReaction.put Conversion(arg0: double) -> void
+    ConversionReaction.get ConversionCoefficients -> RealFlexVariable*
+    ConversionReaction.get ConversionCoefficientsValue -> VARIANT
+    ConversionReaction.put ConversionCoefficientsValue(arg0: VARIANT) -> void
+    _Separator.get PercentReactantConversion -> RealFlexVariable*
+    _Separator.get PercentReactantConversionValue -> VARIANT
+    _Separator.put PercentReactantConversionValue(arg0: VARIANT) -> void
+    Separator1.get PercentReactantConversion -> RealFlexVariable*
+    Separator1.get PercentReactantConversionValue -> VARIANT
+    Separator1.put PercentReactantConversionValue(arg0: VARIANT) -> void
+    Separator.get PercentReactantConversion -> RealFlexVariable*
+    Separator.get PercentReactantConversionValue -> VARIANT
+    Separator.put PercentReactantConversionValue(arg0: VARIANT) -> void
+    RYieldLumpOrDeLumpReaction.call GetConversions -> VARIANT
+    RYieldLumpOrDeLumpReaction.call SetConversions(conversions: VARIANT) -> void
+    YieldReactor.get ConversionEqView -> TextFlexVariable*
+    __DataTable.call GetUnitConversions(param: VARIANT) -> VARIANT
+    _DataTable.call GetUnitConversions(param: VARIANT) -> VARIANT
+    _DataTable1.call GetUnitConversions(param: VARIANT) -> VARIANT
+    _DataTable2.call GetUnitConversions(param: VARIANT) -> VARIANT
+    _DataTable3.call GetUnitConversions(param: VARIANT) -> VARIANT
+    DataTable.call GetUnitConversions(param: VARIANT) -> VARIANT
+    __Application.get UnitConversionSetManager -> UnitConversionSetManager*
+    _1540_Application.get UnitConversionSetManager -> UnitConversionSetManager*
+    _zApplication.get UnitConversionSetManager -> UnitConversionSetManager*
+    _Application1.get UnitConversionSetManager -> UnitConversionSetManager*
+    _OLD12_Application.get UnitConversionSetManager -> UnitConversionSetManager*
+    _Application2.get UnitConversionSetManager -> UnitConversionSetManager*
+    _Application3.get UnitConversionSetManager -> UnitConversionSetManager*
+    _Application4.get UnitConversionSetManager -> UnitConversionSetManager*
+    _Application5.get UnitConversionSetManager -> UnitConversionSetManager*
+    _Application6.get UnitConversionSetManager -> UnitConversionSetManager*
+    _Application7.get UnitConversionSetManager -> UnitConversionSetManager*
+    _Application8.get UnitConversionSetManager -> UnitConversionSetManager*
+    _Application9.get UnitConversionSetManager -> UnitConversionSetManager*
+    _Application.get UnitConversionSetManager -> UnitConversionSetManager*
+    _ExtnKineticReactionContainer1.get BasisConversion -> VARIANT
+    _ExtnKineticReactionContainer1.put BasisConversion(arg0: VARIANT) -> void
+    _ExtnKineticReactionContainer1.get RateConversion -> VARIANT
+    _ExtnKineticReactionContainer1.put RateConversion(arg0: VARIANT) -> void
+    _ExtnKineticReactionContainer2.get BasisConversion -> VARIANT
+    _ExtnKineticReactionContainer2.put BasisConversion(arg0: VARIANT) -> void
+    _ExtnKineticReactionContainer2.get RateConversion -> VARIANT
+    _ExtnKineticReactionContainer2.put RateConversion(arg0: VARIANT) -> void
+    _ExtnKineticReactionContainer3.get BasisConversion -> VARIANT
+    _ExtnKineticReactionContainer3.put BasisConversion(arg0: VARIANT) -> void
+    _ExtnKineticReactionContainer3.get RateConversion -> VARIANT
+    _ExtnKineticReactionContainer3.put RateConversion(arg0: VARIANT) -> void
+    ExtnKineticReactionContainer.get BasisConversion -> VARIANT
+    ExtnKineticReactionContainer.put BasisConversion(arg0: VARIANT) -> void
+    ExtnKineticReactionContainer.get RateConversion -> VARIANT
+    ExtnKineticReactionContainer.put RateConversion(arg0: VARIANT) -> void
+    _KineticReactor.get RxnPercentConversion -> RealFlexVariable*
+    _KineticReactor.get RxnPercentConversionValue -> VARIANT
+    __KineticReactor.get RxnPercentConversion -> RealFlexVariable*
+    __KineticReactor.get RxnPercentConversionValue -> VARIANT
+    _KineticReactor3.get RxnPercentConversion -> RealFlexVariable*
+    _KineticReactor3.get RxnPercentConversionValue -> VARIANT
+    KineticReactor.get RxnPercentConversion -> RealFlexVariable*
+    KineticReactor.get RxnPercentConversionValue -> VARIANT
+    _EquilibriumReactor.get RxnPercentConversion -> RealFlexVariable*
+    _EquilibriumReactor.get RxnPercentConversionValue -> VARIANT
+    _EquilibriumReactor2.get RxnPercentConversion -> RealFlexVariable*
+    _EquilibriumReactor2.get RxnPercentConversionValue -> VARIANT
+    EquilibriumReactor.get RxnPercentConversion -> RealFlexVariable*
+    EquilibriumReactor.get RxnPercentConversionValue -> VARIANT
+[dispatch] _ConversionReactor : IDispatch
+    _ConversionReactor.get Conversion -> RealFlexVariable*
+    _ConversionReactor.get ConversionValue -> VARIANT
+    _ConversionReactor.put ConversionValue(arg0: VARIANT) -> void
+[dispatch] _ConversionReactor2 : IDispatch
+    _ConversionReactor2.get Conversion -> RealFlexVariable*
+    _ConversionReactor2.get ConversionValue -> VARIANT
+    _ConversionReactor2.put ConversionValue(arg0: VARIANT) -> void
+    _ConversionReactor2.get RxnPercentConversion -> RealFlexVariable*
+    _ConversionReactor2.get RxnPercentConversionValue -> VARIANT
+    _ConversionReactor2.get ConversionCoefficients -> RealFlexVariable*
+    _ConversionReactor2.get ConversionCoefficientsValue -> VARIANT
+    _ConversionReactor2.put ConversionCoefficientsValue(arg0: VARIANT) -> void
+[dispatch] ConversionReactor : IDispatch
+    ConversionReactor.get Conversion -> RealFlexVariable*
+    ConversionReactor.get ConversionValue -> VARIANT
+    ConversionReactor.put ConversionValue(arg0: VARIANT) -> void
+    ConversionReactor.get RxnPercentConversion -> RealFlexVariable*
+    ConversionReactor.get RxnPercentConversionValue -> VARIANT
+    ConversionReactor.get ConversionCoefficients -> RealFlexVariable*
+    ConversionReactor.get ConversionCoefficientsValue -> VARIANT
+    ConversionReactor.put ConversionCoefficientsValue(arg0: VARIANT) -> void
+[enum] ColumnD86Conversion_enum
+[enum] ColumnD2887Conversion_enum
+    _ColumnCutPointBaseSpec.get D86ConversionType -> ColumnD86Conversion_enum
+    _ColumnCutPointBaseSpec.put D86ConversionType(arg0: ColumnD86Conversion_enum) -> void
+    _ColumnCutPointBaseSpec.get D2887ConversionType -> ColumnD2887Conversion_enum
+    _ColumnCutPointBaseSpec.put D2887ConversionType(arg0: ColumnD2887Conversion_enum) -> void
+    ColumnCutPointSpec.get D86ConversionType -> ColumnD86Conversion_enum
+    ColumnCutPointSpec.put D86ConversionType(arg0: ColumnD86Conversion_enum) -> void
+    ColumnCutPointSpec.get D2887ConversionType -> ColumnD2887Conversion_enum
+    ColumnCutPointSpec.put D2887ConversionType(arg0: ColumnD2887Conversion_enum) -> void
+    ColumnGapCutPointSpec.get D86ConversionType -> ColumnD86Conversion_enum
+    ColumnGapCutPointSpec.put D86ConversionType(arg0: ColumnD86Conversion_enum) -> void
+    ColumnGapCutPointSpec.get D2887ConversionType -> ColumnD2887Conversion_enum
+    ColumnGapCutPointSpec.put D2887ConversionType(arg0: ColumnD2887Conversion_enum) -> void
+    ColumnColdPropertySpec.get D86ConversionType -> ColumnD86Conversion_enum
+    ColumnColdPropertySpec.put D86ConversionType(arg0: ColumnD86Conversion_enum) -> void
+    _SRUCatalyticConverter.get H2SConversion -> RealVariable*
+    _SRUCatalyticConverter.get H2SConversionValue -> double
+    _SRUCatalyticConverter.put H2SConversionValue(arg0: double) -> void
+    _SRUCatalyticConverter.get COSConversion -> RealVariable*
+    _SRUCatalyticConverter.get COSConversionValue -> double
+    _SRUCatalyticConverter.put COSConversionValue(arg0: double) -> void
+    _SRUCatalyticConverter.get CS2Conversion -> RealVariable*
+    _SRUCatalyticConverter.get CS2ConversionValue -> double
+    _SRUCatalyticConverter.put CS2ConversionValue(arg0: double) -> void
+    _SRUCatalyticConverter.get SConversionAsS1 -> RealVariable*
+    _SRUCatalyticConverter.get SConversionAsS1Value -> double
+    _SRUCatalyticConverter.get SConversionEfficiency -> RealVariable*
+    _SRUCatalyticConverter.get SConversionEfficiencyValue -> double
+    SRUCatalyticConverter.get H2SConversion -> RealVariable*
+    SRUCatalyticConverter.get H2SConversionValue -> double
+    SRUCatalyticConverter.put H2SConversionValue(arg0: double) -> void
+    SRUCatalyticConverter.get COSConversion -> RealVariable*
+    SRUCatalyticConverter.get COSConversionValue -> double
+    SRUCatalyticConverter.put COSConversionValue(arg0: double) -> void
+    SRUCatalyticConverter.get CS2Conversion -> RealVariable*
+    SRUCatalyticConverter.get CS2ConversionValue -> double
+    SRUCatalyticConverter.put CS2ConversionValue(arg0: double) -> void
+    SRUCatalyticConverter.get SConversionAsS1 -> RealVariable*
+    SRUCatalyticConverter.get SConversionAsS1Value -> double
+    SRUCatalyticConverter.get SConversionEfficiency -> RealVariable*
+    SRUCatalyticConverter.get SConversionEfficiencyValue -> double
+    SRUSelOxConverter.get Conversion -> RealVariable*
+    SRUSelOxConverter.get ConversionValue -> double
+    SRUSelOxConverter.put ConversionValue(arg0: double) -> void
+    SRUSelOxConverter.get SConversionAsS1 -> RealVariable*
+    SRUSelOxConverter.get SConversionAsS1Value -> double
+    SRUSelOxConverter.get SConversionEfficiency -> RealVariable*
+    SRUSelOxConverter.get SConversionEfficiencyValue -> double
+    SRUSelOxConverter.get ConversionResult -> RealVariable*
+    SRUSelOxConverter.get ConversionResultValue -> double
+    _SRUSubDewpointConverter.get H2SConversion -> RealVariable*
+    _SRUSubDewpointConverter.get H2SConversionValue -> double
+    _SRUSubDewpointConverter.put H2SConversionValue(arg0: double) -> void
+    _SRUSubDewpointConverter.get COSConversion -> RealVariable*
+    _SRUSubDewpointConverter.get COSConversionValue -> double
+    _SRUSubDewpointConverter.put COSConversionValue(arg0: double) -> void
+    _SRUSubDewpointConverter.get CS2Conversion -> RealVariable*
+    _SRUSubDewpointConverter.get CS2ConversionValue -> double
+    _SRUSubDewpointConverter.put CS2ConversionValue(arg0: double) -> void
+    _SRUSubDewpointConverter.get SConversionAsS1 -> RealVariable*
+    _SRUSubDewpointConverter.get SConversionAsS1Value -> double
+    _SRUSubDewpointConverter.get SConversionEfficiency -> RealVariable*
+    _SRUSubDewpointConverter.get SConversionEfficiencyValue -> double
+    SRUSubDewpointConverter.get H2SConversion -> RealVariable*
+    SRUSubDewpointConverter.get H2SConversionValue -> double
+    SRUSubDewpointConverter.put H2SConversionValue(arg0: double) -> void
+    SRUSubDewpointConverter.get COSConversion -> RealVariable*
+    SRUSubDewpointConverter.get COSConversionValue -> double
+    SRUSubDewpointConverter.put COSConversionValue(arg0: double) -> void
+    SRUSubDewpointConverter.get CS2Conversion -> RealVariable*
+    SRUSubDewpointConverter.get CS2ConversionValue -> double
+    SRUSubDewpointConverter.put CS2ConversionValue(arg0: double) -> void
+    SRUSubDewpointConverter.get SConversionAsS1 -> RealVariable*
+    SRUSubDewpointConverter.get SConversionAsS1Value -> double
+    SRUSubDewpointConverter.get SConversionEfficiency -> RealVariable*
+    SRUSubDewpointConverter.get SConversionEfficiencyValue -> double
+===== Gibbs（80 行，最多写 400 行）=====
+    __Component.get GibbsTmin -> RealVariable*
+    __Component.get GibbsTminValue -> double
+    __Component.put GibbsTminValue(arg0: double) -> void
+    __Component.get GibbsTmax -> RealVariable*
+    __Component.get GibbsTmaxValue -> double
+    __Component.put GibbsTmaxValue(arg0: double) -> void
+    __Component.get GibbsCoeffs -> RealFlexVariable*
+    __Component.get GibbsCoeffsValue -> VARIANT
+    __Component.put GibbsCoeffsValue(arg0: VARIANT) -> void
+    __Component.call EvaluateGibbs(refTemp: double) -> double
+    _Component.get GibbsTmin -> RealVariable*
+    _Component.get GibbsTminValue -> double
+    _Component.put GibbsTminValue(arg0: double) -> void
+    _Component.get GibbsTmax -> RealVariable*
+    _Component.get GibbsTmaxValue -> double
+    _Component.put GibbsTmaxValue(arg0: double) -> void
+    _Component.get GibbsCoeffs -> RealFlexVariable*
+    _Component.get GibbsCoeffsValue -> VARIANT
+    _Component.put GibbsCoeffsValue(arg0: VARIANT) -> void
+    _Component.call EvaluateGibbs(refTemp: double) -> double
+    _Component2.get GibbsTmin -> RealVariable*
+    _Component2.get GibbsTminValue -> double
+    _Component2.put GibbsTminValue(arg0: double) -> void
+    _Component2.get GibbsTmax -> RealVariable*
+    _Component2.get GibbsTmaxValue -> double
+    _Component2.put GibbsTmaxValue(arg0: double) -> void
+    _Component2.get GibbsCoeffs -> RealFlexVariable*
+    _Component2.get GibbsCoeffsValue -> VARIANT
+    _Component2.put GibbsCoeffsValue(arg0: VARIANT) -> void
+    _Component2.call EvaluateGibbs(refTemp: double) -> double
+    _Component3.get GibbsTmin -> RealVariable*
+    _Component3.get GibbsTminValue -> double
+    _Component3.put GibbsTminValue(arg0: double) -> void
+    _Component3.get GibbsTmax -> RealVariable*
+    _Component3.get GibbsTmaxValue -> double
+    _Component3.put GibbsTmaxValue(arg0: double) -> void
+    _Component3.get GibbsCoeffs -> RealFlexVariable*
+    _Component3.get GibbsCoeffsValue -> VARIANT
+    _Component3.put GibbsCoeffsValue(arg0: VARIANT) -> void
+    _Component3.call EvaluateGibbs(refTemp: double) -> double
+    _Component4.get GibbsTmin -> RealVariable*
+    _Component4.get GibbsTminValue -> double
+    _Component4.put GibbsTminValue(arg0: double) -> void
+    _Component4.get GibbsTmax -> RealVariable*
+    _Component4.get GibbsTmaxValue -> double
+    _Component4.put GibbsTmaxValue(arg0: double) -> void
+    _Component4.get GibbsCoeffs -> RealFlexVariable*
+    _Component4.get GibbsCoeffsValue -> VARIANT
+    _Component4.put GibbsCoeffsValue(arg0: VARIANT) -> void
+    _Component4.call EvaluateGibbs(refTemp: double) -> double
+    _Component5.get GibbsTmin -> RealVariable*
+    _Component5.get GibbsTminValue -> double
+    _Component5.put GibbsTminValue(arg0: double) -> void
+    _Component5.get GibbsTmax -> RealVariable*
+    _Component5.get GibbsTmaxValue -> double
+    _Component5.put GibbsTmaxValue(arg0: double) -> void
+    _Component5.get GibbsCoeffs -> RealFlexVariable*
+    _Component5.get GibbsCoeffsValue -> VARIANT
+    _Component5.put GibbsCoeffsValue(arg0: VARIANT) -> void
+    _Component5.call EvaluateGibbs(refTemp: double) -> double
+    Component.get GibbsTmin -> RealVariable*
+    Component.get GibbsTminValue -> double
+    Component.put GibbsTminValue(arg0: double) -> void
+    Component.get GibbsTmax -> RealVariable*
+    Component.get GibbsTmaxValue -> double
+    Component.put GibbsTmaxValue(arg0: double) -> void
+    Component.get GibbsCoeffs -> RealFlexVariable*
+    Component.get GibbsCoeffsValue -> VARIANT
+    Component.put GibbsCoeffsValue(arg0: VARIANT) -> void
+    Component.call EvaluateGibbs(refTemp: double) -> double
+    _Separator.get GibbsEnergy -> RealFlexVariable*
+    _Separator.get GibbsEnergyValue -> VARIANT
+    Separator1.get GibbsEnergy -> RealFlexVariable*
+    Separator1.get GibbsEnergyValue -> VARIANT
+    Separator.get GibbsEnergy -> RealFlexVariable*
+    Separator.get GibbsEnergyValue -> VARIANT
+    ExtnPropertyPackageEOS.call EvaluateGibbs(Temperature: double, dwComponent: ulong, retval: double* [out,retval]) -> HRESULT
+[enum] GibbsReactorType_enum
+[dispatch] _GibbsReactor : IDispatch
+[dispatch] GibbsReactor : IDispatch
+===== Reactor（21 行，最多写 400 行）=====
+[dispatch] _YieldReactor : IDispatch
+[dispatch] YieldReactor : IDispatch
+[dispatch] _KineticReactor : IDispatch
+[dispatch] __KineticReactor : IDispatch
+[dispatch] _KineticReactor3 : IDispatch
+[dispatch] KineticReactor : IDispatch
+[dispatch] _PFReactor : IDispatch
+[dispatch] PFReactor : IDispatch
+[enum] GibbsReactorType_enum
+[dispatch] _GibbsReactor : IDispatch
+    _GibbsReactor.get ReactorType -> GibbsReactorType_enum
+    _GibbsReactor.put ReactorType(arg0: GibbsReactorType_enum) -> void
+[dispatch] GibbsReactor : IDispatch
+    GibbsReactor.get ReactorType -> GibbsReactorType_enum
+    GibbsReactor.put ReactorType(arg0: GibbsReactorType_enum) -> void
+[dispatch] _EquilibriumReactor : IDispatch
+[dispatch] _EquilibriumReactor2 : IDispatch
+[dispatch] EquilibriumReactor : IDispatch
+[dispatch] _ConversionReactor : IDispatch
+[dispatch] _ConversionReactor2 : IDispatch
+[dispatch] ConversionReactor : IDispatch
+===== Add（138 行，最多写 400 行）=====
+    Attachments.call Add(Item: VARIANT) -> VARIANT
+    _IDocuments.call Add(name: VARIANT [opt], Type: VARIANT [opt]) -> VARIANT
+    ObjectStatus.call AddStatusCondition(Level: StatusLevel_enum, ID: long, Description: BSTR) -> void
+    VarDefinitions.call Add(Variable: VARIANT, descr: VARIANT [opt], Tag: VARIANT [opt], Units: VARIANT [opt], accessMode: VARIANT [opt]) -> VARIANT
+[dispatch] IAddInContainer : IDispatch
+[dispatch] IAddInEvent : IDispatch
+    Components.call Add(name: VARIANT [opt], Type: VARIANT [opt]) -> VARIANT
+    HypoComponents.call Add(name: VARIANT [opt], Type: VARIANT [opt]) -> VARIANT
+    HypoGroups.call Add(name: VARIANT [opt], Type: VARIANT [opt]) -> VARIANT
+    _COMPropPkg2.call AddExtPropPkgSetupFile(Tag: BSTR) -> void
+    _COMPropPkg2.call AddExtFlashSetupFile(Tag: BSTR) -> void
+    COMPropPkg.call AddExtPropPkgSetupFile(Tag: BSTR) -> void
+    COMPropPkg.call AddExtFlashSetupFile(Tag: BSTR) -> void
+    UserProperties.call Add(name: VARIANT [opt], Type: VARIANT [opt]) -> VARIANT
+    PropertyVectors.call Add(name: VARIANT [opt], Type: VARIANT [opt]) -> VARIANT
+    ReactionSets.call Add(name: VARIANT [opt], Type: VARIANT [opt]) -> VARIANT
+    FluidPackages.call Add(name: VARIANT [opt], Type: VARIANT [opt]) -> VARIANT
+    AssaysCollection.call Add(name: VARIANT [opt], Type: VARIANT [opt]) -> VARIANT
+    Blends.call Add(name: VARIANT [opt], Type: VARIANT [opt]) -> VARIANT
+    CorrelationSets.call Add(name: VARIANT [opt], Type: VARIANT [opt]) -> VARIANT
+    DoNotUseCollection.call Add(name: VARIANT [opt], Type: VARIANT [opt]) -> VARIANT
+    ComponentLists.call Add(name: VARIANT [opt], Type: VARIANT [opt]) -> VARIANT
+    Reactions.call Add(name: VARIANT [opt], Type: VARIANT [opt]) -> VARIANT
+    _AssayTBP.call AddUserProperty(UserPropertyName: BSTR) -> void
+    AssayTBP.call AddUserProperty(UserPropertyName: BSTR) -> void
+    _AssayD86.call AddUserProperty(UserPropertyName: BSTR) -> void
+    AssayD86.call AddUserProperty(UserPropertyName: BSTR) -> void
+    _AssayD1160.call AddUserProperty(UserPropertyName: BSTR) -> void
+    AssayD1160.call AddUserProperty(UserPropertyName: BSTR) -> void
+    _AssayD86_D1160.call AddUserProperty(UserPropertyName: BSTR) -> void
+    AssayD86_D1160.call AddUserProperty(UserPropertyName: BSTR) -> void
+    _AssayASTM_D2887.call AddUserProperty(UserPropertyName: BSTR) -> void
+    AssayASTM_D2887.call AddUserProperty(UserPropertyName: BSTR) -> void
+    _AssayChromatograph.call AddUserProperty(UserPropertyName: BSTR) -> void
+    AssayChromatograph.call AddUserProperty(UserPropertyName: BSTR) -> void
+    _AssayEFV.call AddUserProperty(UserPropertyName: BSTR) -> void
+    AssayEFV.call AddUserProperty(UserPropertyName: BSTR) -> void
+    _Blend.call AddAssay(AssayName: BSTR) -> void
+    Blend.call AddAssay(AssayName: BSTR) -> void
+    Streams.call Add(name: VARIANT [opt], Type: VARIANT [opt]) -> VARIANT
+    Operations.call Add(name: VARIANT [opt], Type: VARIANT [opt]) -> VARIANT
+    Flowsheets.call Add(name: VARIANT [opt], Type: VARIANT [opt]) -> VARIANT
+    FixedDataTables.call Add(name: VARIANT [opt], Type: VARIANT [opt]) -> VARIANT
+    EventSchedulers.call Add(name: VARIANT [opt], Type: VARIANT [opt]) -> VARIANT
+    _EventSchedulers.call Add(name: VARIANT [opt], Type: VARIANT [opt]) -> VARIANT
+    UtilityObjects.call Add(name: VARIANT [opt], Type: VARIANT [opt]) -> VARIANT
+    CorrelationManager.call AddToConnectedCorrMsgsTextList(szMsg: BSTR) -> void
+    Correlation.call AddToConnectedStreamTextList(szStreamTaggedName: BSTR) -> void
+    Correlation.call AddToConnectedUnitOpTextList(szUnitOpTaggedName: BSTR) -> void
+    Fluid.call AddPhase(FromFluidPhase: FluidPhase*) -> void
+    Fluid.call AddFluid(FromFluid: Fluid*) -> void
+    _Fluid9.call AddPhase(FromFluidPhase: FluidPhase*) -> void
+    _Fluid9.call AddFluid(FromFluid: Fluid*) -> void
+    _Fluid8.call AddPhase(FromFluidPhase: FluidPhase*) -> void
+    _Fluid8.call AddFluid(FromFluid: Fluid*) -> void
+    _Fluid7.call AddPhase(FromFluidPhase: FluidPhase*) -> void
+    _Fluid7.call AddFluid(FromFluid: Fluid*) -> void
+    _Fluid6.call AddPhase(FromFluidPhase: FluidPhase*) -> void
+    _Fluid6.call AddFluid(FromFluid: Fluid*) -> void
+    _Fluid5.call AddPhase(FromFluidPhase: FluidPhase*) -> void
+    _Fluid5.call AddFluid(FromFluid: Fluid*) -> void
+    _Fluid4.call AddPhase(FromFluidPhase: FluidPhase*) -> void
+    _Fluid4.call AddFluid(FromFluid: Fluid*) -> void
+    _Fluid3.call AddPhase(FromFluidPhase: FluidPhase*) -> void
+    _Fluid3.call AddFluid(FromFluid: Fluid*) -> void
+    _Fluid2.call AddPhase(FromFluidPhase: FluidPhase*) -> void
+    _Fluid2.call AddFluid(FromFluid: Fluid*) -> void
+    _Fluid.call AddPhase(FromFluidPhase: FluidPhase*) -> void
+    _Fluid.call AddFluid(FromFluid: Fluid*) -> void
+    PropertyVector.call AddOwnerStream(Stream: ProcessStream*) -> void
+    OnlineConnectivityManager.call AddVariableViaMoniker(bstrMoniker: BSTR) -> void
+    Reactants.call Add(name: VARIANT [opt], Type: VARIANT [opt]) -> VARIANT
+    HydrateProperty.call AddOwnerFluidPackage(FluidPackage: FluidPackage*) -> void
+    HydrateProperty.call AddHydrateComponent(ComponentName: BSTR) -> void
+    VesselSizing.call AddSpecification(SpecificationType: VesselSizingSpecification_enum) -> void
+    _TraySection2.call AddFeedStream(FeedStreamName: BSTR, TrayNumber: long, IsEnergyStream: bool) -> void
+    _TraySection2.call AddDrawStream(DrawStreamName: BSTR, Phase: PhaseType_enum, TrayNumber: long, Export: bool, AddFlowSpec: bool) -> void
+    _TraySection3.call AddFeedStream(FeedStreamName: BSTR, TrayNumber: long, IsEnergyStream: bool) -> void
+    _TraySection3.call AddDrawStream(DrawStreamName: BSTR, Phase: PhaseType_enum, TrayNumber: long, Export: bool, AddFlowSpec: bool) -> void
+    TraySection.call AddFeedStream(FeedStreamName: BSTR, TrayNumber: long, IsEnergyStream: bool) -> void
+    TraySection.call AddDrawStream(DrawStreamName: BSTR, Phase: PhaseType_enum, TrayNumber: long, Export: bool, AddFlowSpec: bool) -> void
+    InterFlowsheetConnections.call Add(name: VARIANT [opt], Type: VARIANT [opt]) -> VARIANT
+    _HeatExchangerCurve.get AddDewAndBubblePoints -> bool
+    _HeatExchangerCurve.put AddDewAndBubblePoints(arg0: bool) -> void
+    HeatExchangerCurve.get AddDewAndBubblePoints -> bool
+    HeatExchangerCurve.put AddDewAndBubblePoints(arg0: bool) -> void
+    HeatExchangerSpecifications.call Add(name: VARIANT [opt], Type: VARIANT [opt]) -> VARIANT
+    ExchSides.call Add(name: VARIANT [opt], Type: VARIANT [opt]) -> VARIANT
+    CompExpCurves.call Add(name: VARIANT [opt], Type: VARIANT [opt]) -> VARIANT
+    RYieldReactionTerms.call Add(name: VARIANT [opt], Type: VARIANT [opt]) -> VARIANT
+    RYieldLumpOrDeLumpReactions.call Add(name: VARIANT [opt], Type: VARIANT [opt]) -> VARIANT
+    BalanceRatios.call Add(name: VARIANT [opt], Type: VARIANT [opt]) -> VARIANT
+    __DataTable.call AddNotifyEventSink(sinkName: VARIANT, eventSink: VARIANT) -> bool
+    _DataTable.call AddNotifyEventSink(sinkName: VARIANT, eventSink: VARIANT) -> bool
+    _DataTable1.call AddNotifyEventSink(sinkName: VARIANT, eventSink: VARIANT) -> bool
+    _DataTable2.call AddNotifyEventSink(sinkName: VARIANT, eventSink: VARIANT) -> bool
+    _DataTable3.call AddNotifyEventSink(sinkName: VARIANT, eventSink: VARIANT) -> bool
+    DataTable.call AddNotifyEventSink(sinkName: VARIANT, eventSink: VARIANT) -> bool
+    EventLogic.put AddLogicVariable(arg0: RealVariable*) -> void
+    EventActions.call Add(name: VARIANT [opt], Type: VARIANT [opt]) -> VARIANT
+    _SequenceEvents.call Add(name: VARIANT [opt], Type: VARIANT [opt]) -> VARIANT
+    SequenceEvents.call Add(name: VARIANT [opt], Type: VARIANT [opt]) -> VARIANT
+    _SchedulerSequences.call Add(name: VARIANT [opt], Type: VARIANT [opt]) -> VARIANT
+    SchedulerSequences.call Add(name: VARIANT [opt], Type: VARIANT [opt]) -> VARIANT
+    SimulationCases1.call Add(name: VARIANT [opt], Type: VARIANT [opt]) -> VARIANT
+    SimulationCases2.call Add(name: VARIANT [opt], Type: VARIANT [opt]) -> VARIANT
+    SimulationCases.call Add(name: VARIANT [opt], Type: VARIANT [opt]) -> VARIANT
+    _ExtnUnitOperationContainer1.call AddSolverNotification(Object: IDispatch) -> void
+    _ExtnUnitOperationContainer2.call AddSolverNotification(Object: IDispatch) -> void
+    _ExtnUnitOperationContainer3.call AddSolverNotification(Object: IDispatch) -> void
+    _ExtnUnitOperationContainer4.call AddSolverNotification(Object: IDispatch) -> void
+    _ExtnUnitOperationContainer5.call AddSolverNotification(Object: IDispatch) -> void
+    ExtnUnitOperationContainer.call AddSolverNotification(Object: IDispatch) -> void
+    ColumnSpecifications.call Add(name: VARIANT [opt], Type: VARIANT [opt]) -> VARIANT
+    _ExtnKineticReactionContainer1.call AddReactantProperty(Tag: BSTR, VisibleDescription: BSTR, ConvType: UnitConversionType_enum, State: VariableStatus_enum) -> void
+    _ExtnKineticReactionContainer2.call AddReactantProperty(Tag: BSTR, VisibleDescription: BSTR, ConvType: UnitConversionType_enum, State: VariableStatus_enum) -> void
+    _ExtnKineticReactionContainer3.call AddReactantProperty(Tag: BSTR, VisibleDescription: BSTR, ConvType: UnitConversionType_enum, State: VariableStatus_enum) -> void
+    ExtnKineticReactionContainer.call AddReactantProperty(Tag: BSTR, VisibleDescription: BSTR, ConvType: UnitConversionType_enum, State: VariableStatus_enum) -> void
+    ExtnPropertyPackage.call AddComponent(ComponentPosition: long, NewComponent: Component*) -> HRESULT
+    _UserUnitOp.call AddStatusCondition(Level: StatusLevel_enum, ID: long, Description: BSTR) -> void
+    _UserUnitOp2.call AddStatusCondition(Level: StatusLevel_enum, ID: long, Description: BSTR) -> void
+    UserUnitOp.call AddStatusCondition(Level: StatusLevel_enum, ID: long, Description: BSTR) -> void
+    PropBalanceUtil.call AddScopeObjs(Tag: BSTR) -> void
+    _LumperOp1.call AddCompToKeep(ComponentNames: BSTR) -> void
+    LumperOp.call AddCompToKeep(ComponentNames: BSTR) -> void
+    BlowdownComponentMapper.call AddBlowdownComponent(blowdownComponent: BSTR) -> void
+    _BlowdownOp1.call AddTimeInterval -> void
+    _BlowdownOp2.call AddTimeInterval -> void
+    _BlowdownOp3.call AddTimeInterval -> void
+    _BlowdownOp4.call AddTimeInterval -> void
+    _BlowdownOp5.call AddTimeInterval -> void
+    BlowdownOp.call AddTimeInterval -> void
+[dispatch] BlowdownCladdingLayer : IDispatch
+    LineSizingLines.call Add(name: VARIANT [opt]) -> VARIANT
+    LineSizingCriteria.call Add(name: VARIANT [opt]) -> VARIANT
+    LineSizingLine.get AdditionalEquivalentLength -> RealVariable*
+    LineSizingLine.get AdditionalEquivalentLengthValue -> double
+    LineSizingLine.put AdditionalEquivalentLengthValue(arg0: double) -> void
+===== BackDoor（41 行，最多写 400 行）=====
+[dispatch] _BackDoor1 : IDispatch
+    _BackDoor1.get BackDoorVariable(Moniker: VARIANT) -> InternalVariableWrapper*
+[dispatch] _BackDoor2 : IDispatch
+    _BackDoor2.get BackDoorVariable(Moniker: VARIANT) -> InternalVariableWrapper*
+    _BackDoor2.get BackDoorVariables(Monikers: VARIANT) -> VARIANT
+[dispatch] _BackDoor3 : IDispatch
+    _BackDoor3.get BackDoorVariable(Moniker: VARIANT) -> InternalVariableWrapper*
+    _BackDoor3.get BackDoorVariables(Monikers: VARIANT) -> VARIANT
+    _BackDoor3.call BackDoorVariablesAndObjects(ObjectMoniker: BSTR, VariableMonikers: VARIANT, VariableTags: VARIANT, Objects: VARIANT* [out], Variables: VARIANT* [out]) -> void
+[dispatch] _BackDoor4 : IDispatch
+    _BackDoor4.get BackDoorVariable(Moniker: VARIANT) -> InternalVariableWrapper*
+    _BackDoor4.get BackDoorVariables(Monikers: VARIANT) -> VARIANT
+    _BackDoor4.call BackDoorVariablesAndObjects(ObjectMoniker: BSTR, VariableMonikers: VARIANT, VariableTags: VARIANT, Objects: VARIANT* [out], Variables: VARIANT* [out]) -> void
+    _BackDoor4.call SendBackDoorMessage(Message: BSTR) -> void
+[dispatch] _BackDoor5 : IDispatch
+    _BackDoor5.get BackDoorVariable(Moniker: VARIANT) -> InternalVariableWrapper*
+    _BackDoor5.get BackDoorVariables(Monikers: VARIANT) -> VARIANT
+    _BackDoor5.call BackDoorVariablesAndObjects(ObjectMoniker: BSTR, VariableMonikers: VARIANT, VariableTags: VARIANT, Objects: VARIANT* [out], Variables: VARIANT* [out]) -> void
+    _BackDoor5.call SendBackDoorMessage(Message: BSTR) -> void
+    _BackDoor5.get BackDoorTextVariable(Moniker: VARIANT) -> InternalVariableWrapper*
+[dispatch] _BackDoor6 : IDispatch
+    _BackDoor6.get BackDoorVariable(Moniker: VARIANT) -> InternalVariableWrapper*
+    _BackDoor6.get BackDoorVariables(Monikers: VARIANT) -> VARIANT
+    _BackDoor6.call BackDoorVariablesAndObjects(ObjectMoniker: BSTR, VariableMonikers: VARIANT, VariableTags: VARIANT, Objects: VARIANT* [out], Variables: VARIANT* [out]) -> void
+    _BackDoor6.call SendBackDoorMessage(Message: BSTR) -> void
+    _BackDoor6.get BackDoorTextVariable(Moniker: VARIANT) -> InternalVariableWrapper*
+[dispatch] _BackDoor7 : IDispatch
+    _BackDoor7.get BackDoorVariable(Moniker: VARIANT) -> InternalVariableWrapper*
+    _BackDoor7.get BackDoorVariables(Monikers: VARIANT) -> VARIANT
+    _BackDoor7.call BackDoorVariablesAndObjects(ObjectMoniker: BSTR, VariableMonikers: VARIANT, VariableTags: VARIANT, Objects: VARIANT* [out], Variables: VARIANT* [out]) -> void
+    _BackDoor7.call SendBackDoorMessage(Message: BSTR) -> void
+    _BackDoor7.get BackDoorTextVariable(Moniker: VARIANT) -> InternalVariableWrapper*
+[dispatch] BackDoor : IDispatch
+    BackDoor.get BackDoorVariable(Moniker: VARIANT) -> InternalVariableWrapper*
+    BackDoor.get BackDoorVariables(Monikers: VARIANT) -> VARIANT
+    BackDoor.call BackDoorVariablesAndObjects(ObjectMoniker: BSTR, VariableMonikers: VARIANT, VariableTags: VARIANT, Objects: VARIANT* [out], Variables: VARIANT* [out]) -> void
+    BackDoor.call SendBackDoorMessage(Message: BSTR) -> void
+    BackDoor.get BackDoorTextVariable(Moniker: VARIANT) -> InternalVariableWrapper*
+    BackDoor.get BackDoorRealVariable(Moniker: VARIANT) -> InternalVariableWrapper*
+    BackDoor.get BackDoorObjectVariable(Moniker: VARIANT) -> InternalVariableWrapper*
+    _Application.get BackDoor(obj: VARIANT [opt]) -> BackDoor*
+===== XML（122 行，最多写 400 行）=====
+    _SimulationCase.call ProvideXMLForCase(flags: XMLOptionFlags_enum) -> BSTR
+    _SimulationCase.call ProvideXMLForOperation(tagName: BSTR, flags: XMLOptionFlags_enum) -> BSTR
+    _SimulationCase.call ProvideXMLForOperations(tagNames: VARIANT, flags: XMLOptionFlags_enum) -> BSTR
+    _SimulationCase.call ApplyXML(flags: XMLOptionFlags_enum, sXML: BSTR) -> void
+    _SimulationCase.call ApplyXMLFromFile(flags: XMLOptionFlags_enum, filePath: BSTR) -> void
+    _SimulationCase.call ApplyXMLForOperation(tagName: BSTR, flags: XMLOptionFlags_enum, sXML: BSTR) -> bool
+    _SimulationCase.call ApplyXMLForOperations(tagNames: VARIANT, flags: XMLOptionFlags_enum, sXMLs: VARIANT) -> bool
+    _SimulationCase.call GetXMLForCase -> BSTR
+    _SimulationCase23.call ProvideXMLForCase(flags: XMLOptionFlags_enum) -> BSTR
+    _SimulationCase23.call ProvideXMLForOperation(tagName: BSTR, flags: XMLOptionFlags_enum) -> BSTR
+    _SimulationCase23.call ProvideXMLForOperations(tagNames: VARIANT, flags: XMLOptionFlags_enum) -> BSTR
+    _SimulationCase23.call ApplyXML(flags: XMLOptionFlags_enum, sXML: BSTR) -> void
+    _SimulationCase23.call ApplyXMLFromFile(flags: XMLOptionFlags_enum, filePath: BSTR) -> void
+    _SimulationCase23.call ApplyXMLForOperation(tagName: BSTR, flags: XMLOptionFlags_enum, sXML: BSTR) -> bool
+    _SimulationCase23.call ApplyXMLForOperations(tagNames: VARIANT, flags: XMLOptionFlags_enum, sXMLs: VARIANT) -> bool
+    _SimulationCase23.call GetXMLForCase -> BSTR
+    _SimulationCase22.call ProvideXMLForCase(flags: XMLOptionFlags_enum) -> BSTR
+    _SimulationCase22.call ProvideXMLForOperation(tagName: BSTR, flags: XMLOptionFlags_enum) -> BSTR
+    _SimulationCase22.call ProvideXMLForOperations(tagNames: VARIANT, flags: XMLOptionFlags_enum) -> BSTR
+    _SimulationCase22.call ApplyXML(flags: XMLOptionFlags_enum, sXML: BSTR) -> void
+    _SimulationCase22.call ApplyXMLFromFile(flags: XMLOptionFlags_enum, filePath: BSTR) -> void
+    _SimulationCase22.call ApplyXMLForOperation(tagName: BSTR, flags: XMLOptionFlags_enum, sXML: BSTR) -> bool
+    _SimulationCase22.call ApplyXMLForOperations(tagNames: VARIANT, flags: XMLOptionFlags_enum, sXMLs: VARIANT) -> bool
+    _SimulationCase22.call GetXMLForCase -> BSTR
+    _SimulationCase21.call ProvideXMLForCase(flags: XMLOptionFlags_enum) -> BSTR
+    _SimulationCase21.call ProvideXMLForOperation(tagName: BSTR, flags: XMLOptionFlags_enum) -> BSTR
+    _SimulationCase21.call ProvideXMLForOperations(tagNames: VARIANT, flags: XMLOptionFlags_enum) -> BSTR
+    _SimulationCase21.call ApplyXML(flags: XMLOptionFlags_enum, sXML: BSTR) -> void
+    _SimulationCase21.call ApplyXMLFromFile(flags: XMLOptionFlags_enum, filePath: BSTR) -> void
+    _SimulationCase21.call ApplyXMLForOperation(tagName: BSTR, flags: XMLOptionFlags_enum, sXML: BSTR) -> bool
+    _SimulationCase21.call ApplyXMLForOperations(tagNames: VARIANT, flags: XMLOptionFlags_enum, sXMLs: VARIANT) -> bool
+    _SimulationCase21.call GetXMLForCase -> BSTR
+    _SimulationCase20.call ProvideXMLForCase(flags: XMLOptionFlags_enum) -> BSTR
+    _SimulationCase20.call ProvideXMLForOperation(tagName: BSTR, flags: XMLOptionFlags_enum) -> BSTR
+    _SimulationCase20.call ProvideXMLForOperations(tagNames: VARIANT, flags: XMLOptionFlags_enum) -> BSTR
+    _SimulationCase20.call ApplyXML(flags: XMLOptionFlags_enum, sXML: BSTR) -> void
+    _SimulationCase20.call ApplyXMLFromFile(flags: XMLOptionFlags_enum, filePath: BSTR) -> void
+    _SimulationCase20.call ApplyXMLForOperation(tagName: BSTR, flags: XMLOptionFlags_enum, sXML: BSTR) -> bool
+    _SimulationCase20.call ApplyXMLForOperations(tagNames: VARIANT, flags: XMLOptionFlags_enum, sXMLs: VARIANT) -> bool
+    _SimulationCase20.call GetXMLForCase -> BSTR
+    _SimulationCase19.call ProvideXMLForCase(flags: XMLOptionFlags_enum) -> BSTR
+    _SimulationCase19.call ProvideXMLForOperation(tagName: BSTR, flags: XMLOptionFlags_enum) -> BSTR
+    _SimulationCase19.call ProvideXMLForOperations(tagNames: VARIANT, flags: XMLOptionFlags_enum) -> BSTR
+    _SimulationCase19.call ApplyXML(flags: XMLOptionFlags_enum, sXML: BSTR) -> void
+    _SimulationCase19.call ApplyXMLFromFile(flags: XMLOptionFlags_enum, filePath: BSTR) -> void
+    _SimulationCase19.call ApplyXMLForOperation(tagName: BSTR, flags: XMLOptionFlags_enum, sXML: BSTR) -> bool
+    _SimulationCase19.call ApplyXMLForOperations(tagNames: VARIANT, flags: XMLOptionFlags_enum, sXMLs: VARIANT) -> bool
+    _SimulationCase18.call ProvideXMLForCase(flags: XMLOptionFlags_enum) -> BSTR
+    _SimulationCase18.call ProvideXMLForOperation(tagName: BSTR, flags: XMLOptionFlags_enum) -> BSTR
+    _SimulationCase18.call ProvideXMLForOperations(tagNames: VARIANT, flags: XMLOptionFlags_enum) -> BSTR
+    _SimulationCase18.call ApplyXML(flags: XMLOptionFlags_enum, sXML: BSTR) -> void
+    _SimulationCase18.call ApplyXMLFromFile(flags: XMLOptionFlags_enum, filePath: BSTR) -> void
+    _SimulationCase18.call ApplyXMLForOperation(tagName: BSTR, flags: XMLOptionFlags_enum, sXML: BSTR) -> bool
+    _SimulationCase18.call ApplyXMLForOperations(tagNames: VARIANT, flags: XMLOptionFlags_enum, sXMLs: VARIANT) -> bool
+    _SimulationCase17.call ProvideXMLForCase(flags: XMLOptionFlags_enum) -> BSTR
+    _SimulationCase17.call ProvideXMLForOperation(tagName: BSTR, flags: XMLOptionFlags_enum) -> BSTR
+    _SimulationCase17.call ProvideXMLForOperations(tagNames: VARIANT, flags: XMLOptionFlags_enum) -> BSTR
+    _SimulationCase17.call ApplyXML(flags: XMLOptionFlags_enum, sXML: BSTR) -> void
+    _SimulationCase17.call ApplyXMLFromFile(flags: XMLOptionFlags_enum, filePath: BSTR) -> void
+    _SimulationCase17.call ApplyXMLForOperation(tagName: BSTR, flags: XMLOptionFlags_enum, sXML: BSTR) -> bool
+    _SimulationCase17.call ApplyXMLForOperations(tagNames: VARIANT, flags: XMLOptionFlags_enum, sXMLs: VARIANT) -> bool
+    _SimulationCase16.call ProvideXMLForCase(flags: XMLOptionFlags_enum) -> BSTR
+    _SimulationCase16.call ProvideXMLForOperation(tagName: BSTR, flags: XMLOptionFlags_enum) -> BSTR
+    _SimulationCase16.call ProvideXMLForOperations(tagNames: VARIANT, flags: XMLOptionFlags_enum) -> BSTR
+    _SimulationCase16.call ApplyXML(flags: XMLOptionFlags_enum, sXML: BSTR) -> void
+    _SimulationCase16.call ApplyXMLFromFile(flags: XMLOptionFlags_enum, filePath: BSTR) -> void
+    _SimulationCase16.call ApplyXMLForOperation(tagName: BSTR, flags: XMLOptionFlags_enum, sXML: BSTR) -> bool
+    _SimulationCase16.call ApplyXMLForOperations(tagNames: VARIANT, flags: XMLOptionFlags_enum, sXMLs: VARIANT) -> bool
+    _SimulationCase15.call ProvideXMLForCase(flags: XMLOptionFlags_enum) -> BSTR
+    _SimulationCase15.call ProvideXMLForOperation(tagName: BSTR, flags: XMLOptionFlags_enum) -> BSTR
+    _SimulationCase15.call ProvideXMLForOperations(tagNames: VARIANT, flags: XMLOptionFlags_enum) -> BSTR
+    _SimulationCase15.call ApplyXML(flags: XMLOptionFlags_enum, sXML: BSTR) -> void
+    _SimulationCase15.call ApplyXMLFromFile(flags: XMLOptionFlags_enum, filePath: BSTR) -> void
+    _SimulationCase15.call ApplyXMLForOperation(tagName: BSTR, flags: XMLOptionFlags_enum, sXML: BSTR) -> bool
+    _SimulationCase15.call ApplyXMLForOperations(tagNames: VARIANT, flags: XMLOptionFlags_enum, sXMLs: VARIANT) -> bool
+    _SimulationCase14.call ProvideXMLForCase(flags: XMLOptionFlags_enum) -> BSTR
+    _SimulationCase14.call ProvideXMLForOperation(tagName: BSTR, flags: XMLOptionFlags_enum) -> BSTR
+    _SimulationCase14.call ProvideXMLForOperations(tagNames: VARIANT, flags: XMLOptionFlags_enum) -> BSTR
+    _SimulationCase14.call ApplyXML(flags: XMLOptionFlags_enum, sXML: BSTR) -> void
+    _SimulationCase14.call ApplyXMLFromFile(flags: XMLOptionFlags_enum, filePath: BSTR) -> void
+    _SimulationCase14.call ApplyXMLForOperation(tagName: BSTR, flags: XMLOptionFlags_enum, sXML: BSTR) -> bool
+    _SimulationCase14.call ApplyXMLForOperations(tagNames: VARIANT, flags: XMLOptionFlags_enum, sXMLs: VARIANT) -> bool
+    _SimulationCase13.call ProvideXMLForCase(flags: XMLOptionFlags_enum) -> BSTR
+    _SimulationCase13.call ProvideXMLForOperation(tagName: BSTR, flags: XMLOptionFlags_enum) -> BSTR
+    _SimulationCase13.call ProvideXMLForOperations(tagNames: VARIANT, flags: XMLOptionFlags_enum) -> BSTR
+    _SimulationCase13.call ApplyXML(flags: XMLOptionFlags_enum, sXML: BSTR) -> void
+    _SimulationCase13.call ApplyXMLFromFile(flags: XMLOptionFlags_enum, filePath: BSTR) -> void
+    _SimulationCase13.call ApplyXMLForOperation(tagName: BSTR, flags: XMLOptionFlags_enum, sXML: BSTR) -> bool
+    _SimulationCase13.call ApplyXMLForOperations(tagNames: VARIANT, flags: XMLOptionFlags_enum, sXMLs: VARIANT) -> bool
+    _SimulationCase12.call ProvideXMLForCase(flags: XMLOptionFlags_enum) -> BSTR
+    _SimulationCase12.call ProvideXMLForOperation(tagName: BSTR, flags: XMLOptionFlags_enum) -> BSTR
+    _SimulationCase12.call ProvideXMLForOperations(tagNames: VARIANT, flags: XMLOptionFlags_enum) -> BSTR
+    _SimulationCase12.call ApplyXML(flags: XMLOptionFlags_enum, sXML: BSTR) -> void
+    _SimulationCase12.call ApplyXMLFromFile(flags: XMLOptionFlags_enum, filePath: BSTR) -> void
+    _SimulationCase12.call ApplyXMLForOperation(tagName: BSTR, flags: XMLOptionFlags_enum, sXML: BSTR) -> bool
+    _SimulationCase12.call ApplyXMLForOperations(tagNames: VARIANT, flags: XMLOptionFlags_enum, sXMLs: VARIANT) -> bool
+    _SimulationCase11.call ProvideXMLForCase(flags: XMLOptionFlags_enum) -> BSTR
+    _SimulationCase11.call ProvideXMLForOperation(tagName: BSTR, flags: XMLOptionFlags_enum) -> BSTR
+    _SimulationCase11.call ProvideXMLForOperations(tagNames: VARIANT, flags: XMLOptionFlags_enum) -> BSTR
+    _SimulationCase11.call ApplyXML(flags: XMLOptionFlags_enum, sXML: BSTR) -> void
+    _SimulationCase11.call ApplyXMLFromFile(flags: XMLOptionFlags_enum, filePath: BSTR) -> void
+    _SimulationCase11.call ApplyXMLForOperation(tagName: BSTR, flags: XMLOptionFlags_enum, sXML: BSTR) -> bool
+    _SimulationCase11.call ApplyXMLForOperations(tagNames: VARIANT, flags: XMLOptionFlags_enum, sXMLs: VARIANT) -> bool
+    _SimulationCase10.call ProvideXMLForCase(flags: XMLOptionFlags_enum) -> BSTR
+    _SimulationCase10.call ProvideXMLForOperation(tagName: BSTR, flags: XMLOptionFlags_enum) -> BSTR
+    _SimulationCase10.call ProvideXMLForOperations(tagNames: VARIANT, flags: XMLOptionFlags_enum) -> BSTR
+    _SimulationCase10.call ApplyXML(flags: XMLOptionFlags_enum, sXML: BSTR) -> void
+    _SimulationCase10.call ApplyXMLFromFile(flags: XMLOptionFlags_enum, filePath: BSTR) -> void
+    _SimulationCase9.call ProvideXMLForCase(flags: XMLOptionFlags_enum) -> BSTR
+    _SimulationCase9.call ProvideXMLForOperation(tagName: BSTR, flags: XMLOptionFlags_enum) -> BSTR
+    _SimulationCase9.call ProvideXMLForOperations(tagNames: VARIANT, flags: XMLOptionFlags_enum) -> BSTR
+    _SimulationCase9.call ApplyXML(flags: XMLOptionFlags_enum, sXML: BSTR) -> void
+    _SimulationCase9.call ApplyXMLFromFile(flags: XMLOptionFlags_enum, filePath: BSTR) -> void
+    ProcessStream.call SetStreamAssayFromXML(sXMLFile: BSTR) -> bool
+    _ProcessStream10.call SetStreamAssayFromXML(sXMLFile: BSTR) -> bool
+    _ProcessStream9.call SetStreamAssayFromXML(sXMLFile: BSTR) -> bool
+    _ProcessStream8.call SetStreamAssayFromXML(sXMLFile: BSTR) -> bool
+    _ProcessStream7.call SetStreamAssayFromXML(sXMLFile: BSTR) -> bool
+    _ProcessStream6.call SetStreamAssayFromXML(sXMLFile: BSTR) -> bool
+    _ProcessStream5.call SetStreamAssayFromXML(sXMLFile: BSTR) -> bool
+    _ProcessStream4.call SetStreamAssayFromXML(sXMLFile: BSTR) -> bool
+[enum] XMLOptionFlags_enum
+===== Script（113 行，最多写 400 行）=====
+    _HVariable.get Description -> BSTR
+    _HFlexVariable.get Description -> BSTR
+    RealVariable.get Description -> BSTR
+    RealFlexVariable.get Description -> BSTR
+    TextVariable.get Description -> BSTR
+    TextFlexVariable.get Description -> BSTR
+    ObjectVariable.get Description -> BSTR
+    ObjectFlexVariable.get Description -> BSTR
+    _InternalRealVariable.get Description -> BSTR
+    InternalRealVariable.get Description -> BSTR
+    _InternalRealFlexVariable1.get Description -> BSTR
+    _InternalRealFlexVariable2.get Description -> BSTR
+    _InternalRealFlexVariable3.get Description -> BSTR
+    InternalRealFlexVariable.get Description -> BSTR
+    InternalTextVariable.get Description -> BSTR
+    _InternalTextFlexVariable1.get Description -> BSTR
+    InternalTextFlexVariable.get Description -> BSTR
+    InternalObjectVariable.get Description -> BSTR
+    _InternalObjectFlexVariable1.get Description -> BSTR
+    InternalObjectFlexVariable.get Description -> BSTR
+    InternalMessageVariable.get Description -> BSTR
+    InternalMessageVariable2.get Description -> BSTR
+    _IDocument.get Description -> TextVariable*
+    _VarDefinition.get Description -> BSTR
+    _VarDefinition.put Description(arg0: BSTR) -> void
+    VarDefinition.get Description -> BSTR
+    VarDefinition.put Description(arg0: BSTR) -> void
+    _TwoDimensionalPlotOld2.put DefaultFlyByDescription(arg0: BSTR) -> void
+    TwoDimensionalPlot.put DefaultFlyByDescription(arg0: BSTR) -> void
+    PlotInteraction.call FlyByDescriptionEvent(PlotName: BSTR, LocX: int, LocY: int, Value: BSTR* [out], result: bool* [out]) -> void
+    _SimulationCase.get Description -> TextVariable*
+    _SimulationCase23.get Description -> TextVariable*
+    _SimulationCase22.get Description -> TextVariable*
+    _SimulationCase21.get Description -> TextVariable*
+    _SimulationCase20.get Description -> TextVariable*
+    _SimulationCase19.get Description -> TextVariable*
+    _SimulationCase18.get Description -> TextVariable*
+    _SimulationCase17.get Description -> TextVariable*
+    _SimulationCase16.get Description -> TextVariable*
+    _SimulationCase15.get Description -> TextVariable*
+    _SimulationCase14.get Description -> TextVariable*
+    _SimulationCase13.get Description -> TextVariable*
+    _SimulationCase12.get Description -> TextVariable*
+    _SimulationCase11.get Description -> TextVariable*
+    _SimulationCase10.get Description -> TextVariable*
+    _SimulationCase9.get Description -> TextVariable*
+    _SimulationCase8.get Description -> TextVariable*
+    _SimulationCase7.get Description -> TextVariable*
+    _SimulationCase5.get Description -> TextVariable*
+    __SimulationCase.get Description -> TextVariable*
+    _SimulationCase4.get Description -> TextVariable*
+    _SimulationCase3.get Description -> TextVariable*
+    _SimulationCase2.get Description -> TextVariable*
+    _SimulationCase1.get Description -> TextVariable*
+    ProcessStream.get StreamDescription -> BSTR
+    ProcessStream.put StreamDescription(arg0: BSTR) -> void
+    _ProcessStream10.get StreamDescription -> BSTR
+    _ProcessStream10.put StreamDescription(arg0: BSTR) -> void
+    _ProcessStream9.get StreamDescription -> BSTR
+    _ProcessStream9.put StreamDescription(arg0: BSTR) -> void
+    _ProcessStream8.get StreamDescription -> BSTR
+    _ProcessStream8.put StreamDescription(arg0: BSTR) -> void
+    _ProcessStream7.get StreamDescription -> BSTR
+    _ProcessStream7.put StreamDescription(arg0: BSTR) -> void
+    _ProcessStream6.get StreamDescription -> BSTR
+    _ProcessStream6.put StreamDescription(arg0: BSTR) -> void
+    PublishedVariable.get VariableDescription -> BSTR
+    _CompressOp3.get CylinderTypeDescription -> BSTR
+    CompressOp.get CylinderTypeDescription -> BSTR
+    LogicExpressionVariable.get Description -> BSTR
+[dispatch] PlayScriptAction : IDispatch
+    PlayScriptAction.get ScriptFile -> BSTR
+    PlayScriptAction.put ScriptFile(arg0: BSTR) -> void
+    PlayScriptAction.call PlayScriptFile -> void
+    _SimulationCase6.get Description -> TextVariable*
+    _Application1.call PlayScriptRelativeTo(RelativeTo: IDispatch, ScriptFileName: BSTR) -> void
+    _Application1.call PlayScript(ScriptFileName: BSTR) -> void
+    _OLD12_Application.call PlayScriptRelativeTo(RelativeTo: IDispatch, ScriptFileName: BSTR) -> void
+    _OLD12_Application.call PlayScript(ScriptFileName: BSTR) -> void
+    _Application2.call PlayScriptRelativeTo(RelativeTo: IDispatch, ScriptFileName: BSTR) -> void
+    _Application2.call PlayScript(ScriptFileName: BSTR) -> void
+    _Application3.call PlayScriptRelativeTo(RelativeTo: IDispatch, ScriptFileName: BSTR) -> void
+    _Application3.call PlayScript(ScriptFileName: BSTR) -> void
+    _Application4.call PlayScriptRelativeTo(RelativeTo: IDispatch, ScriptFileName: BSTR) -> void
+    _Application4.call PlayScript(ScriptFileName: BSTR) -> void
+    _Application5.call PlayScriptRelativeTo(RelativeTo: IDispatch, ScriptFileName: BSTR) -> void
+    _Application5.call PlayScript(ScriptFileName: BSTR) -> void
+    _Application6.call PlayScriptRelativeTo(RelativeTo: IDispatch, ScriptFileName: BSTR) -> void
+    _Application6.call PlayScript(ScriptFileName: BSTR) -> void
+    _Application7.call PlayScriptRelativeTo(RelativeTo: IDispatch, ScriptFileName: BSTR) -> void
+    _Application7.call PlayScript(ScriptFileName: BSTR) -> void
+    _Application7.call PlayScriptRelativeToWithPassword(RelativeTo: IDispatch, ScriptFileName: BSTR, password: BSTR) -> void
+    _Application7.call PlayScriptWithPassword(ScriptFileName: BSTR, password: BSTR) -> void
+    _Application8.call PlayScriptRelativeTo(RelativeTo: IDispatch, ScriptFileName: BSTR) -> void
+    _Application8.call PlayScript(ScriptFileName: BSTR) -> void
+    _Application8.call PlayScriptRelativeToWithPassword(RelativeTo: IDispatch, ScriptFileName: BSTR, password: BSTR) -> void
+    _Application8.call PlayScriptWithPassword(ScriptFileName: BSTR, password: BSTR) -> void
+    _Application9.call PlayScriptRelativeTo(RelativeTo: IDispatch, ScriptFileName: BSTR) -> void
+    _Application9.call PlayScript(ScriptFileName: BSTR) -> void
+    _Application9.call PlayScriptRelativeToWithPassword(RelativeTo: IDispatch, ScriptFileName: BSTR, password: BSTR) -> void
+    _Application9.call PlayScriptWithPassword(ScriptFileName: BSTR, password: BSTR) -> void
+    _Application.call PlayScriptRelativeTo(RelativeTo: IDispatch, ScriptFileName: BSTR) -> void
+    _Application.call PlayScript(ScriptFileName: BSTR) -> void
+    _Application.call PlayScriptRelativeToWithPassword(RelativeTo: IDispatch, ScriptFileName: BSTR, password: BSTR) -> void
+    _Application.call PlayScriptWithPassword(ScriptFileName: BSTR, password: BSTR) -> void
+    CauseAndEffect.get InputDescription -> TextFlexVariable*
+    CauseAndEffect.get OutputDescription -> TextFlexVariable*
+    ExtnMixingRule.call GetMixingRuleDescription(PetroleumProperty: PetroleumPropertyType_enum) -> BSTR
+    _PipeSegSegment1.get Description -> BSTR
+    PipeSegSegment.get Description -> BSTR
+    ACMOp.call ExecuteOOMFScriptCommand(CommandText: BSTR) -> void
+    LineSizingCriterion.get Description -> BSTR
+    LineSizingCriterion.put Description(arg0: BSTR) -> void

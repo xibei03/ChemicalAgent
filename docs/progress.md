@@ -4,9 +4,9 @@
 
 ## 当前状态
 
-- 阶段：0A 进行中。首次开始于 2026-10-03 09:50（UTC+8），当时命令在别的机器上执行，在任务 1 暂停；10:25 在装有 HYSYS 的工作站（主机名 myWin10VM）上恢复，因用量上限在任务 5（E1）中途停止。**第 3 个会话于 2026-10-08 09:50（UTC+8）接手。**任务 1 至 3、5（E1，共 9 次运行）已完成，任务 6（类型库导出）已运行、台账整理中；任务 4（等 D1）、7 至 11 未开始。当前没有残留的 HYSYS 进程。
+- 阶段：0A 进行中。首次开始于 2026-10-03 09:50（UTC+8），当时命令在别的机器上执行，在任务 1 暂停；10:25 在装有 HYSYS 的工作站（主机名 myWin10VM）上恢复，因用量上限在任务 5（E1）中途停止。**第 3 个会话于 2026-10-08 09:50（UTC+8）接手。**任务 1 至 3、5（E1，共 9 次运行）、6（类型库导出）已完成；任务 4（等 D1）、7 至 11 未开始。当前没有残留的 HYSYS 进程。
 - 最近通过的闸门：无（质量工具 2026-10-08 复核全绿：ruff format/check、mypy src、pytest 13 passed；本阶段不改 `src/`）
-- 最近一次更新：2026-10-08 11:00
+- 最近一次更新：2026-10-08 11:25
 - 时间记法：本机时钟是 UTC，进度文件里的时间一律换算成 UTC+8（加 8 小时）。
 - 推送状态：本地 main 已合并远端的初始提交，并已推送（`ea240ed..ff56cdb`）。推送方式见"环境事实"的"GitHub 凭据"。
 
@@ -42,7 +42,8 @@
 | 0A | 1 确认能执行 Windows 程序 | 无代码改动 | `python --version` 得 3.12.4；`platform.architecture()` 得 64bit、WindowsPE；`HKLM\SOFTWARE\AspenTech` 存在，`C:\Program Files\AspenTech\Aspen HYSYS V15.0` 存在 |
 | 0A | 2 仓库和工具 | fbfc7bf | `ruff check .` 通过；`ruff format --check .` 3 个文件已格式化；`mypy src` 无问题；`pytest` 13 passed；`PYTHONUTF8` 的实测见"环境事实" |
 | 0A | 3 建台账 | 029bbe7 | `docs/HYSYS_INTEGRATION.md` 有 10 个固定节名，接口事实表有 H1 至 H26 共 26 行，状态均为"未测试" |
-| 0A | 5 连接 HYSYS（E1），run1 至 run9，已完成 | 2427c43（run1）、4904693（run2）、本次提交（run3 至 run9、`_common.py`） | run1：`Dispatch("HYSYS.Application")` 冷启动 35.2 秒，`Version` 为 `Aspen HYSYS Version 15 (41.0)`，进程 `AspenHysys.exe`，窗口所属进程与 `tasklist` 一致。run2：已有实例被复用（0.0 秒），`Quit()` 后 3.5 秒内消失。run3、run5：`NewInstance` 每次新开进程，`Quit()` 只结束自己（run5 里 7280 退出，14024 继续运行）。run6：丢掉 COM 引用并 `CoUninitialize()` 后 60 秒内实例仍在。run7：`taskkill /PID /T /F` 1.6 秒内结束。run8、run9：`EnsureDispatch` 返回 `gen_py` 的 `_Application`，属性名区分大小写（`app.Name` 报错，类型库里是 `name`），包装生成后 `Dispatch` 也返回同一个类。H1 升为已确认，新增 H27、H28。每次运行后 `tasklist` 无残留进程 |
+| 0A | 5 连接 HYSYS（E1），run1 至 run9，已完成 | 2427c43（run1）、4904693（run2）、58c29f4（run3 至 run9、`_common.py`） | run1：`Dispatch("HYSYS.Application")` 冷启动 35.2 秒，`Version` 为 `Aspen HYSYS Version 15 (41.0)`，进程 `AspenHysys.exe`，窗口所属进程与 `tasklist` 一致。run2：已有实例被复用（0.0 秒），`Quit()` 后 3.5 秒内消失。run3、run5：`NewInstance` 每次新开进程，`Quit()` 只结束自己（run5 里 7280 退出，14024 继续运行）。run6：丢掉 COM 引用并 `CoUninitialize()` 后 60 秒内实例仍在。run7：`taskkill /PID /T /F` 1.6 秒内结束。run8、run9：`EnsureDispatch` 返回 `gen_py` 的 `_Application`，属性名区分大小写（`app.Name` 报错，类型库里是 `name`），包装生成后 `Dispatch` 也返回同一个类。H1 升为已确认，新增 H27、H28。每次运行后 `tasklist` 无残留进程 |
+| 0A | 6 导出类型库（`typelib_dump.py`） | 本次提交 | `.venv\Scripts\python.exe spikes/typelib_dump.py` 成功运行：类型库 1140 个类型（726 个 dispatch 接口、377 个枚举、22 个组件类）；42 个接口有 `Add`，多数是 `Add(name: VARIANT[opt], Type: VARIANT[opt])`；`EnsureModule` 2 至 4 秒生成包装（758 个类），`ReactionSets`、`Reactions`、`Operations`、`FluidPackages`、`SimulationCases` 的包装类都有 `Add`。输出 5 个文件，最大 629 KB，都小于 1 MB。三种反应器是 dispatch 接口 `ConversionReactor`、`EquilibriumReactor`、`GibbsReactor`；XML、`PlayScript`、`BackDoor` 三条降级通道在类型库里都有。结论都只在类型库层面，没有运行验证 |
 | 0A | 只读勘查（计划模式下完成，无脚本） | 2427c43 | 注册表 ProgID、`hysys.tlb` 的接口名与集合的 `Add` 签名、安装目录里的 `hysys.hh`、定义文件、帮助文件，写入台账 L0 和"创建反应的线索"初稿（均未运行验证） |
 
 ## 进行中
@@ -56,7 +57,7 @@
 | `docs/HYSYS_INTEGRATION.md` | 台账：10 个固定节名，H1–H28 逐项更新，每个探针一条日志 | 约 300 | 持续更新 |
 | `spikes/_common.py` | 探针共用：UTF-8 输出、边打印边落盘的日志、HYSYS 进程和窗口检测、看门狗 | 约 150 | 已完成 |
 | `spikes/e1_connect.py` | 查注册表 ProgID，取 Application，打印版本和进程号，演示退出与保留 | 约 150 | 已完成 |
-| `spikes/typelib_dump.py` | 导出类型库：接口和成员、枚举、关键词命中、反应相关接口的完整签名、早绑定包装检查 | 约 270 | 任务 6 |
+| `spikes/typelib_dump.py` | 导出类型库：接口和成员、枚举、关键词命中、反应相关接口的完整签名、早绑定包装检查 | 约 270 | 已完成 |
 | `spikes/e0_llm_ping.py` | 最小 LLM 请求，密钥只读环境变量（等用户给出供应商） | 约 40 | 挂起（D1） |
 | `spikes/find_ref_case.py` | 任务 7：把示例 Case 复制到临时目录，用 COM 打开，列单元操作类型名 | 约 80 | 未开始 |
 | `spikes/e2_read_write.py` | 流体包、物流读写、求解器开关、已知性、空值哨兵 | 约 160 | 未开始 |
@@ -66,10 +67,9 @@
 
 先重读 `CLAUDE.md`、本文件和 `docs/prompts/phase-0a.md`，然后按顺序做本阶段剩下的工作：
 
-1. **任务 6 收尾。** `typelib_dump.py` 已运行（`typelib_*.txt` 在 `spikes/out/`）；把结果整理进台账"对象模型速查"和"创建反应的线索"，提交。
-2. **任务 7。** 把候选示例复制到临时目录再用 COM 打开，列单元操作类型名，最多 20 分钟（候选见台账 L0）。凑不齐三种反应器就把阶段提示词里的清单发给用户，同时继续任务 8。
-3. **任务 8（E2）、任务 9（E3）**，然后任务 10（帮助文件，时间不够可推后）、任务 11（收尾）。
-4. **任务 4（E0）** 等用户给出 LLM 供应商、模型和密钥所在的环境变量（D1）；用户说"需要密钥的先跳过"，所以现在不做，需要时再向用户要。
+1. **任务 7。** 把候选示例复制到临时目录再用 COM 打开，列单元操作类型名，最多 20 分钟（候选见台账 L0）。凑不齐三种反应器就把阶段提示词里的清单发给用户，同时继续任务 8。
+2. **任务 8（E2）、任务 9（E3）**，然后任务 10（帮助文件，时间不够可推后）、任务 11（收尾）。E3 要回答：`Operations.Add` 的类型字符串、`Item()` 取出的对象要不要 `CastTo`、`ActiveReactions` 里放什么、出口温度规定在哪里、`GetXMLForCase()` 的输出含不含反应。
+3. **任务 4（E0）** 等用户给出 LLM 供应商、模型和密钥所在的环境变量（D1）；用户说"需要密钥的先跳过"，所以现在不做，需要时再向用户要。
 
 本阶段沿用的约定：只结束本脚本启动的实例，对已有实例只在没有打开任何 Case 时才退出；示例 Case 先复制到临时目录再打开，不保存回原位置，也不提交 Aspen 的示例文件；用户在 HYSYS 界面里手工建参考 Case 时，探针用 `NewInstance` 另开实例，不碰用户的窗口；COM 调用卡住超过一分钟，先截屏看有没有弹窗（`_common.watch` 会自动打印窗口），再请用户看一眼。每个任务提交后用一次性凭据助手推送（见"环境事实"）。
 
@@ -112,6 +112,8 @@
 | 2026-10-03 | 会话在 E1 之后因用量上限中断 | run1 按 `--exit keep` 留下了 HYSYS 实例；确认它没有打开 Case 后，run2 用 `--exit quit` 退出了它 | 无残留进程。剩余工作见"下一步" |
 | 2026-10-08 | 用户的交接说明与仓库现状不符：说"没有 Git 仓库和台账、进度显示尚未开始"，实际已有 4 个提交、台账和 E1 的两次运行 | 核对 `git log`、台账、`spikes/out/`，并对照 `git diff` 发现工作区的 `progress.md`、`.gitignore` 是旧版 | 以已提交的版本为准，复用已完成的任务（见决策日志） |
 | 2026-10-08 | 首次推送失败：`fatal: could not read Username for 'https://github.com'` | 先用 `git ls-remote` 确认远端是公开的、只有一个提交；`git credential-manager github list`、`cmdkey /list`、`gh auth status` 都没有凭据；再合并远端提交；用非交互模式推送，得到上面的错误；又在后台发起一次允许交互的推送，等用户在 VM 桌面上授权 | 认证拦截，没有任何内容到达远端。本地提交全部保留。需要用户登录一次（D10） |
+| 2026-10-08 | 类型库完整导出 2.0 MB，超过单个文件 1 MB 的提交上限（任务 6） | 先把 533 个接口里重复的基础成员抽成公共组，仍有 1.6 MB；最后改成成员文件只写成员名（629 KB），完整签名只写反应相关的 111 个接口（212 KB）和关键词命中（74 KB） | 见台账 L4。想看某个接口的完整签名，查 `typelib_reaction_api.txt`；不在里面的，重新运行 `typelib_dump.py` 改一下 `RELEVANT_INTERFACE` |
+| 2026-10-08 | 看检索结果时漏看了降级通道（任务 6） | 为了缩短显示，按"不以下划线开头"过滤命中行，把 `_SimulationCase`、`_Application` 上的 XML、`PlayScript` 全过滤掉了，一度以为 XML 路线只有 `SetStreamAssayFromXML` | 用不过滤的结果核对后，发现 `GetXMLForCase`、`ApplyXML`、`PlayScript`、`BackDoor` 都在，写进了台账 H24、H26 和"创建反应的线索" |
 
 ## 与计划的偏差
 
