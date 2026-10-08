@@ -1,0 +1,20 @@
+新实例的进程号: 1676
+== Q1 先写反应相，再写固定 K ==
+  新建之后 {'ReactionPhase': 0, 'Basis': 1, 'LnKSource': 2, 'AutoDetect': True}
+  写 ReactionPhase = 0 之后 {'ReactionPhase': 0, 'Basis': 1, 'LnKSource': 2, 'AutoDetect': True}
+  写 Basis = 5 之后 {'ReactionPhase': 5, 'Basis': 5, 'LnKSource': 2, 'AutoDetect': True}
+  写 LnKSource = 3 之后 {'ReactionPhase': 5, 'Basis': 5, 'LnKSource': 3, 'AutoDetect': False}
+  写 K = 4.0 之后 {'ReactionPhase': 5, 'Basis': 5, 'LnKSource': 3, 'AutoDetect': False}，K 读回 4.0
+== Q2 先写固定 K，最后写反应相 ==
+  写完固定 K 之后 {'ReactionPhase': 5, 'Basis': 5, 'LnKSource': 3, 'AutoDetect': False}，K 读回 4.0
+  最后写 ReactionPhase = 0 之后 {'ReactionPhase': 0, 'Basis': 5, 'LnKSource': 3, 'AutoDetect': False}，K 读回 4.0
+== Q3 Gibbs 自由能来源的反应，写反应相 0 ==
+  新建之后 {'ReactionPhase': 0, 'Basis': 1, 'LnKSource': 2, 'AutoDetect': True}
+  写 ReactionPhase = 0 之后 {'ReactionPhase': 0, 'Basis': 1, 'LnKSource': 2, 'AutoDetect': True}
+== Q4 平衡反应器求解 ==
+  流程图状态 {'OK': 5, 'NotSolved': 0, 'Warning': 0, 'UnderSpecified': 0, 'Error': 0}
+  出口摩尔分率 {'CO': 0.1667, 'H2O': 0.1667, 'CO2': 0.3333, 'Hydrogen': 0.3333}
+  与手算解（1/6、1/6、1/3、1/3）的最大偏差 0.00000（要求 ≤ 0.001）
+  Case 已另存为 C:\Users\azureuser\Desktop\ChemicalAgent\spikes\out\e15_fixed_k_order_run1.hsc
+  实例 1676 已结束
+结论: Q4 通过
