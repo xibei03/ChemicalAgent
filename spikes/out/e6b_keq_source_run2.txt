@@ -1,0 +1,156 @@
+新实例的进程号: 7524
+Basis 已建好：['Methane', 'H2O', 'CO', 'CO2', 'Hydrogen', 'Toluene', 'Benzene', 'p-Xylene']
+CanEndBasisChange=True
+  Reactants.Add('Methane') -> <win32com.gen_py.HYSYS 15.0 Type Library.Reactant instance at 0x1363873916560>
+    Methane.StoichiometricCoefficientValue = -1.0 -> None
+  Reactants.Add('H2O') -> <win32com.gen_py.HYSYS 15.0 Type Library.Reactant instance at 0x1363906097712>
+    H2O.StoichiometricCoefficientValue = -1.0 -> None
+  Reactants.Add('CO') -> <win32com.gen_py.HYSYS 15.0 Type Library.Reactant instance at 0x1363873916560>
+    CO.StoichiometricCoefficientValue = 1.0 -> None
+  Reactants.Add('Hydrogen') -> <win32com.gen_py.HYSYS 15.0 Type Library.Reactant instance at 0x1363906097712>
+    Hydrogen.StoichiometricCoefficientValue = 3.0 -> None
+  Reactants.Names -> ['Methane', 'H2O', 'CO', 'Hydrogen']
+  ReactantStoichCoefValue -> (-1.0, -1.0, 1.0, 3.0)
+== 默认状态 ==
+  默认.LnKSource -> 2
+  默认.EquilibriumConstant -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  默认.LnKEquationAParameter -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  默认.LnKEquationBParameter -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  默认.LnKEquationCParameter -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  默认.LnKEquationDParameter -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  默认.ActivateKTable -> False
+  默认.AutoDetect -> True
+  默认.Basis -> 1
+  默认.KEqValue -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  默认.KCalculatedValue -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  默认.HeatOfReactionValue -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  默认.MinTemperatureValue -> -273.15
+  默认.MaxTemperatureValue -> 3000.0
+  默认.THighValue -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  默认.TLowValue -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+== Q1、Q2 逐个写 LnKSource ==
+  LnKSource = 0 -> None
+    读回 LnKSource -> 2
+    [写 0 之后].LnKSource -> 2
+    [写 0 之后].EquilibriumConstant -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    [写 0 之后].LnKEquationAParameter -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    [写 0 之后].LnKEquationBParameter -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    [写 0 之后].LnKEquationCParameter -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    [写 0 之后].LnKEquationDParameter -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    [写 0 之后].ActivateKTable -> False
+    [写 0 之后].AutoDetect -> True
+    [写 0 之后].Basis -> 1
+    [写 0 之后].KEqValue -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    [写 0 之后].KCalculatedValue -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    [写 0 之后].HeatOfReactionValue -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    [写 0 之后].MinTemperatureValue -> -273.15
+    [写 0 之后].MaxTemperatureValue -> 3000.0
+    [写 0 之后].THighValue -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    [写 0 之后].TLowValue -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  LnKSource = 1 -> None
+    读回 LnKSource -> 1
+    [写 1 之后].LnKSource -> 1
+    [写 1 之后].EquilibriumConstant -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    [写 1 之后].LnKEquationAParameter -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    [写 1 之后].LnKEquationBParameter -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    [写 1 之后].LnKEquationCParameter -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    [写 1 之后].LnKEquationDParameter -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    [写 1 之后].ActivateKTable -> False
+    [写 1 之后].AutoDetect -> False
+    [写 1 之后].Basis -> 1
+    [写 1 之后].KEqValue -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    [写 1 之后].KCalculatedValue -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    [写 1 之后].HeatOfReactionValue -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    [写 1 之后].MinTemperatureValue -> -273.15
+    [写 1 之后].MaxTemperatureValue -> 3000.0
+    [写 1 之后].THighValue -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    [写 1 之后].TLowValue -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  LnKSource = 2 -> None
+    读回 LnKSource -> 2
+    [写 2 之后].LnKSource -> 2
+    [写 2 之后].EquilibriumConstant -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    [写 2 之后].LnKEquationAParameter -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    [写 2 之后].LnKEquationBParameter -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    [写 2 之后].LnKEquationCParameter -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    [写 2 之后].LnKEquationDParameter -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    [写 2 之后].ActivateKTable -> False
+    [写 2 之后].AutoDetect -> False
+    [写 2 之后].Basis -> 1
+    [写 2 之后].KEqValue -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    [写 2 之后].KCalculatedValue -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    [写 2 之后].HeatOfReactionValue -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    [写 2 之后].MinTemperatureValue -> -273.15
+    [写 2 之后].MaxTemperatureValue -> 3000.0
+    [写 2 之后].THighValue -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    [写 2 之后].TLowValue -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  LnKSource = 3 -> None
+    读回 LnKSource -> 3
+    [写 3 之后].LnKSource -> 3
+    [写 3 之后].EquilibriumConstant -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    [写 3 之后].LnKEquationAParameter -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    [写 3 之后].LnKEquationBParameter -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    [写 3 之后].LnKEquationCParameter -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    [写 3 之后].LnKEquationDParameter -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    [写 3 之后].ActivateKTable -> False
+    [写 3 之后].AutoDetect -> False
+    [写 3 之后].Basis -> 1
+    [写 3 之后].KEqValue -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    [写 3 之后].KCalculatedValue -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    [写 3 之后].HeatOfReactionValue -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    [写 3 之后].MinTemperatureValue -> -273.15
+    [写 3 之后].MaxTemperatureValue -> 3000.0
+    [写 3 之后].THighValue -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    [写 3 之后].TLowValue -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  LnKSource = 4 -> None
+    读回 LnKSource -> 4
+    [写 4 之后].LnKSource -> 4
+    [写 4 之后].EquilibriumConstant -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    [写 4 之后].LnKEquationAParameter -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    [写 4 之后].LnKEquationBParameter -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    [写 4 之后].LnKEquationCParameter -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    [写 4 之后].LnKEquationDParameter -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    [写 4 之后].ActivateKTable -> False
+    [写 4 之后].AutoDetect -> False
+    [写 4 之后].Basis -> 1
+    [写 4 之后].KEqValue -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    [写 4 之后].KCalculatedValue -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    [写 4 之后].HeatOfReactionValue -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    [写 4 之后].MinTemperatureValue -> -273.15
+    [写 4 之后].MaxTemperatureValue -> 3000.0
+    [写 4 之后].THighValue -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    [写 4 之后].TLowValue -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+== 固定 K：LnKSource = 3，写 EquilibriumConstant ==
+  LnKSource = 3 -> None
+  EquilibriumConstant = 12.5 -> None
+  EquilibriumConstant 读回 -> 12.5
+  LnKSource 读回 -> 3
+  LnKSource = 2（回到 Gibbs 自由能） -> None
+  LnKSource 读回 -> 2
+== Q3 先 BalanceStoichiometry、再设相态，再写 LnKSource = 0 ==
+  BalanceStoichiometry() -> None
+  ReactionPhase = 0 -> None
+  LnKSource = 0 -> None
+    读回 LnKSource -> 2
+== 结束 Basis 之后再试一次 ==
+  EndBasisChange() -> None
+  LnKSource 读回 -> 2
+  LnKSource = 0（Basis 结束后） -> None
+    读回 LnKSource -> 2
+    [Basis 结束后].LnKSource -> 2
+    [Basis 结束后].EquilibriumConstant -> 12.5
+    [Basis 结束后].LnKEquationAParameter -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    [Basis 结束后].LnKEquationBParameter -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    [Basis 结束后].LnKEquationCParameter -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    [Basis 结束后].LnKEquationDParameter -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    [Basis 结束后].ActivateKTable -> False
+    [Basis 结束后].AutoDetect -> False
+    [Basis 结束后].Basis -> 1
+    [Basis 结束后].KEqValue -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    [Basis 结束后].KCalculatedValue -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    [Basis 结束后].HeatOfReactionValue -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    [Basis 结束后].MinTemperatureValue -> -273.15
+    [Basis 结束后].MaxTemperatureValue -> 3000.0
+    [Basis 结束后].THighValue -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    [Basis 结束后].TLowValue -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  case.Close() -> None
+  实例 7524 已结束

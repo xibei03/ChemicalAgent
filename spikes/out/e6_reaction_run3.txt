@@ -1,0 +1,184 @@
+新实例的进程号: 8660
+Basis 已建好：['Methane', 'H2O', 'CO', 'CO2', 'Hydrogen', 'Toluene', 'Benzene', 'p-Xylene']
+CanEndBasisChange=True
+== Q1 Reactions.Add 的 Type ==
+  Reactions.Count（开始） -> 0
+  Add('T0') [Type 省略] -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  Add('T1') [Type 'conversionrxn'] -> <win32com.gen_py.HYSYS 15.0 Type Library.ConversionReaction instance at 0x1860831933168>
+      返回类型 ConversionReaction；Count=1；['T1']
+        返回对象.name -> 'T1'
+        返回对象.TypeName -> 'conversionrxn'
+        返回对象.VisibleTypeName -> 'Conversion'
+        Remove('T1') -> None
+  Add('T2') [Type 'equilibriumrxn'] -> <win32com.gen_py.HYSYS 15.0 Type Library.EquilibriumReaction instance at 0x1860831933408>
+      返回类型 EquilibriumReaction；Count=1；['T2']
+        返回对象.name -> 'T2'
+        返回对象.TypeName -> 'equilibriumrxn'
+        返回对象.VisibleTypeName -> 'Equilibrium'
+        Remove('T2') -> None
+  Add('T3') [Type 'kineticrxn'] -> <win32com.gen_py.HYSYS 15.0 Type Library.KineticReaction instance at 0x1860831933120>
+      返回类型 KineticReaction；Count=1；['T3']
+        返回对象.name -> 'T3'
+        返回对象.TypeName -> 'kineticrxn'
+        返回对象.VisibleTypeName -> 'Kinetic'
+        Remove('T3') -> None
+  Add('T4') [Type 'Conversion'] -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  Add('T5') [Type 'Equilibrium'] -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  Add('T6') [Type 'Kinetic'] -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  Add('T7') [Type 'ConversionReaction'] -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  Add('T8') [Type 'EquilibriumReaction'] -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  Add('T9') [Type 0] -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  Add('T10') [Type 1] -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  Add('T11') [Type 2] -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  Add('T12') [Type 3] -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  Reactions.Names（试完后） -> []
+== Q2 转化反应 ==
+  Reactions.Add('Tol-Disp', conversionrxn) [写法 1] -> <win32com.gen_py.HYSYS 15.0 Type Library.ConversionReaction instance at 0x1860831933792>
+  类型 ConversionReaction
+  Reactants.Add('Toluene') [写法 1] -> <win32com.gen_py.HYSYS 15.0 Type Library.Reactant instance at 0x1860831933888>
+      返回对象类型 Reactant
+    Toluene.StoichiometricCoefficientValue = -2.0 -> None
+  Reactants.Add('Benzene') [写法 1] -> <win32com.gen_py.HYSYS 15.0 Type Library.Reactant instance at 0x1860831933744>
+      返回对象类型 Reactant
+    Benzene.StoichiometricCoefficientValue = 1.0 -> None
+  Reactants.Add('p-Xylene') [写法 1] -> <win32com.gen_py.HYSYS 15.0 Type Library.Reactant instance at 0x1860831933168>
+      返回对象类型 Reactant
+    p-Xylene.StoichiometricCoefficientValue = 1.0 -> None
+  Reactants.Names -> ['Toluene', 'Benzene', 'p-Xylene']
+  ReactantStoichCoefValue -> (-2.0, 1.0, 1.0)
+  BaseComponent = Toluene -> None
+  BaseComponent 读回 -> 'Toluene'
+  Conversion = 50 -> None
+  Conversion 读回 -> 50.0
+  ReactionPhase -> 5
+  BalanceStoichiometry() -> None
+  BalanceErrorValue -> 0.0
+== Q3 平衡反应 SMR ==
+  Reactions.Add('SMR', equilibriumrxn) -> <win32com.gen_py.HYSYS 15.0 Type Library.EquilibriumReaction instance at 0x1860770250624>
+  默认 LnKSource -> 2
+  默认 Basis -> 1
+  默认 BasisUnits -> ''
+  默认 ReactionPhase -> 0
+  默认 AutoDetect -> True
+  默认 ActivateKTable -> False
+  默认 MinTemperatureValue -> -273.15
+  默认 MaxTemperatureValue -> 3000.0
+  默认 TemperatureApproachValue -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  默认 LogBasis -> False
+  Reactants.Add('Methane') -> <win32com.gen_py.HYSYS 15.0 Type Library.Reactant instance at 0x1860831933168>
+    Methane.StoichiometricCoefficientValue = -1.0 -> None
+  Reactants.Add('H2O') -> <win32com.gen_py.HYSYS 15.0 Type Library.Reactant instance at 0x1860831933792>
+    H2O.StoichiometricCoefficientValue = -1.0 -> None
+  Reactants.Add('CO') -> <win32com.gen_py.HYSYS 15.0 Type Library.Reactant instance at 0x1860831933552>
+    CO.StoichiometricCoefficientValue = 1.0 -> None
+  Reactants.Add('Hydrogen') -> <win32com.gen_py.HYSYS 15.0 Type Library.Reactant instance at 0x1860831933408>
+    Hydrogen.StoichiometricCoefficientValue = 3.0 -> None
+  Reactants.Names -> ['Methane', 'H2O', 'CO', 'Hydrogen']
+  ReactantStoichCoefValue -> (-1.0, -1.0, 1.0, 3.0)
+  BalanceStoichiometry() -> None
+  BalanceErrorValue -> 0.0
+  HeatOfReactionValue -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  LnKSource = 0（Gibbs） -> None
+  LnKSource 读回 -> 2
+  ReactionPhase = 0（气相） -> None
+  ReactionPhase 读回 -> 0
+== Q3 平衡反应 WGS ==
+  Reactions.Add('WGS', equilibriumrxn) -> <win32com.gen_py.HYSYS 15.0 Type Library.EquilibriumReaction instance at 0x1860775677920>
+  默认 LnKSource -> 2
+  默认 Basis -> 1
+  默认 BasisUnits -> ''
+  默认 ReactionPhase -> 0
+  默认 AutoDetect -> True
+  默认 ActivateKTable -> False
+  默认 MinTemperatureValue -> -273.15
+  默认 MaxTemperatureValue -> 3000.0
+  默认 TemperatureApproachValue -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  默认 LogBasis -> False
+  Reactants.Add('CO') -> <win32com.gen_py.HYSYS 15.0 Type Library.Reactant instance at 0x1860831933744>
+    CO.StoichiometricCoefficientValue = -1.0 -> None
+  Reactants.Add('H2O') -> <win32com.gen_py.HYSYS 15.0 Type Library.Reactant instance at 0x1860831933408>
+    H2O.StoichiometricCoefficientValue = -1.0 -> None
+  Reactants.Add('CO2') -> <win32com.gen_py.HYSYS 15.0 Type Library.Reactant instance at 0x1860831933552>
+    CO2.StoichiometricCoefficientValue = 1.0 -> None
+  Reactants.Add('Hydrogen') -> <win32com.gen_py.HYSYS 15.0 Type Library.Reactant instance at 0x1860831933168>
+    Hydrogen.StoichiometricCoefficientValue = 1.0 -> None
+  Reactants.Names -> ['CO', 'H2O', 'CO2', 'Hydrogen']
+  ReactantStoichCoefValue -> (-1.0, -1.0, 1.0, 1.0)
+  BalanceStoichiometry() -> None
+  BalanceErrorValue -> 0.0
+  HeatOfReactionValue -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  LnKSource = 0（Gibbs） -> None
+  LnKSource 读回 -> 2
+  ReactionPhase = 0（气相） -> None
+  ReactionPhase 读回 -> 0
+== Q4 反应集 ==
+  ReactionSets.Count（开始） -> 0
+  流体包的 ReactionPackage.ReactionSets.Names（开始） -> []
+  ReactionSets.Add('Conv-Set') [写法 1] -> <win32com.gen_py.HYSYS 15.0 Type Library.ReactionSet instance at 0x1860770250000>
+      返回类型 ReactionSet，TypeName=rxnset
+    Add 之后、Associate 之前，流体包的反应集 -> []
+    Conv-Set.ActiveReactions.Add('Tol-Disp') [写法 1] -> <win32com.gen_py.HYSYS 15.0 Type Library.ConversionReaction instance at 0x1860831933792>
+    Conv-Set.ActiveReactions.Names -> ['Tol-Disp']
+    Conv-Set.InactiveReactions.Names -> []
+    Conv-Set.AssociateFluidPackage(fp) -> None
+  ReactionSets.Add('Eq-Set') [写法 1] -> <win32com.gen_py.HYSYS 15.0 Type Library.ReactionSet instance at 0x1860831933744>
+      返回类型 ReactionSet，TypeName=rxnset
+    Add 之后、Associate 之前，流体包的反应集 -> ['Conv-Set']
+    Eq-Set.ActiveReactions.Add('SMR') [写法 1] -> <win32com.gen_py.HYSYS 15.0 Type Library.EquilibriumReaction instance at 0x1860831933120>
+    Eq-Set.ActiveReactions.Add('WGS') [写法 1] -> <win32com.gen_py.HYSYS 15.0 Type Library.EquilibriumReaction instance at 0x1860831933600>
+    Eq-Set.ActiveReactions.Names -> ['SMR', 'WGS']
+    Eq-Set.InactiveReactions.Names -> []
+    Eq-Set.AssociateFluidPackage(fp) -> None
+  ReactionSets.Names -> ['Conv-Set', 'Eq-Set']
+  流体包的 ReactionPackage.ReactionSets.Names -> ['Conv-Set', 'Eq-Set']
+== Q5、Q6 结束 Basis、另存、重开 ==
+  EndBasisChange() -> None
+  IsChangingBasis -> False
+-- Basis 结束后，直接建反应（没有 StartBasisChange） --
+  Reactions.Add('late1', conversionrxn) -> <win32com.gen_py.HYSYS 15.0 Type Library.ConversionReaction instance at 0x1860762566880>
+  Reactions.Names -> ['Tol-Disp', 'SMR', 'WGS', 'late1']
+-- StartBasisChange 之后再建 --
+  StartBasisChange() -> None
+  IsChangingBasis -> True
+  Reactions.Add('late2', conversionrxn) -> <win32com.gen_py.HYSYS 15.0 Type Library.ConversionReaction instance at 0x1860762566880>
+  Reactions.Remove('late2') -> None
+  Reactions.Remove('late1') -> None
+  Reactions.Names -> ['Tol-Disp', 'SMR', 'WGS']
+  EndBasisChange() -> None
+  IsChangingBasis -> False
+  SaveAs -> None
+  Close -> None
+  Open -> <win32com.gen_py.HYSYS 15.0 Type Library._SimulationCase instance at 0x1860831934032>
+  重开后 Reactions.Names -> ['Tol-Disp', 'SMR', 'WGS']
+  重开后 ReactionSets.Names -> ['Conv-Set', 'Eq-Set']
+  重开后 Tol-Disp -> ('ConversionReaction', ['Toluene', 'Benzene', 'p-Xylene'], (-2.0, 1.0, 1.0000527473538292))
+  重开后 SMR -> ('EquilibriumReaction', ['Methane', 'H2O', 'CO', 'Hydrogen'], (-1.0, -1.0, 1.0, 2.9995535564872853))
+  重开后 WGS -> ('EquilibriumReaction', ['CO', 'H2O', 'CO2', 'Hydrogen'], (-1.0, -1.0, 1.0, 1.0001488933463596))
+  重开后 Tol-Disp.ReactionPhase -> 5
+  重开后 Tol-Disp.HeatOfReactionValue -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  重开后 Tol-Disp.BalanceErrorValue -> 0.0
+  重开后 Tol-Disp.LnKSource -> 失败 AttributeError: '<win32com.gen_py.HYSYS 15.0 Type Library.ConversionReaction instance at 0x1860831933072>' object has no attribute 'LnKSource'
+  重开后 Tol-Disp.Basis -> 失败 AttributeError: '<win32com.gen_py.HYSYS 15.0 Type Library.ConversionReaction instance at 0x1860831933072>' object has no attribute 'Basis'
+  重开后 Tol-Disp.AutoDetect -> 失败 AttributeError: '<win32com.gen_py.HYSYS 15.0 Type Library.ConversionReaction instance at 0x1860831933072>' object has no attribute 'AutoDetect'
+  重开后 Tol-Disp.BaseComponent -> 'Toluene'
+  重开后 Tol-Disp.Conversion -> 50.0
+  重开后 SMR.ReactionPhase -> 0
+  重开后 SMR.HeatOfReactionValue -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  重开后 SMR.BalanceErrorValue -> 0.0
+  重开后 SMR.LnKSource -> 2
+  重开后 SMR.Basis -> 1
+  重开后 SMR.AutoDetect -> True
+  重开后 SMR.BaseComponent -> 失败 AttributeError: '<win32com.gen_py.HYSYS 15.0 Type Library.EquilibriumReaction instance at 0x1860831932928>' object has no attribute 'BaseComponent'
+  重开后 SMR.Conversion -> 失败 AttributeError: '<win32com.gen_py.HYSYS 15.0 Type Library.EquilibriumReaction instance at 0x1860831932928>' object has no attribute 'Conversion'
+  重开后 WGS.ReactionPhase -> 0
+  重开后 WGS.HeatOfReactionValue -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  重开后 WGS.BalanceErrorValue -> 0.0
+  重开后 WGS.LnKSource -> 2
+  重开后 WGS.Basis -> 1
+  重开后 WGS.AutoDetect -> True
+  重开后 WGS.BaseComponent -> 失败 AttributeError: '<win32com.gen_py.HYSYS 15.0 Type Library.EquilibriumReaction instance at 0x1860831933072>' object has no attribute 'BaseComponent'
+  重开后 WGS.Conversion -> 失败 AttributeError: '<win32com.gen_py.HYSYS 15.0 Type Library.EquilibriumReaction instance at 0x1860831933072>' object has no attribute 'Conversion'
+  重开后 Conv-Set.ActiveReactions -> ['Tol-Disp']
+  重开后 Eq-Set.ActiveReactions -> ['SMR', 'WGS']
+  reopened.Close() -> None
+  实例 8660 已结束

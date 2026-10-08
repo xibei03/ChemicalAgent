@@ -7,7 +7,7 @@
 - 阶段：**0A 已完成**（2026-10-08 10:55，UTC+8）。首次开始于 2026-10-03 09:50，共 3 个会话（见"已完成"的时间表）。任务 1 至 3、5 至 11 都完成，完成标准的 6 条都有实际运行的验证。**任务 4（E0，LLM 连通性）挂起**，等用户给出供应商、模型和密钥所在的环境变量（D1）。**遗留一件等用户动手的事：D11**，在 HYSYS 界面里手工建三种反应器的参考 Case，建好后补跑 E3。下一个会话做阶段 0B。当前没有残留的 HYSYS 进程。
 - **用户 2026-10-08 的答复（0A 交接之后）：D11 由助手自行创建参考 Case，建好后补跑 E3；D9 之后的提交署名改为 `xibei03 <jsl_03@163.com>`；"完成后续跑"。** 我的理解和假设：自行创建用 COM 代码做（没有别的手段），所以这部分工作等于提前做了 0B/0C 的一部分探针（E4 至 E9），台账里按探针记录；"完成后续跑"理解为做完这些之后补跑 E3，**不进入阶段 0B**（阶段边界不变，0B 仍在新会话里做，可以直接用这里的结论）。如果用户的意思是连续做 0B，请在回复里明说。
 - 最近通过的闸门：无（G0 在阶段 0B 结束时判）。阶段结束时质量工具全绿：`ruff format --check`、`ruff check`、`mypy src`、`pytest`（13 passed），本阶段没有改 `src/` 和 `tests/`。
-- 最近一次更新：2026-10-08 11:40
+- 最近一次更新：2026-10-08 12:20
 - 时间记法：本机时钟是 UTC，进度文件里的时间一律换算成 UTC+8（加 8 小时）。
 - 推送状态：本阶段每个任务的提交都已推送到 `origin/main`，没有强制推送；推送方式见"环境事实"的"GitHub 凭据"。
 
@@ -53,6 +53,7 @@
 | 0A | 11 台账收尾和完成标准核对 | 3a6e467 | 台账 10 个节名俱全；H1、H2、H6、H13、H17、H18、H22 都是已确认；三种反应器的类型名、反应、反应集、反应器的成员已记录；"创建反应的线索"按可能性排序；探索日志 L0 至 L9，每个探针都有一条。`python spikes/e1_connect.py` 原样运行，打印版本 `Aspen HYSYS Version 15 (41.0)` 和进程号。`python tests/test_code_health.py` 与四个质量工具见交接报告 |
 | 0A | 4 LLM 连通性（E0） | 未做 | 挂起：用户说需要密钥的先跳过，等 D1 |
 | 0A（D11） | E4 新建 Case 和 Basis（含 E4b 物性包） | 待补 | `spikes/e4_basis.py`、`e4b_property_package.py`：`SimulationCases.Add("name")` 新建空白 Case，新 Case 一开始就在 Basis 修改状态；`ComponentLists.Add` 加组分列表，`Components.Add(name)`（库名大小写不敏感，分子式不行）；`FluidPackages.Add` 加流体包，`fp.ComponentList = cl`，**`fp.PropertyPackageName = "pengrob"`（物性包内部名；界面名等 10 种写法都 E_INVALIDARG）**；`EndBasisChange()`、`SaveAs`、`Close`、`Open` 重开后 Basis 完好。固体碳 `Carbon` 在库里，`IsSolid` 为 True。H3、H4、H7、H8 已确认，H5、H21、H25 部分确认 |
+| 0A（D11） | E6 创建反应和反应集（含 E6b Keq 来源） | 待补 | `spikes/e6_reaction.py`、`e6b_keq_source.py`：**`Reactions.Add(name, "conversionrxn")` 第一次就成功**，返回类型化的 `ConversionReaction`（`equilibriumrxn`、`kineticrxn` 同理，界面名、整数、省略 `Type` 都 E_FAIL）；`Reactants.Add(组分名)` 加反应物，`StoichiometricCoefficientValue` 写系数（负为反应物），`BaseComponent`、`Conversion = 50.0`；分数系数 0.24 能写；`ReactionSets.Add(name)`、`ActiveReactions.Add(反应名)`、`AssociateFluidPackage(fp)`（挂上之后流体包才列出这个集合）；`EndBasisChange()` 之后也能直接建反应；另存重开后全部保留，系数被质量守恒微调 5e-5。**`LnKSource` 实际取值：1 Ln(K) 公式、2 Gibbs 自由能（默认）、3 固定 K、4 K–T 表，写 0 被忽略**（依据 `equirxn.rdf` 和实测）；固定 K 写 `EquilibriumConstant` 可用。H5、H9 已确认，H10、H11 部分确认 |
 | 0A | 只读勘查（计划模式下完成，无脚本） | 2427c43 | 注册表 ProgID、`hysys.tlb` 的接口名与集合的 `Add` 签名、安装目录里的 `hysys.hh`、定义文件、帮助文件，写入台账 L0 和"创建反应的线索"初稿（均未运行验证） |
 
 ## 进行中
@@ -63,7 +64,7 @@
 |---|---|---|
 | 新建 Case、Basis、组分、物性包、另存重开 | `spikes/e4_basis.py`、`e4b_property_package.py` | 已完成 |
 | 新建物流、规定 T、P、流量、组成、闪蒸 | `spikes/e5_stream.py`（E2 已验证新物流和写组成，在新 Case 里再验一次） | 未开始 |
-| 反应和反应集（风险最高） | `spikes/e6_reaction.py` | 未开始 |
+| 反应和反应集（风险最高） | `spikes/e6_reaction.py`、`e6b_keq_source.py` | 已完成 |
 | 三种反应器及其连接、求解 | `spikes/e7_e9_reactors.py`（转化、平衡、Gibbs，沿用 0B/0C 的拆分思路） | 未开始 |
 | 组装并另存参考 Case | `spikes/build_reference_case.py` | 未开始 |
 | 对参考 Case 补跑 E3，解决 `LnKSource` 和 Gibbs `ReactorType` 的对应 | `spikes/e3_reverse_probe.py --case spikes/ref_cases/three_reactors.hsc --tag three` | 未开始 |
@@ -129,10 +130,11 @@
 | 2026-10-08 | 8.3 短路径是不是 `Open` 失败的原因（任务 7 遗留，任务 8 验证） | 同一个副本、同一种复制方式，分别用"目录短名""目录和文件名都短""长路径"打开 | 短路径两种都 `E_ACCESSDENIED`，长路径成功。给 HYSYS 的路径先 `Path.resolve()`。台账 H2 |
 | 2026-10-08 | `case.IsDirty` 在刚打开、没改过的 Case 上也是 True（任务 8） | E2b 三种情况都读到 True | 不能用 `IsDirty` 判断 Case 有没有改过；`Quit()` 和 `Close()` 本来就不弹保存确认，不需要它 |
 | 2026-10-08 | E3 第一次运行在第二台反应器上崩溃（任务 9） | `Combustor` 没有连能流，`op.EnergyStream` 抛 `com_error`（E_FAIL），而脚本只捕获了 `AttributeError` | 加 `optional_attr`，把 `com_error` 当作"没有连接"。台账 H16 记了这个行为 |
-| 2026-10-08 | `LnKSource` 读出 4，与类型库的枚举对不上（任务 9） | 示例里的平衡反应 Rxn-4 用的是 K–T 表（`ActivateKTable` 为 True），类型库里 `eqrxn_Table=3`、`eqrxn_FixedExtent=4`，读出的却是 4；`Basis` 读出 2 与枚举吻合 | 没有解决。要等用户的参考 Case（Keq 来源为 Gibbs 自由能）读到另一个数字。0B 写 Keq 来源时必须先核对这个映射 |
+| 2026-10-08 | `LnKSource` 读出 4，与类型库的枚举对不上（任务 9） | 示例里的平衡反应 Rxn-4 用的是 K–T 表（`ActivateKTable` 为 True），类型库里 `eqrxn_Table=3`、`eqrxn_FixedExtent=4`，读出的却是 4；`Basis` 读出 2 与枚举吻合 | **已解决（E6b，D11）**：实际取值 1 = Ln(K) 公式、2 = Gibbs 自由能（默认）、3 = 固定 K、4 = K–T 表；依据是 `Support\equirxn.rdf` 里界面分组的可见范围和新建反应的默认值（2）。类型库枚举名与实际取值对不上，不要用 |
 | 2026-10-08 | 想靠 XML 导出创建或修改反应（任务 9，走不通） | `ProvideXMLForCase(0 或 1)` 6.5 MB，检索 'Stoich'、'rxnset'、'ReactionSet'、'LnK'、'Rxn-4'，全是 0 次 | XML 里没有反应和反应集的定义，只有反应器上引用反应名的部分。这条路线不能创建反应，在"创建反应的线索"里排最后 |
 | 2026-10-08 | `fp.PropertyPackageName = "Peng-Robinson"` 抛 `E_INVALIDARG`（D11 的 E4） | 试了 10 种写法、先设组分列表再设物性包、`FluidPackages.Add(name, Type)` 传枚举值和字符串，都不行；没设物性包就保存，重开时弹模态对话框卡住 `Open` | 读示例 Case 的 `fp.PropertyPackage`：`TypeName` 是 `pengrob`、`VisibleTypeName` 是 `Peng-Robinson`；设置要用内部名 `pengrob`，成功。台账 H7 |
 | 2026-10-08 | 把探针输出接给 `head` 之后，脚本被管道关闭打断，留下一个 HYSYS 实例（D11 的 E4 run1） | 用 `taskkill` 按进程号结束 | 以后运行探针一律把标准输出丢到 `/dev/null`，从 `spikes/out/` 的日志文件读结果（`Log` 本来就边打印边落盘） |
+| 2026-10-08 | 写 `LnKSource = 0`（想设 Gibbs 自由能）读回仍是 2，一度以为设不上（D11 的 E6） | 逐个写 0 至 4：1 至 4 都读回原值，0 被忽略；读 `equirxn.rdf` 找界面分组的可见范围，得到真实对应 | 默认值 2 就是 Gibbs 自由能，不需要写。教训：类型库的枚举名不可信，枚举值要用 rdf 或实测核对。台账 H10、L13 |
 
 ## 与计划的偏差
 
