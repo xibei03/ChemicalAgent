@@ -197,21 +197,33 @@ def click_affirmative(hwnd: int) -> str | None:
 
 
 @contextmanager
-def dialog_guard(log: Log, pid: int | None, poll_s: float = 0.5) -> Iterator[list[str]]:
+def dialog_guard(
+    log: Log,
+    pid: int | None,
+    poll_s: float = 0.5,
+    include_hidden: bool = False,
+    redo_after_s: float = 0.0,
+) -> Iterator[list[str]]:
     """后台线程盯着 HYSYS 进程的模态对话框：记下文字、点\"确定\"关掉，让被卡住的 COM 调用返回。
 
     产出一个列表，里面是已经处理过的对话框文字，调用方可以据此判断刚才的调用是不是触发了弹窗。
+    include_hidden 为真时也处理不可见的对话框（窗口隐藏的实例里弹窗可能不可见）。
+    redo_after_s 大于 0 时，同一个对话框窗口在这么多秒之内只点一次。
     """
     handled: list[str] = []
     stop = threading.Event()
+    last_click: dict[int, float] = {}
 
     def work() -> None:
         while not stop.wait(poll_s):
             if pid is None:
                 continue
             for window in windows_of([pid]):
-                if not (window.visible and window.class_name == "#32770"):
+                if window.class_name != "#32770" or not (window.visible or include_hidden):
                     continue
+                if time.time() - last_click.get(window.hwnd, 0.0) < redo_after_s:
+                    continue  # 同一个对话框刚点过，等它关掉；不连续点
+                last_click[window.hwnd] = time.time()
                 texts = [t for t in child_texts(window.hwnd) if t.startswith("Static")]
                 clicked = click_affirmative(window.hwnd)
                 message = " | ".join(texts) or window.title

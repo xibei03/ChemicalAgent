@@ -1,0 +1,125 @@
+== C 弹窗（窗口可见） ==
+-- 场景 close-modified（窗口可见） --
+新实例的进程号: 6464
+  case.IsDirty=False（保存后）
+  场景 close-modified
+      用时 0.14 秒；调用期间弹窗 0 个；成功，返回 (<win32com.gen_py.HYSYS 15.0 Type Library.ProcessStream instance at 0x2900673118080>, None)
+        实例还活着吗：app.name -> 失败 com_error: (-2147023170, 'The remote procedure call failed.', None, None)
+        Case 数 -> 失败 com_error: (-2147023174, 'The RPC server is unavailable.', None, None)
+  看门狗处理弹窗 0 个：[]
+  实例 6464 已结束
+-- 场景 close-unsaved-new（窗口可见） --
+新实例的进程号: 14840
+  场景 close-unsaved-new
+      用时 0.64 秒；调用期间弹窗 0 个；成功，返回 None
+        实例还活着吗：app.name -> 'Aspen HYSYS'
+        Case 数 -> 1
+  看门狗处理弹窗 0 个：[]
+  实例 14840 已结束
+-- 场景 open-missing（窗口可见） --
+新实例的进程号: 7228
+  场景 open-missing
+      用时 0.01 秒；调用期间弹窗 0 个；失败 com_error(-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147024891), None)
+        实例还活着吗：app.name -> 'Aspen HYSYS'
+        Case 数 -> 1
+  看门狗处理弹窗 0 个：[]
+  实例 7228 已结束
+-- 场景 open-corrupt（窗口可见） --
+新实例的进程号: 7804
+  场景 open-corrupt
+      用时 0.11 秒；调用期间弹窗 0 个；失败 com_error(-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147024891), None)
+        实例还活着吗：app.name -> 'Aspen HYSYS'
+        Case 数 -> 1
+  看门狗处理弹窗 0 个：[]
+  实例 7804 已结束
+-- 场景 open-corrupt-after-close（窗口可见） --
+新实例的进程号: 12272
+  场景 open-corrupt-after-close
+      用时 0.20 秒；调用期间弹窗 0 个；失败 com_error(-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147024891), None)
+        实例还活着吗：app.name -> 'Aspen HYSYS'
+        Case 数 -> 0
+  看门狗处理弹窗 0 个：[]
+  实例 12272 已结束
+-- 场景 saveas-missing-dir（窗口可见） --
+新实例的进程号: 7360
+  场景 saveas-missing-dir
+      用时 0.05 秒；调用期间弹窗 0 个；成功，返回 None
+        实例还活着吗：app.name -> 'Aspen HYSYS'
+        Case 数 -> 1
+      目标 no_such_dir 是否存在 False
+        case.FullName -> 'C:\\Users\\azureuser\\AppData\\Local\\Temp\\e11c_pi414uex\\no_such_dir\\x.hsc'
+  看门狗处理弹窗 0 个：[]
+  实例 7360 已结束
+-- 场景 saveas-bad-name（窗口可见） --
+新实例的进程号: 12628
+  场景 saveas-bad-name
+      用时 0.01 秒；调用期间弹窗 0 个；失败 com_error(-532462766, 'OLE error 0xe0434352', None, None)
+        实例还活着吗：app.name -> 'Aspen HYSYS'
+        Case 数 -> 1
+      目标 a<b>.hsc 是否存在 False
+        case.FullName -> 'C:\\Users\\azureuser\\AppData\\Local\\Temp\\e11c_m0amneta\\saveas-bad-name.hsc'
+  看门狗处理弹窗 0 个：[]
+  实例 12628 已结束
+== C 弹窗（窗口隐藏） ==
+-- 场景 close-modified（窗口隐藏） --
+新实例的进程号: 5292
+  case.IsDirty=False（保存后）
+  场景 close-modified
+      用时 0.14 秒；调用期间弹窗 0 个；成功，返回 (<win32com.gen_py.HYSYS 15.0 Type Library.ProcessStream instance at 0x2900673152304>, None)
+        实例还活着吗：app.name -> 'Aspen HYSYS'
+        Case 数 -> 0
+  看门狗处理弹窗 0 个：[]
+  实例 5292 已结束
+-- 场景 close-unsaved-new（窗口隐藏） --
+新实例的进程号: 9372
+  场景 close-unsaved-new
+      用时 0.82 秒；调用期间弹窗 0 个；成功，返回 None
+        实例还活着吗：app.name -> 'Aspen HYSYS'
+        Case 数 -> 1
+  看门狗处理弹窗 0 个：[]
+  实例 9372 已结束
+-- 场景 open-missing（窗口隐藏） --
+新实例的进程号: 14048
+  场景 open-missing
+      用时 0.05 秒；调用期间弹窗 0 个；失败 com_error(-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147024891), None)
+        实例还活着吗：app.name -> 'Aspen HYSYS'
+        Case 数 -> 1
+  看门狗处理弹窗 0 个：[]
+  实例 14048 已结束
+-- 场景 open-corrupt（窗口隐藏） --
+新实例的进程号: 13292
+  场景 open-corrupt
+      用时 0.10 秒；调用期间弹窗 0 个；失败 com_error(-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147024891), None)
+        实例还活着吗：app.name -> 'Aspen HYSYS'
+        Case 数 -> 1
+  看门狗处理弹窗 0 个：[]
+  实例 13292 已结束
+-- 场景 open-corrupt-after-close（窗口隐藏） --
+新实例的进程号: 12136
+  场景 open-corrupt-after-close
+      用时 0.21 秒；调用期间弹窗 0 个；失败 com_error(-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147024891), None)
+        实例还活着吗：app.name -> 'Aspen HYSYS'
+        Case 数 -> 0
+  看门狗处理弹窗 0 个：[]
+  实例 12136 已结束
+-- 场景 saveas-missing-dir（窗口隐藏） --
+新实例的进程号: 7316
+  场景 saveas-missing-dir
+      用时 0.04 秒；调用期间弹窗 0 个；成功，返回 None
+        实例还活着吗：app.name -> 'Aspen HYSYS'
+        Case 数 -> 1
+      目标 no_such_dir 是否存在 False
+        case.FullName -> 'C:\\Users\\azureuser\\AppData\\Local\\Temp\\e11c_i660h_ix\\no_such_dir\\x.hsc'
+  看门狗处理弹窗 0 个：[]
+  实例 7316 已结束
+-- 场景 saveas-bad-name（窗口隐藏） --
+新实例的进程号: 14340
+  场景 saveas-bad-name
+      用时 0.03 秒；调用期间弹窗 0 个；失败 com_error(-532462766, 'OLE error 0xe0434352', None, None)
+        实例还活着吗：app.name -> 'Aspen HYSYS'
+        Case 数 -> 1
+      目标 a<b>.hsc 是否存在 False
+        case.FullName -> 'C:\\Users\\azureuser\\AppData\\Local\\Temp\\e11c_qmoiak_p\\saveas-bad-name.hsc'
+  看门狗处理弹窗 0 个：[]
+  实例 14340 已结束
+== 结束后残留的 HYSYS 进程 {} ==

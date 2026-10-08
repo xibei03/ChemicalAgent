@@ -1,0 +1,15 @@
+== D 窗口隐藏 ==
+-- Visible=True --
+新实例的进程号: 10900
+  Rxn-1：LnKSource=2（2 即 Gibbs 自由能），Basis=1，AutoDetect=True，ReactionPhase=0，系数 (-1.0, -1.0, 1.0, 3.0)
+  Rxn-2：LnKSource=2（2 即 Gibbs 自由能），Basis=1，AutoDetect=True，ReactionPhase=0，系数 (-1.0, -1.0, 1.0, 1.0)
+  app.Visible=True；用时 18.4 秒（含启动）
+  实例 10900 已结束
+-- Visible=False --
+新实例的进程号: 2432
+  Rxn-1：LnKSource=2（2 即 Gibbs 自由能），Basis=1，AutoDetect=True，ReactionPhase=0，系数 (-1.0, -1.0, 1.0, 3.0)
+  Rxn-2：LnKSource=2（2 即 Gibbs 自由能），Basis=1，AutoDetect=True，ReactionPhase=0，系数 (-1.0, -1.0, 1.0, 1.0)
+  app.Visible=False；用时 15.4 秒（含启动）
+  实例 2432 已结束
+  可见与隐藏的摩尔分率最大差 0.00e+00（要求 ≤ 1e-06）；热负荷 39989.2 与 39989.2 kW
+== 结束后残留的 HYSYS 进程 {} ==

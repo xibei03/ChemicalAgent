@@ -1,0 +1,294 @@
+新实例的进程号: 9632
+== A1 同名对象：Case、Basis、反应、物流 ==
+  Case 数 1，名字 ['Case']
+  SimulationCases.Add('e11_dup')（与已有的 Case 同名）
+      第 1 次 成功，返回 'Case'
+      第 2 次 成功，返回 'Case'
+  之后 Case 数 3，名字 ['Case', 'Case', 'Case']
+  ComponentLists.Add('CL-1')
+      第 1 次 成功，返回 'CL-1'
+      第 2 次 成功，返回 'CL-1'
+  组分列表 ['CL-1', 'Component List - 1']
+  [弹窗] 标题='Aspen HYSYS' 文字='Static: Duplicate Object Name: Basis-1 - Disallowed' 已点 'OK'
+  [弹窗] 标题='Aspen HYSYS' 文字='Static: Duplicate Object Name: Basis-1 - Disallowed' 已点 'OK'
+  FluidPackages.Add('Basis-1')
+      第 1 次 成功，返回 'Basis-2'
+      第 2 次 成功，返回 'Basis-3'
+  流体包 ['Basis-1', 'Basis-2', 'Basis-3']
+  Components.Add('Methane')
+      第 1 次 成功，返回 'Methane'
+      第 2 次 成功，返回 'Methane'
+  Reactions.Add('Rxn-1', 'equilibriumrxn')
+      第 1 次 成功，返回 'Rxn-1'
+      第 2 次 成功，返回 'Rxn-2'
+  反应 ['Rxn-1', 'Rxn-2']
+  Reactants.Add('Methane')
+      第 1 次 成功，返回 <win32com.gen_py.HYSYS 15.0 Type Library.Reactant instance at 0x2065517167248>
+      第 2 次 成功，返回 <win32com.gen_py.HYSYS 15.0 Type Library.Reactant instance at 0x2065517167152>
+  反应物 ['Methane', 'Methane']
+  ReactionSets.Add('RxnSet-1')
+      第 1 次 成功，返回 'RxnSet-1'
+      第 2 次 成功，返回 'Set-1'
+  ActiveReactions.Add('Rxn-1')
+      第 1 次 成功，返回 'Rxn-1'
+      第 2 次 成功，返回 'Rxn-1'
+  反应集成员 ['Rxn-1']
+  AssociateFluidPackage（第二次）
+      第 1 次 成功，返回 None
+      第 2 次 成功，返回 None
+  MaterialStreams.Add('Feed')
+      第 1 次 成功，返回 'Feed'
+      第 2 次 成功，返回 'Feed'
+  EnergyStreams.Add('Q-1')
+      第 1 次 成功，返回 'Q-1'
+      第 2 次 成功，返回 'Q-1'
+  实例 9632 已结束
+== A2 同名对象：操作和连接 ==
+-- 场景 same-type（对话框同一窗口 0 秒内只点一次） --
+新实例的进程号: 14576
+  先建了 ERV-100；操作 ['ERV-100']
+  场景 same-type -> <win32com.gen_py.HYSYS 15.0 Type Library.EquilibriumReactor instance at 0x2065517168016>
+      调用期间弹窗点击 0 次，不同的文字 []
+        实例还活着吗：app.name -> 'Aspen HYSYS'
+        操作 -> ['ERV-100']
+        物流 -> ['Feed', 'Vap', 'Liq']
+        ERV-100 的进料 -> []
+  实例 14576 已结束
+-- 场景 other-type（对话框同一窗口 0 秒内只点一次） --
+新实例的进程号: 8888
+  先建了 ERV-100；操作 ['ERV-100']
+  [弹窗] 标题='Aspen HYSYS' 文字='Static: Duplicate Object Name: ERV-100 - Creating New Object ERV-100_2' 已点 'OK'
+  场景 other-type -> <win32com.gen_py.HYSYS 15.0 Type Library.GibbsReactor instance at 0x2065517168112>
+      调用期间弹窗点击 1 次，不同的文字 ['Static: Duplicate Object Name: ERV-100 - Creating New Object ERV-100_2']
+        实例还活着吗：app.name -> 'Aspen HYSYS'
+        操作 -> ['ERV-100', 'ERV-100_2']
+        物流 -> ['Feed', 'Vap', 'Liq']
+        ERV-100 的进料 -> []
+  实例 8888 已结束
+-- 场景 stream-named-like-operation（对话框同一窗口 0 秒内只点一次） --
+新实例的进程号: 3172
+  先建了 ERV-100；操作 ['ERV-100']
+  场景 stream-named-like-operation -> <win32com.gen_py.HYSYS 15.0 Type Library.ProcessStream instance at 0x2065517168736>
+      调用期间弹窗点击 0 次，不同的文字 []
+        实例还活着吗：app.name -> 'Aspen HYSYS'
+        操作 -> ['ERV-100']
+        物流 -> ['Feed', 'Vap', 'Liq', 'ERV-100']
+        ERV-100 的进料 -> []
+  实例 3172 已结束
+-- 场景 feed-twice（对话框同一窗口 0 秒内只点一次） --
+新实例的进程号: 1072
+  先建了 ERV-100；操作 ['ERV-100']
+  场景 feed-twice -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+      调用期间弹窗点击 0 次，不同的文字 []
+        实例还活着吗：app.name -> 'Aspen HYSYS'
+        操作 -> ['ERV-100']
+        物流 -> ['Feed', 'Vap', 'Liq']
+        ERV-100 的进料 -> ['Feed']
+  实例 1072 已结束
+-- 场景 product-of-two-reactors（对话框同一窗口 0 秒内只点一次） --
+新实例的进程号: 456
+  先建了 ERV-100；操作 ['ERV-100']
+  场景 product-of-two-reactors -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147024809), None)
+      调用期间弹窗点击 0 次，不同的文字 []
+        实例还活着吗：app.name -> 'Aspen HYSYS'
+        操作 -> ['ERV-100', 'ERV-200']
+        物流 -> ['Feed', 'Vap', 'Liq']
+        ERV-100 的进料 -> []
+  实例 456 已结束
+== B1 进程中断：两次调用之间 ==
+新实例的进程号: 2652
+  [定时器] B1：3.0 秒到，taskkill /F /PID 2652
+  循环里成功读了 59 次；第一次失败发生在 3.13 秒：com_error(-2147023174, 'The RPC server is unavailable.', None, None)
+  同一个物流对象再读一次 -> 失败 com_error: (-2147023174, 'The RPC server is unavailable.', None, None)
+      这一次调用用时 0.00 秒
+  app.name -> 失败 com_error: (-2147023174, 'The RPC server is unavailable.', None, None)
+      这一次调用用时 0.00 秒
+  app.SimulationCases.Count -> 失败 com_error: (-2147023174, 'The RPC server is unavailable.', None, None)
+      这一次调用用时 0.00 秒
+  case.Flowsheet -> 失败 com_error: (-2147023174, 'The RPC server is unavailable.', None, None)
+      这一次调用用时 0.00 秒
+  case.Close() -> 失败 com_error: (-2147023174, 'The RPC server is unavailable.', None, None)
+      这一次调用用时 0.00 秒
+  tasklist 里的 HYSYS 进程 {}
+  实例 2652 已结束
+== B2 进程中断：SaveAs 期间 ==
+新实例的进程号: 10300
+  [定时器] B-save：3.0 秒到，taskkill /F /PID 10300
+  成功循环 89 轮；失败：(3.131038188934326, 'SaveAs', "com_error(-2147023170, 'The remote procedure call failed.', None, None)")
+  tasklist 里的 HYSYS 进程 {10300: 'AspenHysys.exe'}
+  实例 10300 已结束
+  之后目录里的文件和大小 {'source.hsc': 188098, 'target.ads': 10844, 'target.bk0': 204197, 'target.hsc': 204197}
+新实例的进程号: 14248
+    新实例能正常用：Case 数 -> 0
+    新实例打开 source.hsc -> <win32com.gen_py.HYSYS 15.0 Type Library._SimulationCase instance at 0x2065517168064>
+        读回物流 Names -> ['Feed-100', 'Vap-100', 'Liq-100', 'Feed-ADI', 'Vap-ADI', 'Liq-ADI', 'Feed-DUTY', 'Vap-DUTY', 'Liq-DUTY', 'Feed-K', 'Vap-K', 'Liq-K']
+    新实例打开 target.hsc -> <win32com.gen_py.HYSYS 15.0 Type Library._SimulationCase instance at 0x2065517166720>
+        读回物流 Names -> ['Feed-100', 'Vap-100', 'Liq-100', 'Feed-ADI', 'Vap-ADI', 'Liq-ADI', 'Feed-DUTY', 'Vap-DUTY', 'Liq-DUTY', 'Feed-K', 'Vap-K', 'Liq-K']
+  实例 14248 已结束
+== B3 进程中断：Open 期间 ==
+新实例的进程号: 14656
+  [定时器] B-open：3.0 秒到，taskkill /F /PID 14656
+  成功循环 2 轮；失败：(3.1224441528320312, 'Open', "com_error(-2147023170, 'The remote procedure call failed.', None, None)")
+  tasklist 里的 HYSYS 进程 {14656: 'AspenHysys.exe'}
+  实例 14656 已结束
+  之后目录里的文件和大小 {'source.ads': 10486, 'source.hsc': 188098}
+新实例的进程号: 12932
+    新实例能正常用：Case 数 -> 0
+    新实例打开 source.hsc -> <win32com.gen_py.HYSYS 15.0 Type Library._SimulationCase instance at 0x2065517169936>
+        读回物流 Names -> ['Feed-100', 'Vap-100', 'Liq-100', 'Feed-ADI', 'Vap-ADI', 'Liq-ADI', 'Feed-DUTY', 'Vap-DUTY', 'Liq-DUTY', 'Feed-K', 'Vap-K', 'Liq-K']
+  实例 12932 已结束
+== C 弹窗（窗口可见） ==
+-- 场景 close-modified（窗口可见） --
+新实例的进程号: 11388
+  case.IsDirty=False（保存后）
+  场景 close-modified
+      用时 0.14 秒；调用期间弹窗 0 个；成功，返回 (<win32com.gen_py.HYSYS 15.0 Type Library.ProcessStream instance at 0x2065517170608>, None)
+        实例还活着吗：app.name -> 'Aspen HYSYS'
+        Case 数 -> 0
+  看门狗处理弹窗 0 个：[]
+  实例 11388 已结束
+-- 场景 close-unsaved-new（窗口可见） --
+新实例的进程号: 9244
+  场景 close-unsaved-new
+      用时 0.65 秒；调用期间弹窗 0 个；成功，返回 None
+        实例还活着吗：app.name -> 'Aspen HYSYS'
+        Case 数 -> 1
+  看门狗处理弹窗 0 个：[]
+  实例 9244 已结束
+-- 场景 open-missing（窗口可见） --
+新实例的进程号: 11728
+  场景 open-missing
+      用时 0.03 秒；调用期间弹窗 0 个；失败 com_error(-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147024891), None)
+        实例还活着吗：app.name -> 'Aspen HYSYS'
+        Case 数 -> 1
+  看门狗处理弹窗 0 个：[]
+  实例 11728 已结束
+-- 场景 open-corrupt（窗口可见） --
+新实例的进程号: 12068
+  场景 open-corrupt
+      用时 0.11 秒；调用期间弹窗 0 个；失败 com_error(-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147024891), None)
+        实例还活着吗：app.name -> 'Aspen HYSYS'
+        Case 数 -> 1
+  看门狗处理弹窗 0 个：[]
+  实例 12068 已结束
+-- 场景 open-corrupt-after-close（窗口可见） --
+新实例的进程号: 14032
+  场景 open-corrupt-after-close
+      用时 0.19 秒；调用期间弹窗 0 个；失败 com_error(-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147024891), None)
+        实例还活着吗：app.name -> 'Aspen HYSYS'
+        Case 数 -> 0
+  看门狗处理弹窗 0 个：[]
+  实例 14032 已结束
+-- 场景 open-missing-then-corrupt（窗口可见） --
+新实例的进程号: 2308
+  场景 open-missing-then-corrupt
+      用时 0.25 秒；调用期间弹窗 0 个；失败 com_error(-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147024891), None)
+        实例还活着吗：app.name -> 'Aspen HYSYS'
+        Case 数 -> 0
+  看门狗处理弹窗 0 个：[]
+  实例 2308 已结束
+-- 场景 saveas-missing-dir（窗口可见） --
+新实例的进程号: 13116
+  场景 saveas-missing-dir
+      用时 0.04 秒；调用期间弹窗 0 个；成功，返回 None
+        实例还活着吗：app.name -> 'Aspen HYSYS'
+        Case 数 -> 1
+      目标 no_such_dir 是否存在 False
+        case.FullName -> 'C:\\Users\\azureuser\\AppData\\Local\\Temp\\e11c__ghrc0b3\\no_such_dir\\x.hsc'
+  看门狗处理弹窗 0 个：[]
+  实例 13116 已结束
+-- 场景 saveas-bad-name（窗口可见） --
+新实例的进程号: 10076
+  场景 saveas-bad-name
+      用时 0.03 秒；调用期间弹窗 0 个；失败 com_error(-532462766, 'OLE error 0xe0434352', None, None)
+        实例还活着吗：app.name -> 'Aspen HYSYS'
+        Case 数 -> 1
+      目标 a<b>.hsc 是否存在 False
+        case.FullName -> 'C:\\Users\\azureuser\\AppData\\Local\\Temp\\e11c_7f40n0kw\\saveas-bad-name.hsc'
+  看门狗处理弹窗 0 个：[]
+  实例 10076 已结束
+== C 弹窗（窗口隐藏） ==
+-- 场景 close-modified（窗口隐藏） --
+新实例的进程号: 13176
+  case.IsDirty=False（保存后）
+  场景 close-modified
+      用时 0.14 秒；调用期间弹窗 0 个；成功，返回 (<win32com.gen_py.HYSYS 15.0 Type Library.ProcessStream instance at 0x2065517171808>, None)
+        实例还活着吗：app.name -> 'Aspen HYSYS'
+        Case 数 -> 0
+  看门狗处理弹窗 0 个：[]
+  实例 13176 已结束
+-- 场景 close-unsaved-new（窗口隐藏） --
+新实例的进程号: 13476
+  场景 close-unsaved-new
+      用时 0.67 秒；调用期间弹窗 0 个；成功，返回 None
+        实例还活着吗：app.name -> 'Aspen HYSYS'
+        Case 数 -> 1
+  看门狗处理弹窗 0 个：[]
+  实例 13476 已结束
+-- 场景 open-missing（窗口隐藏） --
+新实例的进程号: 13280
+  场景 open-missing
+      用时 0.06 秒；调用期间弹窗 0 个；失败 com_error(-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147024891), None)
+        实例还活着吗：app.name -> 'Aspen HYSYS'
+        Case 数 -> 1
+  看门狗处理弹窗 0 个：[]
+  实例 13280 已结束
+-- 场景 open-corrupt（窗口隐藏） --
+新实例的进程号: 13008
+  场景 open-corrupt
+      用时 0.14 秒；调用期间弹窗 0 个；失败 com_error(-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147024891), None)
+        实例还活着吗：app.name -> 'Aspen HYSYS'
+        Case 数 -> 1
+  看门狗处理弹窗 0 个：[]
+  实例 13008 已结束
+-- 场景 open-corrupt-after-close（窗口隐藏） --
+新实例的进程号: 6488
+  场景 open-corrupt-after-close
+      用时 0.19 秒；调用期间弹窗 0 个；失败 com_error(-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147024891), None)
+        实例还活着吗：app.name -> 'Aspen HYSYS'
+        Case 数 -> 0
+  看门狗处理弹窗 0 个：[]
+  实例 6488 已结束
+-- 场景 open-missing-then-corrupt（窗口隐藏） --
+新实例的进程号: 14496
+  场景 open-missing-then-corrupt
+      用时 0.23 秒；调用期间弹窗 0 个；失败 com_error(-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147024891), None)
+        实例还活着吗：app.name -> 'Aspen HYSYS'
+        Case 数 -> 0
+  看门狗处理弹窗 0 个：[]
+  实例 14496 已结束
+-- 场景 saveas-missing-dir（窗口隐藏） --
+新实例的进程号: 8416
+  场景 saveas-missing-dir
+      用时 0.04 秒；调用期间弹窗 0 个；成功，返回 None
+        实例还活着吗：app.name -> 'Aspen HYSYS'
+        Case 数 -> 1
+      目标 no_such_dir 是否存在 False
+        case.FullName -> 'C:\\Users\\azureuser\\AppData\\Local\\Temp\\e11c_t7l0o4nh\\no_such_dir\\x.hsc'
+  看门狗处理弹窗 0 个：[]
+  实例 8416 已结束
+-- 场景 saveas-bad-name（窗口隐藏） --
+新实例的进程号: 10736
+  场景 saveas-bad-name
+      用时 0.03 秒；调用期间弹窗 0 个；失败 com_error(-532462766, 'OLE error 0xe0434352', None, None)
+        实例还活着吗：app.name -> 'Aspen HYSYS'
+        Case 数 -> 1
+      目标 a<b>.hsc 是否存在 False
+        case.FullName -> 'C:\\Users\\azureuser\\AppData\\Local\\Temp\\e11c_vflaz438\\saveas-bad-name.hsc'
+  看门狗处理弹窗 0 个：[]
+  实例 10736 已结束
+== D 窗口隐藏 ==
+-- Visible=True --
+新实例的进程号: 5508
+  Rxn-1：LnKSource=2（2 即 Gibbs 自由能），Basis=1，AutoDetect=True，ReactionPhase=0，系数 (-1.0, -1.0, 1.0, 3.0)
+  Rxn-2：LnKSource=2（2 即 Gibbs 自由能），Basis=1，AutoDetect=True，ReactionPhase=0，系数 (-1.0, -1.0, 1.0, 1.0)
+  app.Visible=True；用时 16.7 秒（含启动）
+  实例 5508 已结束
+-- Visible=False --
+新实例的进程号: 10516
+  Rxn-1：LnKSource=2（2 即 Gibbs 自由能），Basis=1，AutoDetect=True，ReactionPhase=0，系数 (-1.0, -1.0, 1.0, 3.0)
+  Rxn-2：LnKSource=2（2 即 Gibbs 自由能），Basis=1，AutoDetect=True，ReactionPhase=0，系数 (-1.0, -1.0, 1.0, 1.0)
+  app.Visible=False；用时 15.8 秒（含启动）
+  实例 10516 已结束
+  可见与隐藏的摩尔分率最大差 0.00e+00（要求 ≤ 1e-06）；热负荷 39989.2 与 39989.2 kW
+== 结束后残留的 HYSYS 进程 {} ==

@@ -1,0 +1,28 @@
+== C 弹窗（窗口可见） ==
+新实例的进程号: 11864
+  case.IsDirty=True（保存后又加了一个物流）
+  1 关闭改过但没保存的 Case：case.Close()
+      用时 0.14 秒；调用期间弹窗 0 个；成功，返回 None
+  2a 打开不存在的文件
+      用时 0.02 秒；调用期间弹窗 0 个；失败 com_error(-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147024891), None)
+  2b 打开损坏的文件（文本文件改名 .hsc）
+      用时 3.28 秒；调用期间弹窗 0 个；失败 com_error(-2147023170, 'The remote procedure call failed.', None, None)
+  实例 11864 已结束
+Traceback (most recent call last):
+  File "C:\Users\azureuser\Desktop\ChemicalAgent\spikes\e11_robustness.py", line 391, in main
+    run()
+  File "C:\Users\azureuser\Desktop\ChemicalAgent\spikes\e11_robustness.py", line 384, in <lambda>
+    "C": lambda: [popups(log, True), popups(log, False)],
+                  ^^^^^^^^^^^^^^^^^
+  File "C:\Users\azureuser\Desktop\ChemicalAgent\spikes\e11_robustness.py", line 306, in popups
+    again = app.SimulationCases.Open(str(saved))
+            ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\azureuser\Desktop\ChemicalAgent\.venv\Lib\site-packages\win32com\client\__init__.py", line 590, in __getattr__
+    return self._ApplyTypes_(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\azureuser\Desktop\ChemicalAgent\.venv\Lib\site-packages\win32com\client\__init__.py", line 581, in _ApplyTypes_
+    self._oleobj_.InvokeTypes(dispid, 0, wFlags, retType, argTypes, *args),
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pywintypes.com_error: (-2147023174, 'The RPC server is unavailable.', None, None)
+
+== 结束后残留的 HYSYS 进程 {} ==

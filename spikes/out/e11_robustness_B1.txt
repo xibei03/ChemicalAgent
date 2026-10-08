@@ -1,0 +1,43 @@
+== B1 进程中断：两次调用之间 ==
+新实例的进程号: 1732
+  [定时器] B1：3.0 秒到，taskkill /F /PID 1732
+  循环里成功读了 59 次；第一次失败发生在 3.13 秒：com_error(-2147023174, 'The RPC server is unavailable.', None, None)
+  同一个物流对象再读一次 -> 失败 com_error: (-2147023174, 'The RPC server is unavailable.', None, None)
+      这一次调用用时 0.00 秒
+  app.name -> 失败 com_error: (-2147023174, 'The RPC server is unavailable.', None, None)
+      这一次调用用时 0.00 秒
+  app.SimulationCases.Count -> 失败 com_error: (-2147023174, 'The RPC server is unavailable.', None, None)
+      这一次调用用时 0.00 秒
+  case.Flowsheet -> 失败 com_error: (-2147023174, 'The RPC server is unavailable.', None, None)
+      这一次调用用时 0.00 秒
+  case.Close() -> 失败 com_error: (-2147023174, 'The RPC server is unavailable.', None, None)
+      这一次调用用时 0.00 秒
+  tasklist 里的 HYSYS 进程 {}
+  实例 1732 已结束
+== B2 进程中断：SaveAs 期间 ==
+新实例的进程号: 5516
+  [定时器] B-save：3.0 秒到，taskkill /F /PID 5516
+  成功循环 89 轮；失败：(3.144573926925659, 'SaveAs', "com_error(-2147023170, 'The remote procedure call failed.', None, None)")
+  tasklist 里的 HYSYS 进程 {5516: 'AspenHysys.exe'}
+  实例 5516 已结束
+  之后目录里的文件和大小 {'source.hsc': 188098, 'target.ads': 10846, 'target.bk0': 204198, 'target.hsc': 204198}
+新实例的进程号: 14452
+    新实例能正常用：Case 数 -> 0
+    新实例打开 source.hsc -> <win32com.gen_py.HYSYS 15.0 Type Library._SimulationCase instance at 0x2190041746032>
+        读回物流 Names -> ['Feed-100', 'Vap-100', 'Liq-100', 'Feed-ADI', 'Vap-ADI', 'Liq-ADI', 'Feed-DUTY', 'Vap-DUTY', 'Liq-DUTY', 'Feed-K', 'Vap-K', 'Liq-K']
+    新实例打开 target.hsc -> <win32com.gen_py.HYSYS 15.0 Type Library._SimulationCase instance at 0x2190041746368>
+        读回物流 Names -> ['Feed-100', 'Vap-100', 'Liq-100', 'Feed-ADI', 'Vap-ADI', 'Liq-ADI', 'Feed-DUTY', 'Vap-DUTY', 'Liq-DUTY', 'Feed-K', 'Vap-K', 'Liq-K']
+  实例 14452 已结束
+== B3 进程中断：Open 期间 ==
+新实例的进程号: 13680
+  [定时器] B-open：3.0 秒到，taskkill /F /PID 13680
+  成功循环 2 轮；失败：(3.129716396331787, 'Open', "com_error(-2147023170, 'The remote procedure call failed.', None, None)")
+  tasklist 里的 HYSYS 进程 {13680: 'AspenHysys.exe'}
+  实例 13680 已结束
+  之后目录里的文件和大小 {'source.hsc': 188098}
+新实例的进程号: 9760
+    新实例能正常用：Case 数 -> 0
+    新实例打开 source.hsc -> <win32com.gen_py.HYSYS 15.0 Type Library._SimulationCase instance at 0x2190041746656>
+        读回物流 Names -> ['Feed-100', 'Vap-100', 'Liq-100', 'Feed-ADI', 'Vap-ADI', 'Liq-ADI', 'Feed-DUTY', 'Vap-DUTY', 'Liq-DUTY', 'Feed-K', 'Vap-K', 'Liq-K']
+  实例 9760 已结束
+== 结束后残留的 HYSYS 进程 {} ==

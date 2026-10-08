@@ -1,0 +1,104 @@
+新实例的进程号: 6160
+== A1 同名对象：Case、Basis、反应、物流 ==
+  Case 数 1，名字 ['Case']
+  SimulationCases.Add('e11_dup')（与已有的 Case 同名）
+      第 1 次 成功，返回 'Case'
+      第 2 次 成功，返回 'Case'
+  之后 Case 数 3，名字 ['Case', 'Case', 'Case']
+  ComponentLists.Add('CL-1')
+      第 1 次 成功，返回 'CL-1'
+      第 2 次 成功，返回 'CL-1'
+  组分列表 ['CL-1', 'Component List - 1']
+  [弹窗] 标题='Aspen HYSYS' 文字='Static: Duplicate Object Name: Basis-1 - Disallowed' 已点 'OK'
+  [弹窗] 标题='Aspen HYSYS' 文字='Static: Duplicate Object Name: Basis-1 - Disallowed' 已点 'OK'
+  FluidPackages.Add('Basis-1')
+      第 1 次 成功，返回 'Basis-2'
+      第 2 次 成功，返回 'Basis-3'
+  流体包 ['Basis-1', 'Basis-2', 'Basis-3']
+  Components.Add('Methane')
+      第 1 次 成功，返回 'Methane'
+      第 2 次 成功，返回 'Methane'
+  Reactions.Add('Rxn-1', 'equilibriumrxn')
+      第 1 次 成功，返回 'Rxn-1'
+      第 2 次 成功，返回 'Rxn-2'
+  反应 ['Rxn-1', 'Rxn-2']
+  Reactants.Add('Methane')
+      第 1 次 成功，返回 <win32com.gen_py.HYSYS 15.0 Type Library.Reactant instance at 0x2681918326928>
+      第 2 次 成功，返回 <win32com.gen_py.HYSYS 15.0 Type Library.Reactant instance at 0x2681918326976>
+  反应物 ['Methane', 'Methane']
+  ReactionSets.Add('RxnSet-1')
+      第 1 次 成功，返回 'RxnSet-1'
+      第 2 次 成功，返回 'Set-1'
+  ActiveReactions.Add('Rxn-1')
+      第 1 次 成功，返回 'Rxn-1'
+      第 2 次 成功，返回 'Rxn-1'
+  反应集成员 ['Rxn-1']
+  AssociateFluidPackage（第二次）
+      第 1 次 成功，返回 None
+      第 2 次 成功，返回 None
+  MaterialStreams.Add('Feed')
+      第 1 次 成功，返回 'Feed'
+      第 2 次 成功，返回 'Feed'
+  EnergyStreams.Add('Q-1')
+      第 1 次 成功，返回 'Q-1'
+      第 2 次 成功，返回 'Q-1'
+  实例 6160 已结束
+== A2 同名对象：操作和连接 ==
+-- 场景 same-type --
+新实例的进程号: 11788
+  先建了 ERV-100；操作 ['ERV-100']
+  场景 same-type -> <win32com.gen_py.HYSYS 15.0 Type Library.EquilibriumReactor instance at 0x2681918326544>
+      调用期间弹窗点击 0 次，不同的文字 []
+        实例还活着吗：app.name -> 'Aspen HYSYS'
+        操作 -> ['ERV-100']
+        物流 -> ['Feed', 'Vap', 'Liq']
+        ERV-100 的进料 -> []
+  实例 11788 已结束
+-- 场景 other-type --
+新实例的进程号: 13920
+  先建了 ERV-100；操作 ['ERV-100']
+  [弹窗] 标题='Aspen HYSYS' 文字='Static: Duplicate Object Name: ERV-100 - Creating New Object ERV-100_2' 已点 'OK'
+  [弹窗] 标题='Aspen HYSYS' 文字='Static: Duplicate Object Name: ERV-100 - Creating New Object ERV-100_2' 已点 'OK'
+  [弹窗] 标题='Aspen HYSYS' 文字='Static: Duplicate Object Name: ERV-100 - Creating New Object ERV-100_2' 已点 'OK'
+  [弹窗] 标题='Aspen HYSYS' 文字='Static: Duplicate Object Name: ERV-100 - Creating New Object ERV-100_2' 已点 'OK'
+  [弹窗] 标题='Aspen HYSYS' 文字='Static: Duplicate Object Name: ERV-100 - Creating New Object ERV-100_2' 已点 'OK'
+  [弹窗] 标题='Aspen HYSYS' 文字='Static: Duplicate Object Name: ERV-100 - Creating New Object ERV-100_2' 已点 'OK'
+  [弹窗] 标题='Aspen HYSYS' 文字='Static: Duplicate Object Name: ERV-100 - Creating New Object ERV-100_2' 已点 'OK'
+  场景 other-type -> 失败 com_error: (-2147023170, 'The remote procedure call failed.', None, None)
+      调用期间弹窗点击 7 次，不同的文字 ['Static: Duplicate Object Name: ERV-100 - Creating New Object ERV-100_2']
+        实例还活着吗：app.name -> 失败 com_error: (-2147023174, 'The RPC server is unavailable.', None, None)
+        操作 -> 失败 com_error: (-2147023174, 'The RPC server is unavailable.', None, None)
+        物流 -> 失败 com_error: (-2147023174, 'The RPC server is unavailable.', None, None)
+        ERV-100 的进料 -> 失败 com_error: (-2147023174, 'The RPC server is unavailable.', None, None)
+  实例 13920 已结束
+-- 场景 stream-named-like-operation --
+新实例的进程号: 2464
+  先建了 ERV-100；操作 ['ERV-100']
+  场景 stream-named-like-operation -> <win32com.gen_py.HYSYS 15.0 Type Library.ProcessStream instance at 0x2681918328752>
+      调用期间弹窗点击 0 次，不同的文字 []
+        实例还活着吗：app.name -> 'Aspen HYSYS'
+        操作 -> ['ERV-100']
+        物流 -> ['Feed', 'Vap', 'Liq', 'ERV-100']
+        ERV-100 的进料 -> []
+  实例 2464 已结束
+-- 场景 feed-twice --
+新实例的进程号: 10820
+  先建了 ERV-100；操作 ['ERV-100']
+  场景 feed-twice -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+      调用期间弹窗点击 0 次，不同的文字 []
+        实例还活着吗：app.name -> 'Aspen HYSYS'
+        操作 -> ['ERV-100']
+        物流 -> ['Feed', 'Vap', 'Liq']
+        ERV-100 的进料 -> ['Feed']
+  实例 10820 已结束
+-- 场景 product-of-two-reactors --
+新实例的进程号: 112
+  先建了 ERV-100；操作 ['ERV-100']
+  场景 product-of-two-reactors -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147024809), None)
+      调用期间弹窗点击 0 次，不同的文字 []
+        实例还活着吗：app.name -> 'Aspen HYSYS'
+        操作 -> ['ERV-100', 'ERV-200']
+        物流 -> ['Feed', 'Vap', 'Liq']
+        ERV-100 的进料 -> []
+  实例 112 已结束
+== 结束后残留的 HYSYS 进程 {} ==
