@@ -1,0 +1,122 @@
+新实例的进程号: 15044
+  反应集.Moniker -> <PyIUnknown at 0x00000196CBB446B0 with obj at 0x00000196C74A0A30>
+  反应集.UniqueID -> 'C:\\Windows\\system32\\e7_toluene.hsc!FluidPkgMgr.300/RxnPackageManager.300/RxnSet.300(Conv-Set)'
+  反应器.Moniker -> <PyIUnknown at 0x00000196CBB44710 with obj at 0x00000196C74A08B0>
+  反应器.UniqueID -> 'C:\\Windows\\system32\\e7_toluene.hsc!FlowSht.1/UnitOpObject.400(CRV-100)'
+  反应.Moniker -> <PyIUnknown at 0x00000196CBB44860 with obj at 0x00000196C74A0D30>
+  反应.UniqueID -> 'C:\\Windows\\system32\\e7_toluene.hsc!FluidPkgMgr.300/RxnPackageManager.300/Rxn.300(R-pX)'
+== Q1 ProvideXMLForOperation 的 flags ==
+  ProvideXMLForOperation('CRV-100', 0) 的长度 -> 352909
+      排序节点 3 个；第一个原文: <ReactionRank OwnerType="RxnSetObject" OwnerName="Conv-Set" Type="Param">
+								<Value>0</Value>
+								<ValueType>Real</ValueType>
+								<Status>Specified</Status>
+							</ReactionRank>
+  ProvideXMLForOperation('CRV-100', 1) 的长度 -> 263496
+      排序节点 3 个；第一个原文: <ReactionRank OwnerType="RxnSetObject" OwnerName="Conv-Set" Type="Param">
+								<Value>0</Value>
+								<ValueType>Real</ValueType>
+								<Status>Specified</Status>
+							</ReactionRank>
+  ProvideXMLForOperation('CRV-100', 2) 的长度 -> 360025
+      排序节点 3 个；第一个原文: <ReactionRank OwnerType="RxnSetObject" OwnerName="Conv-Set" Type="Param">
+								<Value>0</Value>
+								<ValueType>Real</ValueType>
+								<Status>Specified</Status>
+							</ReactionRank>
+  ProvideXMLForOperation('CRV-100', 8) 的长度 -> 374564
+      排序节点 3 个；第一个原文: <ReactionRank OwnerType="RxnSetObject" OwnerName="Conv-Set" Type="Param">
+								<Value>0</Value>
+								<ValueType>Real</ValueType>
+								<Moniker>:Index.400.0</Moniker>
+								<Status>Specified</Status>
+							</ReactionRank>
+  ProvideXMLForOperation('CRV-100', 9) 的长度 -> 268095
+      排序节点 3 个；第一个原文: <ReactionRank OwnerType="RxnSetObject" OwnerName="Conv-Set" Type="Param">
+								<Value>0</Value>
+								<ValueType>Real</ValueType>
+								<Moniker>:Index.400.0</Moniker>
+								<Status>Specified</Status>
+							</ReactionRank>
+  ProvideXMLForOperation('CRV-100', 16) 的长度 -> 354048
+      排序节点 3 个；第一个原文: <ReactionRank OwnerType="RxnSetObject" OwnerName="Conv-Set" Type="Param">
+								<Value>0</Value>
+								<ValueType>Real</ValueType>
+								<Status>Specified</Status>
+							</ReactionRank>
+  ProvideXMLForOperation('CRV-100', 128) 的长度 -> 354048
+      排序节点 3 个；第一个原文: <ReactionRank OwnerType="RxnSetObject" OwnerName="Conv-Set" Type="Param">
+								<Value>0</Value>
+								<ValueType>Real</ValueType>
+								<Status>Specified</Status>
+							</ReactionRank>
+  ProvideXMLForOperation('CRV-100', 129) 的长度 -> 263496
+      排序节点 3 个；第一个原文: <ReactionRank OwnerType="RxnSetObject" OwnerName="Conv-Set" Type="Param">
+								<Value>0</Value>
+								<ValueType>Real</ValueType>
+								<Status>Specified</Status>
+							</ReactionRank>
+  ProvideXMLForOperation('CRV-100', 2048) 的长度 -> 354048
+      排序节点 3 个；第一个原文: <ReactionRank OwnerType="RxnSetObject" OwnerName="Conv-Set" Type="Param">
+								<Value>0</Value>
+								<ValueType>Real</ValueType>
+								<Status>Specified</Status>
+							</ReactionRank>
+  ProvideXMLForOperation('CRV-100', 4096) 的长度 -> 354048
+      排序节点 3 个；第一个原文: <ReactionRank OwnerType="RxnSetObject" OwnerName="Conv-Set" Type="Param">
+								<Value>0</Value>
+								<ValueType>Real</ValueType>
+								<Status>Specified</Status>
+							</ReactionRank>
+  ProvideXMLForOperation('CRV-100', 8192) 的长度 -> 279653
+      排序节点 3 个；第一个原文: <ReactionRank Type="Param">
+								<Value>0</Value>
+								<ValueType>Real</ValueType>
+								<Status>Specified</Status>
+							</ReactionRank>
+  ProvideXMLForOperation('CRV-100', 2056) 的长度 -> 374564
+      排序节点 3 个；第一个原文: <ReactionRank OwnerType="RxnSetObject" OwnerName="Conv-Set" Type="Param">
+								<Value>0</Value>
+								<ValueType>Real</ValueType>
+								<Moniker>:Index.400.0</Moniker>
+								<Status>Specified</Status>
+							</ReactionRank>
+== Q2 BackDoor ==
+  app.BackDoor -> <win32com.gen_py.HYSYS 15.0 Type Library.BackDoor instance at 0x1746294063808>
+  BackDoorVariable('<PyIUnknown at 0x00000196CBB446B0 with obj at 0x00000196C74A0A30>:Index.400.[0]') -> <win32com.gen_py.HYSYS 15.0 Type Library.InternalVariableWrapper instance at 0x1746356520192>
+      IsValid=True，Tag=''，Index1=抛 com_error(-2147352567)，Index2=抛 com_error(-2147352567)，Index3=抛 com_error(-2147352567)
+        .Variable -> <win32com.gen_py.HYSYS 15.0 Type Library.InternalRealFlexVariable instance at 0x1746319851488>
+  BackDoorRealVariable('<PyIUnknown at 0x00000196CBB446B0 with obj at 0x00000196C74A0A30>:Index.400.[0]') -> <win32com.gen_py.HYSYS 15.0 Type Library.InternalVariableWrapper instance at 0x1746319851488>
+      IsValid=True，Tag=''，Index1=抛 com_error(-2147352567)，Index2=抛 com_error(-2147352567)，Index3=抛 com_error(-2147352567)
+        .Variable -> <win32com.gen_py.HYSYS 15.0 Type Library.InternalRealFlexVariable instance at 0x1746356521296>
+  BackDoorVariable('<PyIUnknown at 0x00000196CBB446B0 with obj at 0x00000196C74A0A30>.Index.400.[0]') -> <win32com.gen_py.HYSYS 15.0 Type Library.InternalVariableWrapper instance at 0x1746356521296>
+      IsValid=True，Tag=''，Index1=抛 com_error(-2147352567)，Index2=抛 com_error(-2147352567)，Index3=抛 com_error(-2147352567)
+        .Variable -> <win32com.gen_py.HYSYS 15.0 Type Library.InternalTextFlexVariable instance at 0x1746319851488>
+  BackDoorRealVariable('<PyIUnknown at 0x00000196CBB446B0 with obj at 0x00000196C74A0A30>.Index.400.[0]') -> <win32com.gen_py.HYSYS 15.0 Type Library.InternalVariableWrapper instance at 0x1746319851488>
+      IsValid=True，Tag=''，Index1=抛 com_error(-2147352567)，Index2=抛 com_error(-2147352567)，Index3=抛 com_error(-2147352567)
+        .Variable -> <win32com.gen_py.HYSYS 15.0 Type Library.InternalRealFlexVariable instance at 0x1746356520192>
+  BackDoorVariable('<PyIUnknown at 0x00000196CBB446B0 with obj at 0x00000196C74A0A30>:Index.400.[]') -> <win32com.gen_py.HYSYS 15.0 Type Library.InternalVariableWrapper instance at 0x1746356520192>
+      IsValid=True，Tag=''，Index1=抛 com_error(-2147352567)，Index2=抛 com_error(-2147352567)，Index3=抛 com_error(-2147352567)
+        .Variable -> <win32com.gen_py.HYSYS 15.0 Type Library.InternalRealFlexVariable instance at 0x1746319851488>
+  BackDoorRealVariable('<PyIUnknown at 0x00000196CBB446B0 with obj at 0x00000196C74A0A30>:Index.400.[]') -> <win32com.gen_py.HYSYS 15.0 Type Library.InternalVariableWrapper instance at 0x1746319851488>
+      IsValid=True，Tag=''，Index1=抛 com_error(-2147352567)，Index2=抛 com_error(-2147352567)，Index3=抛 com_error(-2147352567)
+        .Variable -> <win32com.gen_py.HYSYS 15.0 Type Library.InternalRealFlexVariable instance at 0x1746356521296>
+  BackDoorVariable('C:\\Windows\\system32\\e7_toluene.hsc!FluidPkgMgr.300/RxnPackageManager.300/RxnSet.300(Conv-Set):Index.400.[0]') -> <win32com.gen_py.HYSYS 15.0 Type Library.InternalVariableWrapper instance at 0x1746356521296>
+      IsValid=True，Tag=''，Index1=抛 com_error(-2147352567)，Index2=抛 com_error(-2147352567)，Index3=抛 com_error(-2147352567)
+        .Variable -> <win32com.gen_py.HYSYS 15.0 Type Library.InternalTextVariable instance at 0x1746319851488>
+  BackDoorRealVariable('C:\\Windows\\system32\\e7_toluene.hsc!FluidPkgMgr.300/RxnPackageManager.300/RxnSet.300(Conv-Set):Index.400.[0]') -> <win32com.gen_py.HYSYS 15.0 Type Library.InternalVariableWrapper instance at 0x1746319851488>
+      IsValid=True，Tag=''，Index1=抛 com_error(-2147352567)，Index2=抛 com_error(-2147352567)，Index3=抛 com_error(-2147352567)
+        .Variable -> <win32com.gen_py.HYSYS 15.0 Type Library.InternalRealVariable instance at 0x1746356520192>
+  BackDoorVariable('C:\\Windows\\system32\\e7_toluene.hsc!FluidPkgMgr.300/RxnPackageManager.300/RxnSet.300(Conv-Set).Index.400.[0]') -> <win32com.gen_py.HYSYS 15.0 Type Library.InternalVariableWrapper instance at 0x1746356520192>
+      IsValid=True，Tag=''，Index1=抛 com_error(-2147352567)，Index2=抛 com_error(-2147352567)，Index3=抛 com_error(-2147352567)
+        .Variable -> <win32com.gen_py.HYSYS 15.0 Type Library.InternalTextVariable instance at 0x1746319851488>
+  BackDoorRealVariable('C:\\Windows\\system32\\e7_toluene.hsc!FluidPkgMgr.300/RxnPackageManager.300/RxnSet.300(Conv-Set).Index.400.[0]') -> <win32com.gen_py.HYSYS 15.0 Type Library.InternalVariableWrapper instance at 0x1746319851488>
+      IsValid=True，Tag=''，Index1=抛 com_error(-2147352567)，Index2=抛 com_error(-2147352567)，Index3=抛 com_error(-2147352567)
+        .Variable -> <win32com.gen_py.HYSYS 15.0 Type Library.InternalRealVariable instance at 0x1746356521296>
+  BackDoorVariable('C:\\Windows\\system32\\e7_toluene.hsc!FluidPkgMgr.300/RxnPackageManager.300/RxnSet.300(Conv-Set):Index.400.[]') -> <win32com.gen_py.HYSYS 15.0 Type Library.InternalVariableWrapper instance at 0x1746356521296>
+      IsValid=True，Tag=''，Index1=抛 com_error(-2147352567)，Index2=抛 com_error(-2147352567)，Index3=抛 com_error(-2147352567)
+        .Variable -> <win32com.gen_py.HYSYS 15.0 Type Library.InternalTextVariable instance at 0x1746319851488>
+  BackDoorRealVariable('C:\\Windows\\system32\\e7_toluene.hsc!FluidPkgMgr.300/RxnPackageManager.300/RxnSet.300(Conv-Set):Index.400.[]') -> <win32com.gen_py.HYSYS 15.0 Type Library.InternalVariableWrapper instance at 0x1746319851488>
+      IsValid=True，Tag=''，Index1=抛 com_error(-2147352567)，Index2=抛 com_error(-2147352567)，Index3=抛 com_error(-2147352567)
+        .Variable -> <win32com.gen_py.HYSYS 15.0 Type Library.InternalRealVariable instance at 0x1746356520192>
+  实例 15044 已结束

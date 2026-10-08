@@ -1,0 +1,180 @@
+新实例的进程号: 8404
+== Q1 ProvideXMLForOperation 的 flags ==
+  ProvideXMLForOperation('CRV-100', 0) 的长度 -> 352916
+      排序节点 3 个；第一个原文: <ReactionRank OwnerType="RxnSetObject" OwnerName="Conv-Set" Type="Param">
+								<Value>0</Value>
+								<ValueType>Real</ValueType>
+								<Status>Specified</Status>
+							</ReactionRank>
+  ProvideXMLForOperation('CRV-100', 1) 的长度 -> 263503
+      排序节点 3 个；第一个原文: <ReactionRank OwnerType="RxnSetObject" OwnerName="Conv-Set" Type="Param">
+								<Value>0</Value>
+								<ValueType>Real</ValueType>
+								<Status>Specified</Status>
+							</ReactionRank>
+  ProvideXMLForOperation('CRV-100', 2) 的长度 -> 360032
+      排序节点 3 个；第一个原文: <ReactionRank OwnerType="RxnSetObject" OwnerName="Conv-Set" Type="Param">
+								<Value>0</Value>
+								<ValueType>Real</ValueType>
+								<Status>Specified</Status>
+							</ReactionRank>
+  ProvideXMLForOperation('CRV-100', 8) 的长度 -> 374571
+      排序节点 3 个；第一个原文: <ReactionRank OwnerType="RxnSetObject" OwnerName="Conv-Set" Type="Param">
+								<Value>0</Value>
+								<ValueType>Real</ValueType>
+								<Moniker>:Index.400.0</Moniker>
+								<Status>Specified</Status>
+							</ReactionRank>
+  ProvideXMLForOperation('CRV-100', 9) 的长度 -> 268102
+      排序节点 3 个；第一个原文: <ReactionRank OwnerType="RxnSetObject" OwnerName="Conv-Set" Type="Param">
+								<Value>0</Value>
+								<ValueType>Real</ValueType>
+								<Moniker>:Index.400.0</Moniker>
+								<Status>Specified</Status>
+							</ReactionRank>
+  ProvideXMLForOperation('CRV-100', 16) 的长度 -> 354055
+      排序节点 3 个；第一个原文: <ReactionRank OwnerType="RxnSetObject" OwnerName="Conv-Set" Type="Param">
+								<Value>0</Value>
+								<ValueType>Real</ValueType>
+								<Status>Specified</Status>
+							</ReactionRank>
+  ProvideXMLForOperation('CRV-100', 128) 的长度 -> 354055
+      排序节点 3 个；第一个原文: <ReactionRank OwnerType="RxnSetObject" OwnerName="Conv-Set" Type="Param">
+								<Value>0</Value>
+								<ValueType>Real</ValueType>
+								<Status>Specified</Status>
+							</ReactionRank>
+  ProvideXMLForOperation('CRV-100', 129) 的长度 -> 263503
+      排序节点 3 个；第一个原文: <ReactionRank OwnerType="RxnSetObject" OwnerName="Conv-Set" Type="Param">
+								<Value>0</Value>
+								<ValueType>Real</ValueType>
+								<Status>Specified</Status>
+							</ReactionRank>
+  ProvideXMLForOperation('CRV-100', 2048) 的长度 -> 354055
+      排序节点 3 个；第一个原文: <ReactionRank OwnerType="RxnSetObject" OwnerName="Conv-Set" Type="Param">
+								<Value>0</Value>
+								<ValueType>Real</ValueType>
+								<Status>Specified</Status>
+							</ReactionRank>
+  ProvideXMLForOperation('CRV-100', 4096) 的长度 -> 354055
+      排序节点 3 个；第一个原文: <ReactionRank OwnerType="RxnSetObject" OwnerName="Conv-Set" Type="Param">
+								<Value>0</Value>
+								<ValueType>Real</ValueType>
+								<Status>Specified</Status>
+							</ReactionRank>
+  ProvideXMLForOperation('CRV-100', 8192) 的长度 -> 279660
+      排序节点 3 个；第一个原文: <ReactionRank Type="Param">
+								<Value>0</Value>
+								<ValueType>Real</ValueType>
+								<Status>Specified</Status>
+							</ReactionRank>
+  ProvideXMLForOperation('CRV-100', 2056) 的长度 -> 374571
+      排序节点 3 个；第一个原文: <ReactionRank OwnerType="RxnSetObject" OwnerName="Conv-Set" Type="Param">
+								<Value>0</Value>
+								<ValueType>Real</ValueType>
+								<Moniker>:Index.400.0</Moniker>
+								<Status>Specified</Status>
+							</ReactionRank>
+== Q2 BackDoor 读排序 ==
+  BackDoorRealVariable(<反应集>:Index.400.0).Variable -> <win32com.gen_py.HYSYS 15.0 Type Library.InternalRealVariable instance at 0x3113829124720>
+      IsKnown=False，Value=-32767.0，State=1，CanModify=True
+  BackDoorRealVariable(<反应集>:Index.400.1).Variable -> <win32com.gen_py.HYSYS 15.0 Type Library.InternalRealVariable instance at 0x3113829125248>
+      IsKnown=False，Value=-32767.0，State=1，CanModify=True
+  BackDoorRealVariable(<反应集>:Index.400.2).Variable -> <win32com.gen_py.HYSYS 15.0 Type Library.InternalRealVariable instance at 0x3113829124048>
+      IsKnown=False，Value=-32767.0，State=1，CanModify=True
+  BackDoorRealVariable(<反应集>:Index.400.[0]).Variable -> <win32com.gen_py.HYSYS 15.0 Type Library.InternalRealVariable instance at 0x3113829125056>
+      IsKnown=False，Value=-32767.0，State=1，CanModify=True
+  BackDoorRealVariable(<反应集>:Index.400.[1]).Variable -> <win32com.gen_py.HYSYS 15.0 Type Library.InternalRealVariable instance at 0x3113829125008>
+      IsKnown=False，Value=-32767.0，State=1，CanModify=True
+  BackDoorRealVariable(<反应集>:Index.400.[2]).Variable -> <win32com.gen_py.HYSYS 15.0 Type Library.InternalRealVariable instance at 0x3113829124720>
+      IsKnown=False，Value=-32767.0，State=1，CanModify=True
+  BackDoorRealVariable(<反应集>.Index.400.0).Variable -> <win32com.gen_py.HYSYS 15.0 Type Library.InternalRealVariable instance at 0x3113829125248>
+      IsKnown=False，Value=-32767.0，State=1，CanModify=True
+  BackDoorRealVariable(<反应集>.Index.400.1).Variable -> <win32com.gen_py.HYSYS 15.0 Type Library.InternalRealVariable instance at 0x3113829124048>
+      IsKnown=False，Value=-32767.0，State=1，CanModify=True
+  BackDoorRealVariable(<反应集>.Index.400.2).Variable -> <win32com.gen_py.HYSYS 15.0 Type Library.InternalRealVariable instance at 0x3113829125056>
+      IsKnown=False，Value=-32767.0，State=1，CanModify=True
+== Q3 BackDoor 写排序（每次一个新 Case） ==
+-- 写 (0.0, 1.0, 2.0)：依次：预测甲苯 0.5731 --
+    第 0 号 SetValue(0.0) -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    第 1 号 SetValue(1.0) -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    第 2 号 SetValue(2.0) -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+      写后 XML 里的排序 ['0', '0', '0']
+  [排序 (0.0, 1.0, 2.0)] 出口摩尔分率 {'Toluene': 0.5, 'Benzene': 0.25, 'p-Xylene': 0.06, 'm-Xylene': 0.13, 'o-Xylene': 0.06}
+      出口甲苯摩尔分率 0.5000：并行（0.500）
+        reactor.ConversionValue -> (12.0, 26.0, 12.0)
+        reactor.RxnPercentConversionValue -> (12.0, 26.0, 12.0)
+-- 写 (1.0, 1.0, 0.0)：第三个先算，前两个并行：预测甲苯 0.5456 --
+    第 0 号 SetValue(1.0) -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    第 1 号 SetValue(1.0) -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    第 2 号 SetValue(0.0) -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+      写后 XML 里的排序 ['0', '0', '0']
+  [排序 (1.0, 1.0, 0.0)] 出口摩尔分率 {'Toluene': 0.5, 'Benzene': 0.25, 'p-Xylene': 0.06, 'm-Xylene': 0.13, 'o-Xylene': 0.06}
+      出口甲苯摩尔分率 0.5000：并行（0.500）
+        reactor.ConversionValue -> (12.0, 26.0, 12.0)
+        reactor.RxnPercentConversionValue -> (12.0, 26.0, 12.0)
+-- 写 (2.0, 1.0, 0.0)：倒序依次：预测甲苯 0.5731 --
+    第 0 号 SetValue(2.0) -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    第 1 号 SetValue(1.0) -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    第 2 号 SetValue(0.0) -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+      写后 XML 里的排序 ['0', '0', '0']
+  [排序 (2.0, 1.0, 0.0)] 出口摩尔分率 {'Toluene': 0.5, 'Benzene': 0.25, 'p-Xylene': 0.06, 'm-Xylene': 0.13, 'o-Xylene': 0.06}
+      出口甲苯摩尔分率 0.5000：并行（0.500）
+        reactor.ConversionValue -> (12.0, 26.0, 12.0)
+        reactor.RxnPercentConversionValue -> (12.0, 26.0, 12.0)
+-- 写 (5.0, 5.0, 5.0)：三个相同的非零值：预测并行 0.5000 --
+    第 0 号 SetValue(5.0) -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    第 1 号 SetValue(5.0) -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    第 2 号 SetValue(5.0) -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+      写后 XML 里的排序 ['0', '0', '0']
+  [排序 (5.0, 5.0, 5.0)] 出口摩尔分率 {'Toluene': 0.5, 'Benzene': 0.25, 'p-Xylene': 0.06, 'm-Xylene': 0.13, 'o-Xylene': 0.06}
+      出口甲苯摩尔分率 0.5000：并行（0.500）
+        reactor.ConversionValue -> (12.0, 26.0, 12.0)
+        reactor.RxnPercentConversionValue -> (12.0, 26.0, 12.0)
+== Q4 带 flags 的 ApplyXMLForOperation（每次一个新 Case） ==
+-- flags=8，排序 (0, 1, 2)：预测甲苯 0.5731 --
+      写回前：进料组成 (1.0, 0.0, 0.0, 0.0, 0.0)，排序 ['0', '0', '0']
+  ApplyXMLForOperation('CRV-100', 8, 最小 XML) -> False
+      写回后：返回 False，进料组成 (1.0, 0.0, 0.0, 0.0, 0.0)
+      写回后排序 ['0', '0', '0']
+  [flags=8] 出口摩尔分率 {'Toluene': 0.2, 'Benzene': 0.2, 'p-Xylene': 0.2, 'm-Xylene': 0.2, 'o-Xylene': 0.2}
+      出口甲苯摩尔分率 0.2000：不是已知的三种
+        reactor.ConversionValue -> (12.0, 26.0, 12.0)
+        reactor.RxnPercentConversionValue -> (12.0, 26.0, 12.0)
+-- flags=9，排序 (0, 1, 2)：预测甲苯 0.5731 --
+      写回前：进料组成 (1.0, 0.0, 0.0, 0.0, 0.0)，排序 ['0', '0', '0']
+  ApplyXMLForOperation('CRV-100', 9, 最小 XML) -> False
+      写回后：返回 False，进料组成 (1.0, 0.0, 0.0, 0.0, 0.0)
+      写回后排序 ['0', '0', '0']
+  [flags=9] 出口摩尔分率 {'Toluene': 0.2, 'Benzene': 0.2, 'p-Xylene': 0.2, 'm-Xylene': 0.2, 'o-Xylene': 0.2}
+      出口甲苯摩尔分率 0.2000：不是已知的三种
+        reactor.ConversionValue -> (12.0, 26.0, 12.0)
+        reactor.RxnPercentConversionValue -> (12.0, 26.0, 12.0)
+-- flags=128，排序 (0, 1, 2)：预测甲苯 0.5731 --
+      写回前：进料组成 (1.0, 0.0, 0.0, 0.0, 0.0)，排序 ['0', '0', '0']
+  ApplyXMLForOperation('CRV-100', 128, 最小 XML) -> True
+      写回后：返回 True，进料组成 (1.0, 0.0, 0.0, 0.0, 0.0)
+      写回后排序 ['0', '0', '0']
+  [flags=128] 出口摩尔分率 {'Toluene': 0.5, 'Benzene': 0.25, 'p-Xylene': 0.06, 'm-Xylene': 0.13, 'o-Xylene': 0.06}
+      出口甲苯摩尔分率 0.5000：并行（0.500）
+        reactor.ConversionValue -> (12.0, 26.0, 12.0)
+        reactor.RxnPercentConversionValue -> (12.0, 26.0, 12.0)
+-- flags=129，排序 (0, 1, 2)：预测甲苯 0.5731 --
+      写回前：进料组成 (1.0, 0.0, 0.0, 0.0, 0.0)，排序 ['0', '0', '0']
+  ApplyXMLForOperation('CRV-100', 129, 最小 XML) -> True
+      写回后：返回 True，进料组成 (1.0, 0.0, 0.0, 0.0, 0.0)
+      写回后排序 ['0', '0', '0']
+  [flags=129] 出口摩尔分率 {'Toluene': 0.5, 'Benzene': 0.25, 'p-Xylene': 0.06, 'm-Xylene': 0.13, 'o-Xylene': 0.06}
+      出口甲苯摩尔分率 0.5000：并行（0.500）
+        reactor.ConversionValue -> (12.0, 26.0, 12.0)
+        reactor.RxnPercentConversionValue -> (12.0, 26.0, 12.0)
+-- flags=137，排序 (0, 1, 2)：预测甲苯 0.5731 --
+      写回前：进料组成 (1.0, 0.0, 0.0, 0.0, 0.0)，排序 ['0', '0', '0']
+  ApplyXMLForOperation('CRV-100', 137, 最小 XML) -> True
+      写回后：返回 True，进料组成 (1.0, 0.0, 0.0, 0.0, 0.0)
+      写回后排序 ['0', '0', '0']
+  [flags=137] 出口摩尔分率 {'Toluene': 0.5, 'Benzene': 0.25, 'p-Xylene': 0.06, 'm-Xylene': 0.13, 'o-Xylene': 0.06}
+      出口甲苯摩尔分率 0.5000：并行（0.500）
+        reactor.ConversionValue -> (12.0, 26.0, 12.0)
+        reactor.RxnPercentConversionValue -> (12.0, 26.0, 12.0)
+  实例 8404 已结束
