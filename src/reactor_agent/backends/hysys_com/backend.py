@@ -61,6 +61,13 @@ class HysysComBackend(SimBackend):
         """看门狗处理过的对话框文字。正常的建模流程不应该触发任何弹窗。"""
         return tuple(self._guard.messages)
 
+    def is_running(self) -> bool:
+        """自己连接的 HYSYS 进程是否还在。只看进程号，不碰 COM，所以进程崩溃之后也能调用。"""
+        if self._session is None:
+            return False
+        process_id = self._session.process_id
+        return process_id is None or process_id in session.running_process_ids()
+
     def shutdown(self) -> None:
         """结束自己启动的 HYSYS 实例并停掉弹窗看门狗。接管来的实例不动。"""
         if self._session is not None:
