@@ -673,3 +673,20 @@ D11 的实测结果：与平衡反应器的 710 °C 工况相比，各组分摩�
 - **走过的弯路**：run1 把 `Moniker` 属性（IMoniker 对象）当字符串拼进 moniker，得到 `<PyIUnknown at 0x…>` 的乱码，BackDoor 照样返回有效的包装而不报错；run2 用 `UniqueID` 拼，读到的变量仍然是空的，当时还不知道是 moniker 写法的问题还是排序变量的问题，所以 run3 加了用进料温度的校准，run4 又加了复合 IMoniker 和 Case 级 `ApplyXML`。
 - **结论**：排序**能读（XML）、不能写**。含义从示例 Case 反推：排序值最小的反应先算，排序相同的并行，后面的反应对剩下的基准组分按指定转化率算。依次进行的 0.573 没有用代码验证；Recipe 不设排序（H32）。H24 记为不可行，H26 补充了导入的结果，新增 H32。第二级的 60 分钟没有用完，试过的方式已经超过 5 种，按提示词的"走不通"标准停止，没有降到第三、四级。
 - **脚本与输出**：`spikes/e6c_rank_channels.py`；`spikes/out/e6c_rank_channels_run1.txt` 至 `run4.txt`。
+
+### L22 E8：平衡反应器，两个工况，三种热模式，固定 K（2026-10-08，0C 任务 1）
+
+- **目的**：从空白 Case 用代码建出场景 1 的平衡反应器模型，两个出口温度的结果与参照值对比；弄清 Keq 来源的默认值、出口温度规定的位置、改规定后是否自动重算、热负荷的读法和符号；验证绝热和规定热负荷两种热模式；试一次固定 K。
+- **做法**：`spikes/e8_equilibrium_chain.py`（沿用 `chain_kit.py` 里的建模函数）：甲烷、水、CO、CO2、氢气，PR；两个平衡反应 Rxn-1（CH4 + H2O ⇌ CO + 3 H2）、Rxn-2（CO + H2O ⇌ CO2 + H2），Keq 来源不写；反应集 RxnSet-1 加入流体包；进料 520 °C、1350 kPa、3700 kgmole/h、CH4 0.2703；ERV-100 带能流，气相出料温度依次写 710、600、710 °C。同一个 Case 里再建三台反应器：ERV-ADI（不接能流）、ERV-DUTY（接能流，写 710 °C 工况读出的热负荷 39989.2 kW，不规定出口温度）、ERV-K（固定 K：`Basis = 5`（摩尔分率基准）、`LnKSource = 3`、`EquilibriumConstant` 取 710 °C 结果反推的 0.0830251 和 1.55565）。运行 1 次（run1）。
+- **结果**（`spikes/out/e8_equilibrium_chain_run1.txt`）：
+  - **Keq 来源默认就是 Gibbs 自由能**：新建的平衡反应读出 `LnKSource` 2、`Basis` 1（Activity）、`AutoDetect` True，不用写。
+  - **710 °C**：CH4 转化率 54.0%，出口总流量 4780.7 kgmole/h（参照约 4800），摩尔分率 CH4 0.0962、H2O 0.3844、H2 0.4064、CO 0.0457、CO2 0.0673，与参照值最大偏差 0.0046（容差 0.02）；热负荷 +39989.2 kW。**600 °C**：转化率 30.3%，总流量 4307.1（参照约 4305），最大偏差 0.0014；热负荷 +20159.8 kW，小于 710 °C 工况。两个工况通过。质量守恒相对误差都在 6.1e-06 以内；液相出口流量 0。
+  - **改规定自动重算**：写气相出料物流的 `Temperature`，同步重算，不用额外调用；再回到 710 °C，摩尔分率与第一次最大差 3.9e-08。
+  - **出口温度规定在气相出料物流上**，反应器上没有这个成员。连接完、没规定出口温度时，反应器和三个出口量（气相、液相、能流）都是 `NotSolved`，进料 OK；规定温度后 5 个对象全是 OK。
+  - **热负荷**：`energy.HeatFlow.GetValue("kW")`，**吸热为正**；计算值 `State` 0、`CanModify` False；规定热负荷时 `State` 1、`CanModify` True。
+  - **绝热**（不接能流）：直接求解，出口温度 422.63 °C 是计算值（`State` 0、`CanModify` False），CH4 转化率 8.8%。
+  - **规定热负荷**：能流写 39989.2 kW、不规定出口温度，出口温度 710.00 °C，组成与规定 710 °C 的工况相同。
+  - **固定 K**：`reaction.Basis = 5`、`reaction.LnKSource = 3`、`reaction.EquilibriumConstant = K`，读回一致；求解成功，与 Gibbs 来源 710 °C 的摩尔分率最大差 0.00000。反应器的 `EqConstantValue` 读出 Gibbs 来源（活度基准）K 为 (14.919, 1.561)（710 °C）、(0.520, 2.744)（600 °C）；活度基准的 K 与摩尔分率基准的 K 之比约等于 (P/P°)^Δν 再乘逸度系数的修正（SMR：Δν 为 2，14.92/0.0830 = 179.7；P° 取 1 atm 得 177.5，取 1 bar 得 182.3，两者都能解释，没有区分）。
+  - 反应器自己的结果：`RxnPercentConversionValue` 读出 (54.03, -32767.0)（第二个反应没有基准组分，空值）；`RxnExtentValue`、`EqConstantValue` 按反应集里的反应顺序。
+- **结论**：H10、H16、H20 补充（固定 K 已验证求解，三种热模式都验证过）。**实测验证过的热模式：规定出口温度、绝热、规定热负荷；Keq 来源：Gibbs 自由能（默认）、固定 K（摩尔分率基准）；Ln(K) 公式和 K–T 表没有验证。**
+- **脚本与输出**：`spikes/e8_equilibrium_chain.py`、`spikes/chain_kit.py`；`spikes/out/e8_equilibrium_chain_run1.txt`、`e8_equilibrium_chain_run1.hsc`（Case，188 KB）。
