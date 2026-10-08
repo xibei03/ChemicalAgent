@@ -1,0 +1,61 @@
+== Q1 注册表中的 ProgID ==
+  HYSYS.Application                             CLSID={0963D456-4B58-4A20-A4B0-B1372D4DA588}  CurVer=HYSYS.Application.V15.0  (HYSYS Simulator)
+  HYSYS.Application.Latest                      CLSID={0963D456-4B58-4A20-A4B0-B1372D4DA588}  CurVer=HYSYS.Application.V15.0  (HYSYS Simulator)
+  HYSYS.Application.NewInstance                 CLSID={824AD71C-1A11-42CD-8A9E-912E73F4C91A}  CurVer=HYSYS.Application.NewInstance.V15.0  (HYSYS Simulator)
+  HYSYS.Application.NewInstance.Latest          CLSID={824AD71C-1A11-42CD-8A9E-912E73F4C91A}  CurVer=HYSYS.Application.NewInstance.V15.0  (HYSYS Simulator)
+  HYSYS.Application.NewInstance.RTO             CLSID={6326FC09-6814-4B85-8E7A-C3AEA6FE324D}  CurVer=HYSYS.Application.NewInstance.RTO  (HYSYS RTO Optimizer)
+  HYSYS.Application.NewInstance.RTO.Latest      CLSID={6326FC09-6814-4B85-8E7A-C3AEA6FE324D}  CurVer=HYSYS.Application.NewInstance.RTO  (HYSYS RTO Optimizer)
+  HYSYS.Application.NewInstance.RTO.V15.0       CLSID={6326FC09-6814-4B85-8E7A-C3AEA6FE324D}  CurVer=-  (HYSYS RTO Optimizer)
+  HYSYS.Application.NewInstance.Runtime         CLSID={5393F4CF-F3A8-4AAD-A16F-F90488E1091D}  CurVer=HYSYS.Application.NewInstance.Runtime  (HYSYS Runtime Simulator)
+  HYSYS.Application.NewInstance.Runtime.Latest  CLSID={5393F4CF-F3A8-4AAD-A16F-F90488E1091D}  CurVer=HYSYS.Application.NewInstance.Runtime  (HYSYS Runtime Simulator)
+  HYSYS.Application.NewInstance.Runtime.V15.0   CLSID={5393F4CF-F3A8-4AAD-A16F-F90488E1091D}  CurVer=-  (HYSYS Runtime Simulator)
+  HYSYS.Application.NewInstance.V15.0           CLSID={824AD71C-1A11-42CD-8A9E-912E73F4C91A}  CurVer=-  (HYSYS Simulator)
+  HYSYS.Application.V15.0                       CLSID={0963D456-4B58-4A20-A4B0-B1372D4DA588}  CurVer=-  (HYSYS Simulator)
+  -- HYSYS.Application.V15.0 的服务器登记 --
+     LocalServer32 = C:\Program Files\AspenTech\Aspen HYSYS V15.0\aspenhysys.exe /Automation
+     ProgID = HYSYS.Application.V15.0
+     Version = V15.0
+     VersionIndependentProgID = HYSYS.Application.Latest
+     (AppID 子键的值: None)
+  -- HYSYS.Application.NewInstance.V15.0 的服务器登记 --
+     LocalServer32 = C:\Program Files\AspenTech\Aspen HYSYS V15.0\aspenhysys.exe /AutomationSingleUse
+     ProgID = HYSYS.Application.NewInstance.V15.0
+     Version = V15.0
+     VersionIndependentProgID = HYSYS.Application.NewInstance.Latest
+     (AppID 子键的值: None)
+  -- HYSYS.Application.NewInstance.RTO.V15.0 的服务器登记 --
+     LocalServer32 = C:\Program Files\AspenTech\Aspen HYSYS V15.0\aspenhysys.exe /AutomationSingleUse /RTOHYSYS
+     ProgID = HYSYS.Application.NewInstance.RTO.V15.0
+     Version = V15.0
+     VersionIndependentProgID = HYSYS.Application.NewInstance.RTO.Latest
+     (AppID 子键的值: None)
+  -- HYSYS.Application.NewInstance.Runtime.V15.0 的服务器登记 --
+     LocalServer32 = C:\Program Files\AspenTech\Aspen HYSYS V15.0\aspenhysys.exe /AutomationSingleUse /RuntimeHYSYS
+     ProgID = HYSYS.Application.NewInstance.Runtime.V15.0
+     TypeLib = {DFC1C58B-AE9F-11cf-8EB2-0020AF119B90}
+     Version = V15.0
+     VersionIndependentProgID = HYSYS.Application.NewInstance.Runtime.Latest
+     (AppID 子键的值: None)
+== Q2 连接前后的 HYSYS 进程 ==
+  连接前: 没有 HYSYS 进程
+  Dispatch('HYSYS.Application', early) 用时 15.3 秒
+  连接后: {4260: 'AspenHysys.exe'}
+结论: 连接后出现新进程 {4260: 'AspenHysys.exe'}：新启动了实例
+== 取 Application 的成员 ==
+  type(app) -> 'win32com.gen_py.DFC1C58B-AE9F-11CF-8EB2-0020AF119B90x0x3x2._Application'
+  type(app.SimulationCases) -> 'SimulationCases'
+  app.Version -> 'Aspen HYSYS Version 15 (41.0)'
+  app.Name -> 失败 AttributeError: '<win32com.gen_py.HYSYS 15.0 Type Library._Application instance at 0x2745779692144>' object has no attribute 'Name'
+  app.FullName -> 'C:\\Program Files\\AspenTech\\Aspen HYSYS V15.0\\aspenhysys.exe'
+  app.Path -> 'C:\\Program Files\\AspenTech\\Aspen HYSYS V15.0\\'
+  app.Visible -> False
+  app.ActiveDocument -> None
+  设置 Visible=True 后读回 -> True
+== Q3 进程号 ==
+  tasklist: {4260: 'AspenHysys.exe'}
+  可见的 HYSYS 窗口所属进程: {4260: '<No Document> - Aspen HYSYS V15 - aspenONE'}
+结论: 界面进程号 4260；新进程中的界面进程 [4260]，窗口所属进程 [4260]，tasklist 中的 AspenHysys.exe [4260]
+== Q4 退出方式: quit ==
+  app.Quit() -> None
+结论: quit 之后进程 4260 在 1.6 秒内消失
+  结束时的 HYSYS 进程: 无

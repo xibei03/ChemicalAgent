@@ -16,40 +16,28 @@
 """
 
 import argparse
-import csv
 import gc
 import subprocess
-import sys
 import time
 import winreg
-from pathlib import Path
 
 import pythoncom
 import win32com.client
-import win32gui
-import win32process
+from _common import (
+    EXIT_WAIT_S,
+    Log,
+    gui_pids,
+    hysys_processes,
+    hysys_window_pids,
+    use_utf8,
+    wait_gone,
+    watch,
+)
 
-sys.stdout.reconfigure(encoding="utf-8")
-sys.stderr.reconfigure(encoding="utf-8")
+use_utf8()
 
-OUT_DIR = Path(__file__).resolve().parent / "out"
 PROGID_PREFIX = "HYSYS.Application"
-# 和 HYSYS 有关的进程映像名（小写）。AspenHysys.exe 是界面进程。
-HYSYS_IMAGES = ("aspenhysys.exe", "hysyssvr.exe", "hysysengine.exe", "aspenhysysreportwriter.exe")
 MEMBERS_TO_TRY = ("Version", "Name", "FullName", "Path", "Visible", "ActiveDocument")
-EXIT_WAIT_S = 60
-
-LOG: list[str] = []
-
-
-def say(text: str = "") -> None:
-    """打印并记入输出文件。"""
-    print(text, flush=True)
-    LOG.append(text)
-
-
-def conclude(text: str) -> None:
-    say(f"结论: {text}")
 
 
 def reg_default(root: int, path: str) -> str | None:
@@ -72,9 +60,9 @@ def reg_subkeys(root: int, path: str) -> list[str]:
         return names
 
 
-def report_registry() -> None:
+def report_registry(log: Log) -> None:
     """Q1：列出 HYSYS.Application 开头的 ProgID，以及各 CLSID 的服务器登记。"""
-    say("== Q1 注册表中的 ProgID ==")
+    log.say("== Q1 注册表中的 ProgID ==")
     hkcr = winreg.HKEY_CLASSES_ROOT
     progids = sorted(n for n in reg_subkeys(hkcr, "") if n.startswith(PROGID_PREFIX))
     clsids: dict[str, str] = {}
@@ -82,93 +70,64 @@ def report_registry() -> None:
         clsid = reg_default(hkcr, name + r"\CLSID") or "-"
         cur = reg_default(hkcr, name + r"\CurVer") or "-"
         desc = reg_default(hkcr, name) or "-"
-        say(f"  {name:45} CLSID={clsid}  CurVer={cur}  ({desc})")
+        log.say(f"  {name:45} CLSID={clsid}  CurVer={cur}  ({desc})")
         if clsid != "-":
             clsids[clsid] = name
     for clsid, name in clsids.items():
         base = rf"CLSID\{clsid}"
-        say(f"  -- {name} 的服务器登记 --")
+        log.say(f"  -- {name} 的服务器登记 --")
         for sub in reg_subkeys(hkcr, base):
-            say(f"     {sub} = {reg_default(hkcr, base + chr(92) + sub)}")
-        app_id = reg_default(hkcr, base + r"\AppID")
-        say(f"     (AppID 子键的值: {app_id})")
+            log.say(f"     {sub} = {reg_default(hkcr, base + chr(92) + sub)}")
+        log.say(f"     (AppID 子键的值: {reg_default(hkcr, base + chr(92) + 'AppID')})")
 
 
-def hysys_processes() -> dict[int, str]:
-    """用 tasklist 取得 HYSYS 相关进程：{进程号: 映像名}。"""
-    result = subprocess.run(
-        ["tasklist", "/FO", "CSV", "/NH"], capture_output=True, text=True, errors="replace"
-    )
-    found: dict[int, str] = {}
-    for row in csv.reader(result.stdout.splitlines()):
-        if len(row) >= 2 and row[0].lower() in HYSYS_IMAGES:
-            found[int(row[1])] = row[0]
-    return found
-
-
-def window_pids() -> dict[int, str]:
-    """可见的、标题含 HYSYS 的顶层窗口所属的进程号：{进程号: 窗口标题}。"""
-    found: dict[int, str] = {}
-
-    def visit(hwnd: int, _extra: object) -> None:
-        title = win32gui.GetWindowText(hwnd)
-        if win32gui.IsWindowVisible(hwnd) and "hysys" in title.lower():
-            found[win32process.GetWindowThreadProcessId(hwnd)[1]] = title
-
-    win32gui.EnumWindows(visit, None)
-    return found
-
-
-def describe_app(app) -> None:
-    say("== 取 Application 的成员（晚绑定下逐个试） ==")
-    for name in MEMBERS_TO_TRY:
-        try:
-            say(f"  app.{name} = {getattr(app, name)!r}")
-        except Exception as exc:  # 探针：任何失败都要记录下来，而不是中断
-            say(f"  app.{name} 失败: {type(exc).__name__}: {exc}")
-
-
-def connect(progid: str, binding: str):
+def connect(progid: str, binding: str) -> object:
     if binding == "early":
         return win32com.client.gencache.EnsureDispatch(progid)
     return win32com.client.Dispatch(progid)
 
 
-def wait_gone(pid: int) -> float | None:
-    """等进程消失，返回用时；超时返回 None。"""
-    start = time.time()
-    while time.time() - start < EXIT_WAIT_S:
-        if pid not in hysys_processes():
-            return time.time() - start
-        time.sleep(0.5)
-    return None
+def pick_pid(log: Log, new: dict[int, str]) -> int | None:
+    """Q3：找出刚连上的实例的界面进程号。有新进程就取新的，否则取窗口所属的进程。"""
+    windows = hysys_window_pids()
+    gui = gui_pids()
+    log.say(f"  tasklist: {hysys_processes()}")
+    log.say(f"  可见的 HYSYS 窗口所属进程: {windows}")
+    new_gui = [pid for pid in new if pid in gui]
+    pid = new_gui[0] if new_gui else next(iter(windows), gui[0] if gui else None)
+    log.conclude(
+        f"界面进程号 {pid}；新进程中的界面进程 {new_gui}，窗口所属进程 {sorted(windows)}，"
+        f"tasklist 中的 AspenHysys.exe {gui}"
+    )
+    return pid
 
 
-def do_exit(mode: str, app, pid: int | None) -> None:
-    """Q4：按指定方式结束或保留实例，并用 tasklist 验证结果。"""
-    say(f"== Q4 退出方式: {mode} ==")
+def do_exit(log: Log, mode: str, holder: list, pid: int | None) -> None:
+    """Q4：按指定方式结束或保留实例，并用 tasklist 验证结果。
+
+    holder 里放着唯一的 COM 引用，release 模式要把它真正丢掉。
+    """
+    log.say(f"== Q4 退出方式: {mode} ==")
     if mode == "keep" or pid is None:
-        conclude("不做任何退出动作，实例留着")
+        log.conclude("不做任何退出动作，实例留着")
         return
     if mode == "quit":
-        try:
-            app.Quit()
-        except Exception as exc:  # 探针：记录失败原因
-            say(f"  app.Quit() 失败: {type(exc).__name__}: {exc}")
+        log.attempt("app.Quit()", holder[0].Quit)
     elif mode == "release":
-        del app
+        holder.clear()
         gc.collect()
         pythoncom.CoUninitialize()
+        log.say("  已丢掉 COM 引用并 CoUninitialize")
     elif mode == "kill":
         out = subprocess.run(
             ["taskkill", "/PID", str(pid), "/T", "/F"], capture_output=True, text=True
         )
-        say(f"  taskkill: {out.stdout.strip()} {out.stderr.strip()}")
+        log.say(f"  taskkill: {out.stdout.strip()} {out.stderr.strip()}")
     gone = wait_gone(pid)
     if gone is None:
-        conclude(f"{mode} 之后 {EXIT_WAIT_S} 秒内进程 {pid} 仍在")
+        log.conclude(f"{mode} 之后 {EXIT_WAIT_S} 秒内进程 {pid} 仍在")
     else:
-        conclude(f"{mode} 之后进程 {pid} 在 {gone:.1f} 秒内消失")
+        log.conclude(f"{mode} 之后进程 {pid} 在 {gone:.1f} 秒内消失")
 
 
 def main() -> None:
@@ -178,47 +137,40 @@ def main() -> None:
     parser.add_argument("--exit", dest="exit_mode", default="auto")
     parser.add_argument("--tag", default="default")
     args = parser.parse_args()
+    log = Log(f"e1_connect_{args.tag}")
 
-    report_registry()
-    say("== Q2 连接前后的 HYSYS 进程 ==")
+    report_registry(log)
+    log.say("== Q2 连接前后的 HYSYS 进程 ==")
     before = hysys_processes()
-    say(f"  连接前: {before or '没有 HYSYS 进程'}")
+    log.say(f"  连接前: {before or '没有 HYSYS 进程'}")
     start = time.time()
-    app = connect(args.progid, args.binding)
-    say(f"  Dispatch({args.progid!r}, {args.binding}) 用时 {time.time() - start:.1f} 秒")
+    with watch(log, f"Dispatch({args.progid})"):
+        holder = [connect(args.progid, args.binding)]
+    log.say(f"  Dispatch({args.progid!r}, {args.binding}) 用时 {time.time() - start:.1f} 秒")
     after = hysys_processes()
-    say(f"  连接后: {after}")
+    log.say(f"  连接后: {after}")
     new = {pid: name for pid, name in after.items() if pid not in before}
     if before and not new:
-        conclude("连接前已有 HYSYS 进程，连接后没有新进程：取得的是已有的实例")
+        log.conclude("连接前已有 HYSYS 进程，连接后没有新进程：取得的是已有的实例")
     elif new:
-        conclude(f"连接后出现新进程 {new}：新启动了实例")
+        log.conclude(f"连接后出现新进程 {new}：新启动了实例")
 
-    describe_app(app)
-    try:
-        app.Visible = True
-        say(f"  设置 Visible=True 后读回: {app.Visible}")
-    except Exception as exc:  # 探针：记录失败原因
-        say(f"  设置 Visible 失败: {type(exc).__name__}: {exc}")
+    log.say("== 取 Application 的成员 ==")
+    log.attempt("type(app)", lambda: f"{type(holder[0]).__module__}.{type(holder[0]).__name__}")
+    log.attempt("type(app.SimulationCases)", lambda: type(holder[0].SimulationCases).__name__)
+    for name in MEMBERS_TO_TRY:
+        log.attempt(f"app.{name}", lambda name=name: getattr(holder[0], name))
+    holder[0].Visible = True
+    log.attempt("设置 Visible=True 后读回", lambda: holder[0].Visible)
 
-    say("== Q3 进程号 ==")
-    say(f"  tasklist: {hysys_processes()}")
-    windows = window_pids()
-    say(f"  可见的 HYSYS 窗口所属进程: {windows}")
-    gui = [pid for pid, name in hysys_processes().items() if name.lower() == "aspenhysys.exe"]
-    pid = next(iter(windows), gui[0] if gui else None)
-    conclude(
-        f"界面进程号 {pid}；窗口所属进程 {sorted(windows)}，tasklist 中的 AspenHysys.exe {gui}"
-    )
+    log.say("== Q3 进程号 ==")
+    pid = pick_pid(log, new)
 
     mode = args.exit_mode
     if mode == "auto":
         mode = "quit" if new else "keep"
-    do_exit(mode, app, pid)
-    say(f"  结束时的 HYSYS 进程: {hysys_processes() or '无'}")
-
-    OUT_DIR.mkdir(exist_ok=True)
-    (OUT_DIR / f"e1_connect_{args.tag}.txt").write_text("\n".join(LOG) + "\n", encoding="utf-8")
+    do_exit(log, mode, holder, pid)
+    log.say(f"  结束时的 HYSYS 进程: {hysys_processes() or '无'}")
 
 
 if __name__ == "__main__":
