@@ -13,15 +13,17 @@
 比较各次出料各组分摩尔流量的相对偏差。
 
 用法：python spikes/e7_conversion_chain.py [--tag 名字] [--repeat N] [--hold-solver]
-输出：spikes/out/e7_conversion_chain_<tag>.txt
+输出：spikes/out/e7_conversion_chain_<tag>.txt；最后一次运行的 Case 另存为同名 .hsc，
+可以在 HYSYS 里打开看反应页面。
 """
 
 import argparse
 import time
 import traceback
 from dataclasses import dataclass
+from pathlib import Path
 
-from _common import Log, new_instance, use_utf8, watch
+from _common import OUT_DIR, Log, new_instance, use_utf8, watch
 
 use_utf8()
 
@@ -209,7 +211,7 @@ def compare(log: Log, result: dict[str, object]) -> bool:
     return all(checks.values())
 
 
-def run_once(log: Log, hold_solver: bool) -> dict[str, object]:
+def run_once(log: Log, hold_solver: bool, save_path: Path) -> dict[str, object]:
     """从空白 Case 到读出结果的全部步骤，返回结果字典。"""
     with new_instance(log) as (app, _pid):
         timings: list[tuple[str, float]] = []
@@ -243,6 +245,8 @@ def run_once(log: Log, hold_solver: bool) -> dict[str, object]:
         result = read_results(model)
         result["passed"] = compare(log, result)
         result["state"] = solver_state(model)
+        model.case.SaveAs(str(save_path))
+        log.say(f"  Case 已另存为 {save_path}")
         model.case.Close()
         return result
 
@@ -255,10 +259,11 @@ def main() -> int:
     args = parser.parse_args()
     log = Log(f"e7_conversion_chain_{args.tag}")
     results = []
+    save_path = OUT_DIR / f"e7_conversion_chain_{args.tag}.hsc"
     for index in range(args.repeat):
         log.say(f"==== 第 {index + 1} 次，从空白 Case 开始（hold_solver={args.hold_solver}） ====")
         try:
-            results.append(run_once(log, args.hold_solver))
+            results.append(run_once(log, args.hold_solver, save_path))
         except Exception:  # 探针：任何失败都要连同堆栈记进日志，再以非零状态退出
             log.say(traceback.format_exc())
             return 1
