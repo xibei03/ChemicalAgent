@@ -53,7 +53,7 @@ ProgID、早绑定还是晚绑定、怎么取得进程号、怎么退出。由�
 - **生成包装之后，连 `Dispatch("HYSYS.Application")` 也返回同一个 gen_py 类**（run9 的 `type(app)` 与 run8 相同）。所以只要缓存存在，"晚绑定"就不再是纯晚绑定；`gen_py` 缓存被清掉之后才是。要保证行为不随缓存变化，代码里统一用 `gencache.EnsureDispatch`。
 - 未测：纯动态对象（`win32com.client.dynamic.Dispatch`）；从集合 `Item()` 取出的对象是否需要 `CastTo`（返回类型是 `IDispatch`，见 E3）。
 
-**绑定方式的结论（暂定，E3 之后确认）：** 统一用早绑定，`gencache.EnsureDispatch`。
+**绑定方式的结论（暂定，E3 之后确认）：** 统一用早绑定，`gencache.EnsureDispatch`。`SimulationCases.Open()` 返回类型化的 `_SimulationCase`，`Operations.Item(i)` 返回具体的反应器类型（如 `ConversionReactor`），**不需要 `CastTo`**（L5）。
 
 **脚本管理 HYSYS 会话的约定（后面所有探针沿用）：**
 
@@ -91,7 +91,7 @@ ProgID、早绑定还是晚绑定、怎么取得进程号、怎么退出。由�
 | H20 | 读取结果（T、P、流量、组成、分组分流量、热负荷） | 未测试 | | | 计划假设：`GetValue(unit)`、`ComponentMolarFraction.Values`。计划状态：基本读取有官方文档，分组分流量和热负荷待验证。探针 E7 类型库（2026-10-08，未运行验证）：反应器：`ComponentTotalInValue`、`ComponentTotalOutValue`、`ComponentTotalReactedValue`（转化、平衡）；`ComponentTotalFeedValue`、`ComponentTotalProductValue`（Gibbs）；`RxnPercentConversionValue`、`HeatFlowValue`。物流：`ComponentMolarFlow`、`ComponentMassFlow`。 |
 | H21 | 固体碳组分及其在 Gibbs 反应器中的行为 | 未测试 | | | 计划假设：库组分 `Carbon`。计划状态：未知。探针 E10 类型库（2026-10-08，未运行验证）：`Component.IsSolid` 可以读，库里能不能加固体碳要实测。 |
 | H22 | 空值的表示方式 | 未测试 | | | 计划假设：约定的哨兵值。探针 E2 |
-| H23 | 模态弹窗对 COM 调用的阻塞 | 未测试 | | | 计划假设：无。计划状态：未知。探针 E11 |
+| H23 | 模态弹窗对 COM 调用的阻塞 | 部分确认 | 阻塞：`SimulationCases.Open` 在弹窗出现时不返回。检测：枚举 HYSYS 进程的顶层窗口，类名 `#32770` 的是对话框，读它的 `Static` 子控件得到文字（`spikes/_common.py` 的 `windows_of`、`child_texts`、`watch`）。关闭：对 OK 按钮发 `BM_CLICK`（`win32gui.PostMessage`） | `spikes/find_ref_case.py`，2026-10-08，输出 `spikes/out/find_ref_case_scan.txt` | 只见过一种弹窗：打开用到 Aspen Properties 的 Case（Green Ammonia Process）时的 "To use Aspen Properties in HYSYS, at least one databank should be installed..."。`BM_CLICK` 能关闭对话框；阻塞的调用在对话框关闭后能否返回没测到。计划假设：无。探针 E11 |
 | H24 | 降级通道：内部变量访问、脚本回放 | 未测试 | | | 计划假设：无。计划状态：未知。仅在 E6 至 E9 受阻时探测 类型库（2026-10-08，未运行验证）：`Application.BackDoor(obj[opt])` 返回 `BackDoor`：`BackDoorVariable(moniker)`、`BackDoorRealVariable`、`BackDoorTextVariable`、`BackDoorVariables(monikers)`、`SendBackDoorMessage(message)`；`Application.PlayScript(ScriptFileName)`。 |
 | H25 | 组分库的枚举或检索（按名称、分子式查到规范名） | 未测试 | | | 计划假设：无。计划状态：未知。探针 E4 |
 | H26 | Case 导出为可读文本并重新导入 | 未测试 | | | 计划假设：无。计划状态：未知。探针 E13 类型库（2026-10-08，未运行验证）：`SimulationCase.GetXMLForCase()`、`ProvideXMLForCase(flags)`、`ApplyXML(flags, sXML)`、`ApplyXMLFromFile(flags, filePath)`、`ProvideXMLForOperation(tagName, flags)`、`ApplyXMLForOperation(tagName, flags, sXML)`；`XMLOptionFlags_enum` 的取值见 `typelib_enums.txt`。这是文件路线最有希望的入口，E13 再测。 |
@@ -110,10 +110,10 @@ ProgID、早绑定还是晚绑定、怎么取得进程号、怎么退出。由�
 
 | 反应器 | 类型库里的接口 | `Operations.Add` 的类型字符串 |
 |---|---|---|
-| 转化反应器 | `ConversionReactor`（旧版本接口 `_ConversionReactor`、`_ConversionReactor2`） | 待 E3 |
-| 平衡反应器 | `EquilibriumReactor`（`_EquilibriumReactor`、`_EquilibriumReactor2`） | 待 E3 |
-| Gibbs 反应器 | `GibbsReactor`（`_GibbsReactor`） | 待 E3 |
-| 其他（本项目暂不用，留给阶段 3B） | `KineticReactor`（可能是 CSTR，待核实）、`PFReactor`、`YieldReactor` | 待 E3 |
+| 转化反应器 | `ConversionReactor`（旧版本接口 `_ConversionReactor`、`_ConversionReactor2`） | `conversionreactorop`（`TypeName`，示例 Synthesis Gas Production 实测，界面名 `Conversion Reactor`）。未用 `Add` 验证 |
+| 平衡反应器 | `EquilibriumReactor`（`_EquilibriumReactor`、`_EquilibriumReactor2`） | `equilibriumreactorop`（同上，界面名 `Equilibrium Reactor`）。未用 `Add` 验证 |
+| Gibbs 反应器 | `GibbsReactor`（`_GibbsReactor`） | 推测是 `gibbsreactorop`，没有样本核实（示例里都没有 Gibbs 反应器），等用户的参考 Case |
+| 其他（本项目暂不用，留给阶段 3B） | `KineticReactor`（`TypeName` 为 `kineticreactorop`，示例 CSTR - Dynamic Model 里是 CSTR）、`PFReactor`（`pfreactorop`，示例 Ammonia Synthesis）、`YieldReactor` | 见左 |
 
 三种反应器都不是组件类（coclass）：类型库里只有 22 个组件类（`Application`、`SimulationCase` 及其单实例、Plant/Process/Engine 变体）。反应器对象只能从 `Operations.Add` 或 `Operations.Item` 取得。
 
@@ -327,3 +327,30 @@ ProgID、早绑定还是晚绑定、怎么取得进程号、怎么退出。由�
 - **走过的弯路**：第一版把全部接口的完整签名写进 `typelib_members.txt`，2.0 MB，超过 1 MB 的提交上限，原因是 533 个接口各自重复了十几个基础成员。先试"把重复成员抽成公共组"，仍有 1.6 MB。最后改成：成员文件只写成员名（629 KB）；完整签名只写反应相关的 111 个接口（`typelib_reaction_api.txt`，212 KB，省略基础成员）和关键词命中（`typelib_hits.txt`，74 KB）。第一版检索结果的显示也漏看了：我按"不以下划线开头"过滤了命中行，把 `_SimulationCase`、`_Application` 上的 XML 和 PlayScript 都过滤掉了，重新按带下划线的接口查才发现。
 - **结论**：创建反应、反应集、反应器的入口都在类型库里，设置路径完整，但没有一条运行验证过，所以 H9 至 H11、H15、H16 仍是"未测试"，备注里写了类型库层面的线索。H24、H26 的入口也在类型库里。"对象模型速查"和"创建反应的线索"两节已按类型库填写。
 - **脚本与输出**：`spikes/typelib_dump.py`；`spikes/out/typelib_dump.txt`、`typelib_members.txt`、`typelib_reaction_api.txt`、`typelib_hits.txt`、`typelib_enums.txt`。
+
+### L5 任务 7：在自带示例里找含反应器的 Case（2026-10-08）
+
+- **目的**：反向探测需要一个含三种反应器的 Case，先看 HYSYS 自带的示例里有没有。顺带第一次用 COM 打开 Case，看对象的样子。
+- **做法**：`spikes/find_ref_case.py`：按文件名挑候选，复制到临时目录，用 `NewInstance` 新开的实例 `SimulationCases.Open`，枚举 `Flowsheet.Operations`（含子流程图）的名字和 `TypeName`，不保存，`Close()`。第一遍只看 `Synthesis Gas Production`（输出 `find_ref_case_synthesis_gas.txt`），第二遍看其余五个（输出 `find_ref_case_scan.txt`）。
+- **结果**：
+
+| 示例 | `Open` 用时 | 反应器 |
+|---|---|---|
+| `Synthesis Gas Production` | 2.5 秒 | 转化反应器 2 台（`Reformer`、`Combustor`，`TypeName` 为 `conversionreactorop`），平衡反应器 3 台（`Combustor Shift`、`Shift Reactor 1`、`Shift Reactor 2`，`equilibriumreactorop`） |
+| `Ammonia Synthesis` | 2.9 秒 | PFR 3 台，`pfreactorop` |
+| `Ethanol Dehydration` | 1.3 秒 | 没有 |
+| `CSTR - Dynamic Model` | 1.1 秒 | 动态 CSTR 1 台，`kineticreactorop` |
+| `Toluene_Disproportionation_Example` | 15.8 秒 | 只有 1 个单元操作，`mbreactorbed`（分子级的炼油反应器，不是三种之一） |
+| `Ethanol Plant` | 1.4 秒 | 没有 |
+| `Green Ammonia Process` | 卡住 | 出现模态弹窗，见下 |
+
+  - **没有一个示例含 Gibbs 反应器。** 所以需要用户手工建参考 Case（`spikes/ref_cases/three_reactors.hsc`）；`Synthesis Gas Production` 先拿来做转化和平衡反应器的反向探测。
+  - `Open` 返回的对象类型直接是 `gen_py` 的 `_SimulationCase`；`Flowsheet.Operations.Item(i)` 返回的已经是具体类型：`ConversionReactor`、`EquilibriumReactor`、`PFReactor`、`SetOp`、`AdjustOp`、`SpreadsheetOp` 等。**早绑定下不需要 `CastTo`**（虽然类型库里 `Item` 的返回类型写的是 `IDispatch`，pywin32 在运行时按对象自己的类型信息选了具体的包装类）。
+  - `Item(i)` 的下标从 0 开始；`Operations.Names` 给出名字列表，`Count` 与之相符。
+  - 单元操作的 `TypeName` 字符串：`conversionreactorop`、`equilibriumreactorop`、`pfreactorop`、`kineticreactorop`；其他见输出，如 `valveop`、`mixerop`、`flashtank`、`coolerop`、`heatexop`、`teeop`、`recycle`、`compressor`、`adjust`、`setop`。Gibbs 反应器的字符串推测是 `gibbsreactorop`，没有样本核实。
+  - `VisibleTypeName` 是界面上的名字：`Conversion Reactor`、`Equilibrium Reactor`。
+  - `app.ActiveDocument` 在 `Open` 之后仍是 `None`（`NewInstance`，窗口可见）。要不要 `Activate()`，E2 里看。
+  - **弹窗阻塞（H23）。** 打开 `Green Ammonia Process` 时出现模态对话框：标题 `Aspen HYSYS`，类名 `#32770`，文字 "To use Aspen Properties in HYSYS, at least one databank should be installed and registered through Aspen Properties database configuration tool"，一个 OK 按钮。`SimulationCases.Open` 一直不返回。`_common.watch` 在 45 秒后打印了这个窗口和文字；用 Win32 的 `BM_CLICK` 点 OK 按钮，对话框随即关闭。阻塞的 COM 调用在对话框关闭后能否返回没有测到（脚本已被外层超时杀掉，实例按进程号 `taskkill`）。**这台机器没有注册 Aspen Properties 的数据库，凡是用到 Aspen Properties 的 Case 都会遇到它，所以我们的流体包只能用 HYSYS 自带的物性包（Peng-Robinson）。**
+  - **走过的弯路：第一次 `Open` 失败。** `com_error -2147352567 ... -2147024891`（`E_ACCESSDENIED`）。当时副本在 `C:\Users\AZUREU~1\AppData\Local\Temp\...`（8.3 短路径），用 `shutil.copy2` 复制；改成 `shutil.copyfile` 加长路径（`Path.resolve()`）之后成功。到底是短路径还是别的原因，同时改了两处，没有分开验证，E2 里单独验证。
+- **结论**：H23 升为部分确认；三种反应器里转化、平衡的 `TypeName` 已有实测；Gibbs 缺参考 Case。`Item()` 不需要 `CastTo`，写进"绑定方式的结论"。
+- **脚本与输出**：`spikes/find_ref_case.py`；`spikes/out/find_ref_case_synthesis_gas.txt`、`find_ref_case_scan.txt`。

@@ -1,0 +1,73 @@
+开始前的 HYSYS 进程: 无
+新实例的进程号: 8672
+== Synthesis Gas Production.hsc（288 KB），复制到 C:\Users\azureuser\AppData\Local\Temp\hysys_samples_sdh8sizh\Synthesis Gas Production.hsc ==
+  SimulationCases.Open -> <win32com.gen_py.HYSYS 15.0 Type Library._SimulationCase instance at 0x1951964133472>
+  Open 用时 2.5 秒，对象类型 _SimulationCase
+  ActiveDocument 是同一个 Case 吗 -> 失败 AttributeError: 'NoneType' object has no attribute 'FullName'
+  case.FullName -> 'C:\\Users\\azureuser\\AppData\\Local\\Temp\\hysys_samples_sdh8sizh\\Synthesis Gas Production.hsc'
+  case.Flowsheet -> <win32com.gen_py.HYSYS 15.0 Type Library.Flowsheet instance at 0x1951964132800>
+  flowsheet.Operations -> <win32com.gen_py.HYSYS 15.0 Type Library.Operations instance at 0x1951964133376>
+  Operations.Names -> ['Reformer', 'Combustor', 'SET-1', 'SET-2', 'SET-3', 'Combustor Shift', 'Shift Reactor 1', 'Shift Reactor 2', 'ADJ-1', 'ADJ-2', 'SPRDSHT-1']
+  Operations.Count -> 11
+  Operations.Item(0) -> <win32com.gen_py.HYSYS 15.0 Type Library.ConversionReactor instance at 0x1951964132608>
+  Operations.Item(1) -> <win32com.gen_py.HYSYS 15.0 Type Library.ConversionReactor instance at 0x1951964132320>
+  Operations.Item(2) -> <win32com.gen_py.HYSYS 15.0 Type Library.SetOp instance at 0x1951964132272>
+  Operations.Item(3) -> <win32com.gen_py.HYSYS 15.0 Type Library.SetOp instance at 0x1951964132752>
+  Operations.Item(4) -> <win32com.gen_py.HYSYS 15.0 Type Library.SetOp instance at 0x1951964132368>
+  Operations.Item(5) -> <win32com.gen_py.HYSYS 15.0 Type Library.EquilibriumReactor instance at 0x1951964133616>
+  Operations.Item(6) -> <win32com.gen_py.HYSYS 15.0 Type Library.EquilibriumReactor instance at 0x1951964132944>
+  Operations.Item(7) -> <win32com.gen_py.HYSYS 15.0 Type Library.EquilibriumReactor instance at 0x1951964133568>
+  Operations.Item(8) -> <win32com.gen_py.HYSYS 15.0 Type Library.AdjustOp instance at 0x1951964133424>
+  Operations.Item(9) -> <win32com.gen_py.HYSYS 15.0 Type Library.AdjustOp instance at 0x1951964133520>
+  Operations.Item(10) -> <win32com.gen_py.HYSYS 15.0 Type Library.SpreadsheetOp instance at 0x1951964132464>
+  op.name -> 'Reformer'
+  op.TypeName -> 'conversionreactorop'
+  op.VisibleTypeName -> 'Conversion Reactor'
+      [主流程图] 'Reformer'                     TypeName='conversionreactorop'  Visible='Conversion Reactor'
+  op.name -> 'Combustor'
+  op.TypeName -> 'conversionreactorop'
+  op.VisibleTypeName -> 'Conversion Reactor'
+      [主流程图] 'Combustor'                    TypeName='conversionreactorop'  Visible='Conversion Reactor'
+  op.name -> 'SET-1'
+  op.TypeName -> 'setop'
+  op.VisibleTypeName -> 'Set'
+      [主流程图] 'SET-1'                        TypeName='setop'  Visible='Set'
+  op.name -> 'SET-2'
+  op.TypeName -> 'setop'
+  op.VisibleTypeName -> 'Set'
+      [主流程图] 'SET-2'                        TypeName='setop'  Visible='Set'
+  op.name -> 'SET-3'
+  op.TypeName -> 'setop'
+  op.VisibleTypeName -> 'Set'
+      [主流程图] 'SET-3'                        TypeName='setop'  Visible='Set'
+  op.name -> 'Combustor Shift'
+  op.TypeName -> 'equilibriumreactorop'
+  op.VisibleTypeName -> 'Equilibrium Reactor'
+      [主流程图] 'Combustor Shift'              TypeName='equilibriumreactorop'  Visible='Equilibrium Reactor'
+  op.name -> 'Shift Reactor 1'
+  op.TypeName -> 'equilibriumreactorop'
+  op.VisibleTypeName -> 'Equilibrium Reactor'
+      [主流程图] 'Shift Reactor 1'              TypeName='equilibriumreactorop'  Visible='Equilibrium Reactor'
+  op.name -> 'Shift Reactor 2'
+  op.TypeName -> 'equilibriumreactorop'
+  op.VisibleTypeName -> 'Equilibrium Reactor'
+      [主流程图] 'Shift Reactor 2'              TypeName='equilibriumreactorop'  Visible='Equilibrium Reactor'
+  op.name -> 'ADJ-1'
+  op.TypeName -> 'adjust'
+  op.VisibleTypeName -> 'Adjust'
+      [主流程图] 'ADJ-1'                        TypeName='adjust'  Visible='Adjust'
+  op.name -> 'ADJ-2'
+  op.TypeName -> 'adjust'
+  op.VisibleTypeName -> 'Adjust'
+      [主流程图] 'ADJ-2'                        TypeName='adjust'  Visible='Adjust'
+  op.name -> 'SPRDSHT-1'
+  op.TypeName -> 'spreadsheetop'
+  op.VisibleTypeName -> 'Spreadsheet'
+      [主流程图] 'SPRDSHT-1'                    TypeName='spreadsheetop'  Visible='Spreadsheet'
+  flowsheet.Flowsheets -> <win32com.gen_py.HYSYS 15.0 Type Library.Flowsheets instance at 0x1951964132656>
+  Flowsheets.Count -> 0
+结论: Synthesis Gas Production.hsc：共 11 个单元操作；反应器类 [('Reformer', 'conversionreactorop'), ('Combustor', 'conversionreactorop'), ('Combustor Shift', 'equilibriumreactorop'), ('Shift Reactor 1', 'equilibriumreactorop'), ('Shift Reactor 2', 'equilibriumreactorop')]
+  case.Close -> None
+  app.Quit() -> None
+  实例 8672 已退出，用时 1.6 秒
+结束时的 HYSYS 进程: 无

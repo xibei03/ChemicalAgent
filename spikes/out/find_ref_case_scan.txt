@@ -1,0 +1,397 @@
+开始前的 HYSYS 进程: 无
+新实例的进程号: 11684
+== Ammonia Synthesis.hsc（456 KB），复制到 C:\Users\azureuser\AppData\Local\Temp\hysys_samples_zr4baq6r\Ammonia Synthesis.hsc ==
+  SimulationCases.Open -> <win32com.gen_py.HYSYS 15.0 Type Library._SimulationCase instance at 0x2032907597392>
+  Open 用时 2.9 秒，对象类型 _SimulationCase
+  ActiveDocument 是同一个 Case 吗 -> 失败 AttributeError: 'NoneType' object has no attribute 'FullName'
+  case.FullName -> 'C:\\Users\\azureuser\\AppData\\Local\\Temp\\hysys_samples_zr4baq6r\\Ammonia Synthesis.hsc'
+  case.Flowsheet -> <win32com.gen_py.HYSYS 15.0 Type Library.Flowsheet instance at 0x2032907596576>
+  flowsheet.Operations -> <win32com.gen_py.HYSYS 15.0 Type Library.Operations instance at 0x2032907597296>
+  Operations.Names -> ['PFR-100', 'MIX-100', 'PFR-101', 'MIX-101', 'PFR-102', 'E-101', 'V-100', 'E-102', 'E-103', 'V-101', 'MIX-102', 'VLV-100', 'VLV-101', 'LIC-100', 'LIC-101', 'PIC-100', 'VLV-102', 'TEE-101', 'RCY-1', 'TEE-100', 'E-104', 'K-100']
+  Operations.Count -> 22
+  Operations.Item(0) -> <win32com.gen_py.HYSYS 15.0 Type Library.PFReactor instance at 0x2032907596432>
+  Operations.Item(1) -> <win32com.gen_py.HYSYS 15.0 Type Library.MixerOp instance at 0x2032907596960>
+  Operations.Item(2) -> <win32com.gen_py.HYSYS 15.0 Type Library.PFReactor instance at 0x2032856180368>
+  Operations.Item(3) -> <win32com.gen_py.HYSYS 15.0 Type Library.MixerOp instance at 0x2032907596144>
+  Operations.Item(4) -> <win32com.gen_py.HYSYS 15.0 Type Library.PFReactor instance at 0x2032907596192>
+  Operations.Item(5) -> <win32com.gen_py.HYSYS 15.0 Type Library.CoolerOp instance at 0x2032907596240>
+  Operations.Item(6) -> <win32com.gen_py.HYSYS 15.0 Type Library.Separator instance at 0x2032859588480>
+  Operations.Item(7) -> <win32com.gen_py.HYSYS 15.0 Type Library.HeatExchanger instance at 0x2032862220832>
+  Operations.Item(8) -> <win32com.gen_py.HYSYS 15.0 Type Library.CoolerOp instance at 0x2032907596480>
+  Operations.Item(9) -> <win32com.gen_py.HYSYS 15.0 Type Library.Separator instance at 0x2032907597536>
+  Operations.Item(10) -> <win32com.gen_py.HYSYS 15.0 Type Library.MixerOp instance at 0x2032907596672>
+  Operations.Item(11) -> <win32com.gen_py.HYSYS 15.0 Type Library.Valve instance at 0x2032907596384>
+  Operations.Item(12) -> <win32com.gen_py.HYSYS 15.0 Type Library.Valve instance at 0x2032907597344>
+  Operations.Item(13) -> <win32com.gen_py.HYSYS 15.0 Type Library.Controller instance at 0x2032907597440>
+  Operations.Item(14) -> <win32com.gen_py.HYSYS 15.0 Type Library.Controller instance at 0x2032907597584>
+  Operations.Item(15) -> <win32com.gen_py.HYSYS 15.0 Type Library.Controller instance at 0x2032907597632>
+  Operations.Item(16) -> <win32com.gen_py.HYSYS 15.0 Type Library.Valve instance at 0x2032907597680>
+  Operations.Item(17) -> <win32com.gen_py.HYSYS 15.0 Type Library.TeeOp instance at 0x2032907597728>
+  Operations.Item(18) -> <win32com.gen_py.HYSYS 15.0 Type Library.Recycle instance at 0x2032890668160>
+  Operations.Item(19) -> <win32com.gen_py.HYSYS 15.0 Type Library.TeeOp instance at 0x2032907597776>
+  Operations.Item(20) -> <win32com.gen_py.HYSYS 15.0 Type Library.HeatExchanger instance at 0x2032907597824>
+  Operations.Item(21) -> <win32com.gen_py.HYSYS 15.0 Type Library.CompressOp instance at 0x2032907597920>
+  op.name -> 'PFR-100'
+  op.TypeName -> 'pfreactorop'
+  op.VisibleTypeName -> 'Plug Flow Reactor'
+      [主流程图] 'PFR-100'                      TypeName='pfreactorop'  Visible='Plug Flow Reactor'
+  op.name -> 'MIX-100'
+  op.TypeName -> 'mixerop'
+  op.VisibleTypeName -> 'Mixer'
+      [主流程图] 'MIX-100'                      TypeName='mixerop'  Visible='Mixer'
+  op.name -> 'PFR-101'
+  op.TypeName -> 'pfreactorop'
+  op.VisibleTypeName -> 'Plug Flow Reactor'
+      [主流程图] 'PFR-101'                      TypeName='pfreactorop'  Visible='Plug Flow Reactor'
+  op.name -> 'MIX-101'
+  op.TypeName -> 'mixerop'
+  op.VisibleTypeName -> 'Mixer'
+      [主流程图] 'MIX-101'                      TypeName='mixerop'  Visible='Mixer'
+  op.name -> 'PFR-102'
+  op.TypeName -> 'pfreactorop'
+  op.VisibleTypeName -> 'Plug Flow Reactor'
+      [主流程图] 'PFR-102'                      TypeName='pfreactorop'  Visible='Plug Flow Reactor'
+  op.name -> 'E-101'
+  op.TypeName -> 'coolerop'
+  op.VisibleTypeName -> 'Cooler'
+      [主流程图] 'E-101'                        TypeName='coolerop'  Visible='Cooler'
+  op.name -> 'V-100'
+  op.TypeName -> 'flashtank'
+  op.VisibleTypeName -> 'Separator'
+      [主流程图] 'V-100'                        TypeName='flashtank'  Visible='Separator'
+  op.name -> 'E-102'
+  op.TypeName -> 'heatexop'
+  op.VisibleTypeName -> 'Heat Exchanger'
+      [主流程图] 'E-102'                        TypeName='heatexop'  Visible='Heat Exchanger'
+  op.name -> 'E-103'
+  op.TypeName -> 'coolerop'
+  op.VisibleTypeName -> 'Cooler'
+      [主流程图] 'E-103'                        TypeName='coolerop'  Visible='Cooler'
+  op.name -> 'V-101'
+  op.TypeName -> 'flashtank'
+  op.VisibleTypeName -> 'Separator'
+      [主流程图] 'V-101'                        TypeName='flashtank'  Visible='Separator'
+  op.name -> 'MIX-102'
+  op.TypeName -> 'mixerop'
+  op.VisibleTypeName -> 'Mixer'
+      [主流程图] 'MIX-102'                      TypeName='mixerop'  Visible='Mixer'
+  op.name -> 'VLV-100'
+  op.TypeName -> 'valveop'
+  op.VisibleTypeName -> 'Valve'
+      [主流程图] 'VLV-100'                      TypeName='valveop'  Visible='Valve'
+  op.name -> 'VLV-101'
+  op.TypeName -> 'valveop'
+  op.VisibleTypeName -> 'Valve'
+      [主流程图] 'VLV-101'                      TypeName='valveop'  Visible='Valve'
+  op.name -> 'LIC-100'
+  op.TypeName -> 'fbcontrolop'
+  op.VisibleTypeName -> 'PID Controller'
+      [主流程图] 'LIC-100'                      TypeName='fbcontrolop'  Visible='PID Controller'
+  op.name -> 'LIC-101'
+  op.TypeName -> 'fbcontrolop'
+  op.VisibleTypeName -> 'PID Controller'
+      [主流程图] 'LIC-101'                      TypeName='fbcontrolop'  Visible='PID Controller'
+  op.name -> 'PIC-100'
+  op.TypeName -> 'fbcontrolop'
+  op.VisibleTypeName -> 'PID Controller'
+      [主流程图] 'PIC-100'                      TypeName='fbcontrolop'  Visible='PID Controller'
+  op.name -> 'VLV-102'
+  op.TypeName -> 'valveop'
+  op.VisibleTypeName -> 'Valve'
+      [主流程图] 'VLV-102'                      TypeName='valveop'  Visible='Valve'
+  op.name -> 'TEE-101'
+  op.TypeName -> 'teeop'
+  op.VisibleTypeName -> 'Tee'
+      [主流程图] 'TEE-101'                      TypeName='teeop'  Visible='Tee'
+  op.name -> 'RCY-1'
+  op.TypeName -> 'recycle'
+  op.VisibleTypeName -> 'Recycle'
+      [主流程图] 'RCY-1'                        TypeName='recycle'  Visible='Recycle'
+  op.name -> 'TEE-100'
+  op.TypeName -> 'teeop'
+  op.VisibleTypeName -> 'Tee'
+      [主流程图] 'TEE-100'                      TypeName='teeop'  Visible='Tee'
+  op.name -> 'E-104'
+  op.TypeName -> 'heatexop'
+  op.VisibleTypeName -> 'Heat Exchanger'
+      [主流程图] 'E-104'                        TypeName='heatexop'  Visible='Heat Exchanger'
+  op.name -> 'K-100'
+  op.TypeName -> 'compressor'
+  op.VisibleTypeName -> 'Compressor'
+      [主流程图] 'K-100'                        TypeName='compressor'  Visible='Compressor'
+  flowsheet.Flowsheets -> <win32com.gen_py.HYSYS 15.0 Type Library.Flowsheets instance at 0x2032859588480>
+  Flowsheets.Count -> 0
+结论: Ammonia Synthesis.hsc：共 22 个单元操作；反应器类 [('PFR-100', 'pfreactorop'), ('PFR-101', 'pfreactorop'), ('PFR-102', 'pfreactorop')]
+  case.Close -> None
+== Ethanol Dehydration.hsc（626 KB），复制到 C:\Users\azureuser\AppData\Local\Temp\hysys_samples_zr4baq6r\Ethanol Dehydration.hsc ==
+  SimulationCases.Open -> <win32com.gen_py.HYSYS 15.0 Type Library._SimulationCase instance at 0x2032907597152>
+  Open 用时 1.3 秒，对象类型 _SimulationCase
+  ActiveDocument 是同一个 Case 吗 -> 失败 AttributeError: 'NoneType' object has no attribute 'FullName'
+  case.FullName -> 'C:\\Users\\azureuser\\AppData\\Local\\Temp\\hysys_samples_zr4baq6r\\Ethanol Dehydration.hsc'
+  case.Flowsheet -> <win32com.gen_py.HYSYS 15.0 Type Library.Flowsheet instance at 0x2032895866304>
+  flowsheet.Operations -> <win32com.gen_py.HYSYS 15.0 Type Library.Operations instance at 0x2032890668160>
+  Operations.Names -> ['DEHYDRATOR', 'DECANT', 'BZ STRIPPER', 'RECY SEP', 'RCY-1']
+  Operations.Count -> 5
+  Operations.Item(0) -> <win32com.gen_py.HYSYS 15.0 Type Library.ColumnOp instance at 0x2032907598208>
+  Operations.Item(1) -> <win32com.gen_py.HYSYS 15.0 Type Library.TemplateOp instance at 0x2032859210784>
+  Operations.Item(2) -> <win32com.gen_py.HYSYS 15.0 Type Library.ColumnOp instance at 0x2032907597488>
+  Operations.Item(3) -> <win32com.gen_py.HYSYS 15.0 Type Library.Separator instance at 0x2032907598160>
+  Operations.Item(4) -> <win32com.gen_py.HYSYS 15.0 Type Library.Recycle instance at 0x2032907598256>
+  op.name -> 'DEHYDRATOR'
+  op.TypeName -> 'reboiledabsorber'
+  op.VisibleTypeName -> 'Reboiled Absorber'
+      [主流程图] 'DEHYDRATOR'                   TypeName='reboiledabsorber'  Visible='Reboiled Absorber'
+  op.name -> 'DECANT'
+  op.TypeName -> 'templateop'
+  op.VisibleTypeName -> 'Standard Sub-Flowsheet'
+      [主流程图] 'DECANT'                       TypeName='templateop'  Visible='Standard Sub-Flowsheet'
+  op.name -> 'BZ STRIPPER'
+  op.TypeName -> 'reboiledabsorber'
+  op.VisibleTypeName -> 'Reboiled Absorber'
+      [主流程图] 'BZ STRIPPER'                  TypeName='reboiledabsorber'  Visible='Reboiled Absorber'
+  op.name -> 'RECY SEP'
+  op.TypeName -> 'flashtank'
+  op.VisibleTypeName -> 'Separator'
+      [主流程图] 'RECY SEP'                     TypeName='flashtank'  Visible='Separator'
+  op.name -> 'RCY-1'
+  op.TypeName -> 'recycle'
+  op.VisibleTypeName -> 'Recycle'
+      [主流程图] 'RCY-1'                        TypeName='recycle'  Visible='Recycle'
+  flowsheet.Flowsheets -> <win32com.gen_py.HYSYS 15.0 Type Library.Flowsheets instance at 0x2032859210784>
+  Flowsheets.Count -> 3
+  Flowsheets.Item(0) -> <win32com.gen_py.HYSYS 15.0 Type Library.ColumnFlowsheet instance at 0x2032907597488>
+  Flowsheets.Item(1) -> <win32com.gen_py.HYSYS 15.0 Type Library.Flowsheet instance at 0x2032907597968>
+  Flowsheets.Item(2) -> <win32com.gen_py.HYSYS 15.0 Type Library.ColumnFlowsheet instance at 0x2032907596816>
+  sub.name -> 'COL1'
+  flowsheet.Operations -> <win32com.gen_py.HYSYS 15.0 Type Library.Operations instance at 0x2032907598352>
+  Operations.Names -> ['Main TS', 'Reboiler']
+  Operations.Count -> 2
+  Operations.Item(0) -> <win32com.gen_py.HYSYS 15.0 Type Library.TraySection instance at 0x2032907598688>
+  Operations.Item(1) -> <win32com.gen_py.HYSYS 15.0 Type Library.Reboiler instance at 0x2032907598736>
+  op.name -> 'Main TS'
+  op.TypeName -> 'traysection'
+  op.VisibleTypeName -> 'Tower'
+      [主流程图/COL1] 'Main TS'                      TypeName='traysection'  Visible='Tower'
+  op.name -> 'Reboiler'
+  op.TypeName -> 'bpreboiler'
+  op.VisibleTypeName -> 'Reboiler'
+      [主流程图/COL1] 'Reboiler'                     TypeName='bpreboiler'  Visible='Reboiler'
+  flowsheet.Flowsheets -> <win32com.gen_py.HYSYS 15.0 Type Library.Flowsheets instance at 0x2032907597104>
+  Flowsheets.Count -> 0
+  sub.name -> 'TPL1'
+  flowsheet.Operations -> <win32com.gen_py.HYSYS 15.0 Type Library.Operations instance at 0x2032907598736>
+  Operations.Names -> ['PRE-COOL', 'DECANT']
+  Operations.Count -> 2
+  Operations.Item(0) -> <win32com.gen_py.HYSYS 15.0 Type Library.CoolerOp instance at 0x2032907598688>
+  Operations.Item(1) -> <win32com.gen_py.HYSYS 15.0 Type Library.Separator instance at 0x2032907598016>
+  op.name -> 'PRE-COOL'
+  op.TypeName -> 'coolerop'
+  op.VisibleTypeName -> 'Cooler'
+      [主流程图/TPL1] 'PRE-COOL'                     TypeName='coolerop'  Visible='Cooler'
+  op.name -> 'DECANT'
+  op.TypeName -> 'sep3op'
+  op.VisibleTypeName -> '3 Phase Separator'
+      [主流程图/TPL1] 'DECANT'                       TypeName='sep3op'  Visible='3 Phase Separator'
+  flowsheet.Flowsheets -> <win32com.gen_py.HYSYS 15.0 Type Library.Flowsheets instance at 0x2032907598688>
+  Flowsheets.Count -> 0
+  sub.name -> 'COL2'
+  flowsheet.Operations -> <win32com.gen_py.HYSYS 15.0 Type Library.Operations instance at 0x2032907598016>
+  Operations.Names -> ['Main TS', 'Reboiler']
+  Operations.Count -> 2
+  Operations.Item(0) -> <win32com.gen_py.HYSYS 15.0 Type Library.TraySection instance at 0x2032907597104>
+  Operations.Item(1) -> <win32com.gen_py.HYSYS 15.0 Type Library.Reboiler instance at 0x2032907598832>
+  op.name -> 'Main TS'
+  op.TypeName -> 'traysection'
+  op.VisibleTypeName -> 'Tower'
+      [主流程图/COL2] 'Main TS'                      TypeName='traysection'  Visible='Tower'
+  op.name -> 'Reboiler'
+  op.TypeName -> 'bpreboiler'
+  op.VisibleTypeName -> 'Reboiler'
+      [主流程图/COL2] 'Reboiler'                     TypeName='bpreboiler'  Visible='Reboiler'
+  flowsheet.Flowsheets -> <win32com.gen_py.HYSYS 15.0 Type Library.Flowsheets instance at 0x2032907597104>
+  Flowsheets.Count -> 0
+结论: Ethanol Dehydration.hsc：共 11 个单元操作；反应器类 没有
+  case.Close -> None
+== CSTR - Dynamic Model.hsc（252 KB），复制到 C:\Users\azureuser\AppData\Local\Temp\hysys_samples_zr4baq6r\CSTR - Dynamic Model.hsc ==
+  SimulationCases.Open -> <win32com.gen_py.HYSYS 15.0 Type Library._SimulationCase instance at 0x2032907598208>
+  Open 用时 1.1 秒，对象类型 _SimulationCase
+  ActiveDocument 是同一个 Case 吗 -> 失败 AttributeError: 'NoneType' object has no attribute 'FullName'
+  case.FullName -> 'C:\\Users\\azureuser\\AppData\\Local\\Temp\\hysys_samples_zr4baq6r\\CSTR - Dynamic Model.hsc'
+  case.Flowsheet -> <win32com.gen_py.HYSYS 15.0 Type Library.Flowsheet instance at 0x2032862220832>
+  flowsheet.Operations -> <win32com.gen_py.HYSYS 15.0 Type Library.Operations instance at 0x2032856180368>
+  Operations.Names -> ['MIX-100', 'Reactor', 'VLV-Prop Oxide', 'VLV-Reactor Prods', 'VLV-Water Feed', 'Reactor LC', 'PropOxide FC', 'WaterFeed FC', 'Reactor TC']
+  Operations.Count -> 9
+  Operations.Item(0) -> <win32com.gen_py.HYSYS 15.0 Type Library.MixerOp instance at 0x2032859210784>
+  Operations.Item(1) -> <win32com.gen_py.HYSYS 15.0 Type Library.KineticReactor instance at 0x2032856053904>
+  Operations.Item(2) -> <win32com.gen_py.HYSYS 15.0 Type Library.Valve instance at 0x2032859223808>
+  Operations.Item(3) -> <win32com.gen_py.HYSYS 15.0 Type Library.Valve instance at 0x2032907597152>
+  Operations.Item(4) -> <win32com.gen_py.HYSYS 15.0 Type Library.Valve instance at 0x2032907597056>
+  Operations.Item(5) -> <win32com.gen_py.HYSYS 15.0 Type Library.Controller instance at 0x2032907598448>
+  Operations.Item(6) -> <win32com.gen_py.HYSYS 15.0 Type Library.Controller instance at 0x2032907598304>
+  Operations.Item(7) -> <win32com.gen_py.HYSYS 15.0 Type Library.Controller instance at 0x2032907597488>
+  Operations.Item(8) -> <win32com.gen_py.HYSYS 15.0 Type Library.Controller instance at 0x2032907598256>
+  op.name -> 'MIX-100'
+  op.TypeName -> 'mixerop'
+  op.VisibleTypeName -> 'Mixer'
+      [主流程图] 'MIX-100'                      TypeName='mixerop'  Visible='Mixer'
+  op.name -> 'Reactor'
+  op.TypeName -> 'kineticreactorop'
+  op.VisibleTypeName -> 'Cont. Stirred Tank Reactor'
+      [主流程图] 'Reactor'                      TypeName='kineticreactorop'  Visible='Cont. Stirred Tank Reactor'
+  op.name -> 'VLV-Prop Oxide'
+  op.TypeName -> 'valveop'
+  op.VisibleTypeName -> 'Valve'
+      [主流程图] 'VLV-Prop Oxide'               TypeName='valveop'  Visible='Valve'
+  op.name -> 'VLV-Reactor Prods'
+  op.TypeName -> 'valveop'
+  op.VisibleTypeName -> 'Valve'
+      [主流程图] 'VLV-Reactor Prods'            TypeName='valveop'  Visible='Valve'
+  op.name -> 'VLV-Water Feed'
+  op.TypeName -> 'valveop'
+  op.VisibleTypeName -> 'Valve'
+      [主流程图] 'VLV-Water Feed'               TypeName='valveop'  Visible='Valve'
+  op.name -> 'Reactor LC'
+  op.TypeName -> 'fbcontrolop'
+  op.VisibleTypeName -> 'PID Controller'
+      [主流程图] 'Reactor LC'                   TypeName='fbcontrolop'  Visible='PID Controller'
+  op.name -> 'PropOxide FC'
+  op.TypeName -> 'fbcontrolop'
+  op.VisibleTypeName -> 'PID Controller'
+      [主流程图] 'PropOxide FC'                 TypeName='fbcontrolop'  Visible='PID Controller'
+  op.name -> 'WaterFeed FC'
+  op.TypeName -> 'fbcontrolop'
+  op.VisibleTypeName -> 'PID Controller'
+      [主流程图] 'WaterFeed FC'                 TypeName='fbcontrolop'  Visible='PID Controller'
+  op.name -> 'Reactor TC'
+  op.TypeName -> 'fbcontrolop'
+  op.VisibleTypeName -> 'PID Controller'
+      [主流程图] 'Reactor TC'                   TypeName='fbcontrolop'  Visible='PID Controller'
+  flowsheet.Flowsheets -> <win32com.gen_py.HYSYS 15.0 Type Library.Flowsheets instance at 0x2032859210784>
+  Flowsheets.Count -> 0
+结论: CSTR - Dynamic Model.hsc：共 9 个单元操作；反应器类 [('Reactor', 'kineticreactorop')]
+  case.Close -> None
+== Toluene_Disproportionation_Example.hsc（1678 KB），复制到 C:\Users\azureuser\AppData\Local\Temp\hysys_samples_zr4baq6r\Toluene_Disproportionation_Example.hsc ==
+  SimulationCases.Open -> <win32com.gen_py.HYSYS 15.0 Type Library._SimulationCase instance at 0x2032907598256>
+  Open 用时 15.8 秒，对象类型 _SimulationCase
+  ActiveDocument 是同一个 Case 吗 -> 失败 AttributeError: 'NoneType' object has no attribute 'FullName'
+  case.FullName -> 'C:\\Users\\azureuser\\AppData\\Local\\Temp\\hysys_samples_zr4baq6r\\Toluene_Disproportionation_Example.hsc'
+  case.Flowsheet -> <win32com.gen_py.HYSYS 15.0 Type Library.Flowsheet instance at 0x2032856180368>
+  flowsheet.Operations -> <win32com.gen_py.HYSYS 15.0 Type Library.Operations instance at 0x2032856180320>
+  Operations.Names -> ['MBREACTOR-100']
+  Operations.Count -> 1
+  Operations.Item(0) -> <win32com.gen_py.HYSYS 15.0 Type Library.ACMOp instance at 0x2032856053952>
+  op.name -> 'MBREACTOR-100'
+  op.TypeName -> 'mbreactorbed'
+  op.VisibleTypeName -> 'MBReactor'
+      [主流程图] 'MBREACTOR-100'                TypeName='mbreactorbed'  Visible='MBReactor'
+  flowsheet.Flowsheets -> <win32com.gen_py.HYSYS 15.0 Type Library.Flowsheets instance at 0x2032856380432>
+  Flowsheets.Count -> 0
+结论: Toluene_Disproportionation_Example.hsc：共 1 个单元操作；反应器类 [('MBREACTOR-100', 'mbreactorbed')]
+  case.Close -> None
+== Ethanol Plant.hsc（877 KB），复制到 C:\Users\azureuser\AppData\Local\Temp\hysys_samples_zr4baq6r\Ethanol Plant.hsc ==
+  SimulationCases.Open -> <win32com.gen_py.HYSYS 15.0 Type Library._SimulationCase instance at 0x2032907597056>
+  Open 用时 1.4 秒，对象类型 _SimulationCase
+  ActiveDocument 是同一个 Case 吗 -> 失败 AttributeError: 'NoneType' object has no attribute 'FullName'
+  case.FullName -> 'C:\\Users\\azureuser\\AppData\\Local\\Temp\\hysys_samples_zr4baq6r\\Ethanol Plant.hsc'
+  case.Flowsheet -> <win32com.gen_py.HYSYS 15.0 Type Library.Flowsheet instance at 0x2032856053952>
+  flowsheet.Operations -> <win32com.gen_py.HYSYS 15.0 Type Library.Operations instance at 0x2032859588480>
+  Operations.Names -> ['CO2_Vent', 'CO2 Wash', 'Conc', 'Lights', 'Rect']
+  Operations.Count -> 5
+  Operations.Item(0) -> <win32com.gen_py.HYSYS 15.0 Type Library.Separator instance at 0x2032856180368>
+  Operations.Item(1) -> <win32com.gen_py.HYSYS 15.0 Type Library.ColumnOp instance at 0x2032856180320>
+  Operations.Item(2) -> <win32com.gen_py.HYSYS 15.0 Type Library.ColumnOp instance at 0x2032859223808>
+  Operations.Item(3) -> <win32com.gen_py.HYSYS 15.0 Type Library.ColumnOp instance at 0x2032907596816>
+  Operations.Item(4) -> <win32com.gen_py.HYSYS 15.0 Type Library.ColumnOp instance at 0x2032907598928>
+  op.name -> 'CO2_Vent'
+  op.TypeName -> 'flashtank'
+  op.VisibleTypeName -> 'Separator'
+      [主流程图] 'CO2_Vent'                     TypeName='flashtank'  Visible='Separator'
+  op.name -> 'CO2 Wash'
+  op.TypeName -> 'absorber'
+  op.VisibleTypeName -> 'Absorber'
+      [主流程图] 'CO2 Wash'                     TypeName='absorber'  Visible='Absorber'
+  op.name -> 'Conc'
+  op.TypeName -> 'absorber'
+  op.VisibleTypeName -> 'Absorber'
+      [主流程图] 'Conc'                         TypeName='absorber'  Visible='Absorber'
+  op.name -> 'Lights'
+  op.TypeName -> 'refluxedabsorber'
+  op.VisibleTypeName -> 'Refluxed Absorber'
+      [主流程图] 'Lights'                       TypeName='refluxedabsorber'  Visible='Refluxed Absorber'
+  op.name -> 'Rect'
+  op.TypeName -> 'distillation'
+  op.VisibleTypeName -> 'Distillation'
+      [主流程图] 'Rect'                         TypeName='distillation'  Visible='Distillation'
+  flowsheet.Flowsheets -> <win32com.gen_py.HYSYS 15.0 Type Library.Flowsheets instance at 0x2032856180368>
+  Flowsheets.Count -> 4
+  Flowsheets.Item(0) -> <win32com.gen_py.HYSYS 15.0 Type Library.ColumnFlowsheet instance at 0x2032856180320>
+  Flowsheets.Item(1) -> <win32com.gen_py.HYSYS 15.0 Type Library.ColumnFlowsheet instance at 0x2032859223808>
+  Flowsheets.Item(2) -> <win32com.gen_py.HYSYS 15.0 Type Library.ColumnFlowsheet instance at 0x2032907597488>
+  Flowsheets.Item(3) -> <win32com.gen_py.HYSYS 15.0 Type Library.ColumnFlowsheet instance at 0x2032907597152>
+  sub.name -> 'COL1'
+  flowsheet.Operations -> <win32com.gen_py.HYSYS 15.0 Type Library.Operations instance at 0x2032907598208>
+  Operations.Names -> ['TS-1']
+  Operations.Count -> 1
+  Operations.Item(0) -> <win32com.gen_py.HYSYS 15.0 Type Library.TraySection instance at 0x2032907597104>
+  op.name -> 'TS-1'
+  op.TypeName -> 'traysection'
+  op.VisibleTypeName -> 'Tower'
+      [主流程图/COL1] 'TS-1'                         TypeName='traysection'  Visible='Tower'
+  flowsheet.Flowsheets -> <win32com.gen_py.HYSYS 15.0 Type Library.Flowsheets instance at 0x2032907598016>
+  Flowsheets.Count -> 0
+  sub.name -> 'COL2'
+  flowsheet.Operations -> <win32com.gen_py.HYSYS 15.0 Type Library.Operations instance at 0x2032907597392>
+  Operations.Names -> ['TS-1']
+  Operations.Count -> 1
+  Operations.Item(0) -> <win32com.gen_py.HYSYS 15.0 Type Library.TraySection instance at 0x2032907597104>
+  op.name -> 'TS-1'
+  op.TypeName -> 'traysection'
+  op.VisibleTypeName -> 'Tower'
+      [主流程图/COL2] 'TS-1'                         TypeName='traysection'  Visible='Tower'
+  flowsheet.Flowsheets -> <win32com.gen_py.HYSYS 15.0 Type Library.Flowsheets instance at 0x2032907598736>
+  Flowsheets.Count -> 0
+  sub.name -> 'COL3'
+  flowsheet.Operations -> <win32com.gen_py.HYSYS 15.0 Type Library.Operations instance at 0x2032907598112>
+  Operations.Names -> ['Main TS', 'Condenser']
+  Operations.Count -> 2
+  Operations.Item(0) -> <win32com.gen_py.HYSYS 15.0 Type Library.TraySection instance at 0x2032907597248>
+  Operations.Item(1) -> <win32com.gen_py.HYSYS 15.0 Type Library.Condenser instance at 0x2032907596816>
+  op.name -> 'Main TS'
+  op.TypeName -> 'traysection'
+  op.VisibleTypeName -> 'Tower'
+      [主流程图/COL3] 'Main TS'                      TypeName='traysection'  Visible='Tower'
+  op.name -> 'Condenser'
+  op.TypeName -> 'partialcondenser'
+  op.VisibleTypeName -> 'Partial Condenser'
+      [主流程图/COL3] 'Condenser'                    TypeName='partialcondenser'  Visible='Partial Condenser'
+  flowsheet.Flowsheets -> <win32com.gen_py.HYSYS 15.0 Type Library.Flowsheets instance at 0x2032907598304>
+  Flowsheets.Count -> 0
+  sub.name -> 'COL4'
+  flowsheet.Operations -> <win32com.gen_py.HYSYS 15.0 Type Library.Operations instance at 0x2032907596816>
+  Operations.Names -> ['Main TS', 'Condenser', 'Reboiler']
+  Operations.Count -> 3
+  Operations.Item(0) -> <win32com.gen_py.HYSYS 15.0 Type Library.TraySection instance at 0x2032907597248>
+  Operations.Item(1) -> <win32com.gen_py.HYSYS 15.0 Type Library.Condenser instance at 0x2032907599024>
+  Operations.Item(2) -> <win32com.gen_py.HYSYS 15.0 Type Library.Reboiler instance at 0x2032907597104>
+  op.name -> 'Main TS'
+  op.TypeName -> 'traysection'
+  op.VisibleTypeName -> 'Tower'
+      [主流程图/COL4] 'Main TS'                      TypeName='traysection'  Visible='Tower'
+  op.name -> 'Condenser'
+  op.TypeName -> 'partialcondenser'
+  op.VisibleTypeName -> 'Partial Condenser'
+      [主流程图/COL4] 'Condenser'                    TypeName='partialcondenser'  Visible='Partial Condenser'
+  op.name -> 'Reboiler'
+  op.TypeName -> 'bpreboiler'
+  op.VisibleTypeName -> 'Reboiler'
+      [主流程图/COL4] 'Reboiler'                     TypeName='bpreboiler'  Visible='Reboiler'
+  flowsheet.Flowsheets -> <win32com.gen_py.HYSYS 15.0 Type Library.Flowsheets instance at 0x2032907597248>
+  Flowsheets.Count -> 0
+结论: Ethanol Plant.hsc：共 12 个单元操作；反应器类 没有
+  case.Close -> None
+== Green Ammonia Process.hsc（961 KB），复制到 C:\Users\azureuser\AppData\Local\Temp\hysys_samples_zr4baq6r\Green Ammonia Process.hsc ==
+  [看门狗] Open(Green Ammonia Process.hsc) 已超过 45 秒没有返回，HYSYS 窗口如下：
+    窗口 pid=11684 类名='#32770' 标题='Aspen HYSYS'
+        控件 Button: OK
+        控件 Static: To use Aspen Properties in HYSYS, at least one databank should be installed and registered through Aspen Properties database configuration tool
+    窗口 pid=11684 类名='HwndWrapper[aspenhysys.exe;;00d04d76-c86e-41b7-a53e-0e224f0ef987]' 标题='Aspen HYSYS V15 - aspenONE'
