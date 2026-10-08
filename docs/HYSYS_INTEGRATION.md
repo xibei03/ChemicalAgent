@@ -690,3 +690,17 @@ D11 的实测结果：与平衡反应器的 710 °C 工况相比，各组分摩�
   - 反应器自己的结果：`RxnPercentConversionValue` 读出 (54.03, -32767.0)（第二个反应没有基准组分，空值）；`RxnExtentValue`、`EqConstantValue` 按反应集里的反应顺序。
 - **结论**：H10、H16、H20 补充（固定 K 已验证求解，三种热模式都验证过）。**实测验证过的热模式：规定出口温度、绝热、规定热负荷；Keq 来源：Gibbs 自由能（默认）、固定 K（摩尔分率基准）；Ln(K) 公式和 K–T 表没有验证。**
 - **脚本与输出**：`spikes/e8_equilibrium_chain.py`、`spikes/chain_kit.py`；`spikes/out/e8_equilibrium_chain_run1.txt`、`e8_equilibrium_chain_run1.hsc`（Case，188 KB）。
+
+### L23 E9：Gibbs 反应器，纯气相，多股进料，绝热（2026-10-08，0C 任务 2）
+
+- **目的**：用任务 1 的进料和组分，不建反应、不挂反应集，用 Gibbs 反应器的纯自由能最小化模式，出口 710 °C，结果应与平衡反应器很接近；再各试一次多股进料和绝热。
+- **做法**：`spikes/e9_gibbs_gas.py`（沿用 `chain_kit.py` 和 E8 的 `build_train`）：同一个 Case 里 Gibbs 反应器 GBR-100（带能流，气相出料写 710 °C）和平衡反应器 ERV-E（对照）；GBR-MULTI 把进料拆成甲烷 1000 kgmole/h 和水蒸气 2700 kgmole/h 两股，条件与单股进料相同；GBR-GADI 和 ERV-EADI 都不接能流。运行 2 次：run1 在最后一步崩溃，是脚本的名字冲突（见弯路），run2 是最终日志。
+- **结果**（`spikes/out/e9_gibbs_gas_run2.txt`；run1 的 Q1、Q2 与它相同）：
+  - **Gibbs 模式**：`reactor.ReactorType` 新建时读出 3（"Gibbs Reactions Only"，纯自由能最小化），不用写；不挂反应集，读 `reactor.ReactionSet` 抛 `com_error`（`E_FAIL`），但能正常求解；连接完、没规定出口温度时，反应器和三个出口量都是 `NotSolved`（和平衡反应器一样），写气相出料的温度后求解。
+  - **710 °C**：出口总流量 4780.75 kgmole/h，摩尔分率 CH4 0.0962、H2O 0.3844、H2 0.4064、CO 0.0457、CO2 0.0673，CH4 转化率 54.0%，热负荷 +39989.8 kW。与参照值最大偏差 0.0046（容差 0.02），与同一个 Case 里的平衡反应器最大偏差 0.00001，热负荷差 0.6 kW。通过。
+  - **多股进料**：`reactor.Feeds.Add(stream)` 对每股进料调用一次，`Feeds.Names` 读出 `['FeedCH4-M', 'FeedH2O-M']`；摩尔分率与单股混合进料相同（最大差 0.00000）；热负荷 40038.3 kW，比单股进料多 48.5 kW（0.12%），是两股分开进料的焓与混合后进料的焓不完全相等（PR 的混合热），不是模型问题。
+  - **绝热**（不接能流）：Gibbs 反应器直接求解，出口温度 422.63 °C 是计算值（`State` 0、`CanModify` False），CH4 转化率 8.8%，与绝热平衡反应器（E8 的 422.63 °C）相差 0.01 °C，摩尔分率最大差 0.00001。
+  - 质量守恒相对误差 8.2e-07 以内；全部求解后流程图 24 个对象全是 OK。
+- **走过的弯路**：run1 里 Gibbs 和平衡反应器的绝热对照用了同一个名字后缀，`MaterialStreams.Add("Vap-ADI")` 对已有的名字返回已经接在 Gibbs 反应器上的那股物流（H12 的幂等），再把它设成平衡反应器的 `VapourProduct`，抛 `com_error`（`E_INVALIDARG`，`-2147024809`）：**一股物流不能同时是两台反应器的出料**。这条也记进鲁棒性观察；run2 改了名字。
+- **结论**：Gibbs 纯气相、多股进料、绝热都已验证；三种热模式（规定出口温度、绝热、规定热负荷）只在平衡反应器上验证了规定热负荷（E8），Gibbs 反应器没有试规定热负荷。H16、H20、H31 补充。
+- **脚本与输出**：`spikes/e9_gibbs_gas.py`；`spikes/out/e9_gibbs_gas_run1.txt`、`run2.txt`、`e9_gibbs_gas_run2.hsc`（Case，199 KB）。
