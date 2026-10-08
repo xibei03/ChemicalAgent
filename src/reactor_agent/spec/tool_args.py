@@ -32,9 +32,9 @@ DEFAULT_SOLVE_TIMEOUT_S = 120.0
 MAX_SOLVE_TIMEOUT_S = 600.0
 CASE_FILE_SUFFIX = ".hsc"
 
-# 对象名由代码按约定生成（Feed、Vap、Q-100、Rxn-1、CRV-100 一类），字符集收窄到 HYSYS 一定接受的。
+# 对象名由代码按约定生成（物流、反应、反应器的编号名一类），字符集收窄到 HYSYS 一定接受的。
 ObjectName = Annotated[str, StringConstraints(pattern=r"^[A-Za-z0-9][A-Za-z0-9 _.\-]{0,59}$")]
-# 组分名是 HYSYS 组分库里的规范名（大小写和连字符都要一致，如 p-Xylene、H2O）。
+# 组分名是 HYSYS 组分库里的规范名，大小写和连字符都要一致。
 ComponentName = Annotated[str, StringConstraints(min_length=1, max_length=60)]
 TemperatureC = Annotated[float, Field(gt=ABSOLUTE_ZERO_C, allow_inf_nan=False)]
 PositiveValue = Annotated[float, Field(gt=0.0, allow_inf_nan=False)]

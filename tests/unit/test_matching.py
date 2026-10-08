@@ -18,6 +18,7 @@ from reactor_agent.spec.matching import (
     require_match,
     stream_differences,
     thermo_differences,
+    values_close,
 )
 from reactor_agent.spec.snapshot import (
     ComponentInfo,
@@ -311,3 +312,17 @@ class TestNames:
         wanted_set = EnsureReactionSetArgs(name="RxnSet-1", reactions=("Rxn-1",))
         assert reaction_set_differences(renamed_set, wanted_set)
         assert reactor_differences(reactor_snapshot(name="CRV-100_2"), reactor_args())
+
+
+class TestValuesClose:
+    def test_values_that_differ_only_by_unit_conversion_noise_are_close(self):
+        assert values_close(380.0, 380.0000000001)
+        assert values_close(0.0, 1e-9)
+
+    def test_different_values_are_not_close(self):
+        assert not values_close(380.0, 380.1)
+
+    def test_unknown_values_are_close_only_to_each_other(self):
+        assert values_close(None, None)
+        assert not values_close(None, 0.0)
+        assert not values_close(0.0, None)

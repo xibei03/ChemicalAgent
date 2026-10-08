@@ -37,7 +37,8 @@ def _close(first: float | None, second: float | None, tolerance: float) -> bool:
     return math.isclose(first, second, rel_tol=tolerance, abs_tol=tolerance)
 
 
-def _value_close(first: float | None, second: float | None) -> bool:
+def values_close(first: float | None, second: float | None) -> bool:
+    """写进去再读回来的物理量是否相同：只允许换算和浮点表示的误差。读不到（None）算不同。"""
     return _close(first, second, VALUE_REL_TOLERANCE)
 
 
@@ -66,7 +67,7 @@ def _conversion_differences(existing: ConversionReaction, wanted: ConversionReac
     found = []
     if existing.base_component != wanted.base_component:
         found.append(_difference("基准组分", existing.base_component, wanted.base_component))
-    if not _value_close(existing.conversion_percent, wanted.conversion_percent):
+    if not values_close(existing.conversion_percent, wanted.conversion_percent):
         found.append(_difference("转化率", existing.conversion_percent, wanted.conversion_percent))
     return found
 
@@ -77,7 +78,7 @@ def _equilibrium_differences(
     found = []
     if existing.keq_source != wanted.keq_source:
         found.append(_difference("平衡常数来源", existing.keq_source, wanted.keq_source))
-    if not _value_close(existing.equilibrium_constant, wanted.equilibrium_constant):
+    if not values_close(existing.equilibrium_constant, wanted.equilibrium_constant):
         found.append(
             _difference("平衡常数", existing.equilibrium_constant, wanted.equilibrium_constant)
         )
@@ -141,17 +142,17 @@ def _composition_differences(existing: StreamSnapshot, wanted: FeedConditions) -
 def stream_differences(existing: StreamSnapshot, wanted: FeedConditions) -> tuple[str, ...]:
     """已有的物流与期望的规定（温度、压力、组成、流量）有哪些不同。"""
     found = []
-    if not _value_close(existing.temperature_c, wanted.temperature_c):
+    if not values_close(existing.temperature_c, wanted.temperature_c):
         found.append(_difference("温度 °C", existing.temperature_c, wanted.temperature_c))
-    if not _value_close(existing.pressure_bar, wanted.pressure_bar):
+    if not values_close(existing.pressure_bar, wanted.pressure_bar):
         found.append(_difference("压力 bar", existing.pressure_bar, wanted.pressure_bar))
     found += _composition_differences(existing, wanted)
     if wanted.molar_flow_kmol_h is not None:
-        if not _value_close(existing.molar_flow_kmol_h, wanted.molar_flow_kmol_h):
+        if not values_close(existing.molar_flow_kmol_h, wanted.molar_flow_kmol_h):
             found.append(
                 _difference("摩尔流量 kmol/h", existing.molar_flow_kmol_h, wanted.molar_flow_kmol_h)
             )
-    elif not _value_close(existing.mass_flow_kg_h, wanted.mass_flow_kg_h):
+    elif not values_close(existing.mass_flow_kg_h, wanted.mass_flow_kg_h):
         found.append(_difference("质量流量 kg/h", existing.mass_flow_kg_h, wanted.mass_flow_kg_h))
     return tuple(found)
 
@@ -171,7 +172,7 @@ def reactor_differences(existing: ReactorSnapshot, wanted: EnsureReactorArgs) ->
     ):
         if have != want:
             found.append(_difference(what, have, want))
-    if not _value_close(existing.pressure_drop_bar, wanted.pressure_drop_bar):
+    if not values_close(existing.pressure_drop_bar, wanted.pressure_drop_bar):
         found.append(_difference("压降 bar", existing.pressure_drop_bar, wanted.pressure_drop_bar))
     return tuple(found)
 

@@ -6,6 +6,7 @@ from collections.abc import Callable, Mapping
 from pydantic import BaseModel
 
 from reactor_agent.errors import ErrorCode, ReactorAgentError
+from reactor_agent.spec.enums import ToolName
 from reactor_agent.spec.tool_results import ToolCallEvent, ToolResult
 
 ToolRunner = Callable[[BaseModel], ToolResult]
@@ -19,7 +20,7 @@ class ToolExecutor:
     """
 
     def __init__(
-        self, tools: Mapping[str, ToolRunner], on_event: EventHandler | None = None
+        self, tools: Mapping[ToolName, ToolRunner], on_event: EventHandler | None = None
     ) -> None:
         self._tools = tools
         self._on_event = on_event
@@ -35,8 +36,14 @@ class ToolExecutor:
             )
         return result
 
+    def _runner(self, name: str) -> ToolRunner | None:
+        try:
+            return self._tools.get(ToolName(name))
+        except ValueError:
+            return None  # 不是任何一个工具名
+
     def _run(self, name: str, args: BaseModel) -> ToolResult:
-        runner = self._tools.get(name)
+        runner = self._runner(name)
         if runner is None:
             return ToolResult.failure(ErrorCode.TOOL_NOT_ALLOWED, f"没有这个工具：{name}")
         try:
