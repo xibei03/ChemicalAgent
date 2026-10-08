@@ -1,0 +1,28 @@
+==== 变体 direct ====
+新实例的进程号: 5708
+[direct] EndBasisChange 之后 IsChangingBasis=False
+[direct] 反应集成员 ['Tol-Disp']
+[direct] 流体包的反应集 ['Conv-Set']
+[direct] 求解后的流程图状态 {'OK': 4, 'NotSolved': 0, 'Warning': 0, 'UnderSpecified': 0, 'Error': 0}
+[direct] 出口摩尔分率 {'Toluene': 0.5, 'Benzene': 0.25, 'p-Xylene': 0.06, 'm-Xylene': 0.13, 'o-Xylene': 0.06}
+[direct] 与解析解的最大偏差 0.00000（要求 ≤ 0.001）
+[direct] Case 已另存为 C:\Users\azureuser\Desktop\ChemicalAgent\spikes\out\e14_basis_order_run1.hsc
+== Q4 ReactionPhase 显式写入 ==
+  Phase-0 默认 ReactionPhase=5
+  Phase-0 写 0 之后读回 0
+  Phase-5 默认 ReactionPhase=5
+  Phase-5 写 5 之后读回 5
+  实例 5708 已结束
+[direct] 通过
+==== 变体 wrapped ====
+新实例的进程号: 11640
+[wrapped] EndBasisChange 之后 IsChangingBasis=False
+[wrapped] StartBasisChange 之后 IsChangingBasis=True
+[wrapped] 反应集成员 ['Tol-Disp']
+[wrapped] 流体包的反应集 ['Conv-Set']
+[wrapped] 求解后的流程图状态 {'OK': 4, 'NotSolved': 0, 'Warning': 0, 'UnderSpecified': 0, 'Error': 0}
+[wrapped] 出口摩尔分率 {'Toluene': 0.5, 'Benzene': 0.25, 'p-Xylene': 0.06, 'm-Xylene': 0.13, 'o-Xylene': 0.06}
+[wrapped] 与解析解的最大偏差 0.00000（要求 ≤ 0.001）
+  实例 11640 已结束
+[wrapped] 通过
+结论: 各变体的结果 {'direct': True, 'wrapped': True}
