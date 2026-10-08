@@ -1,0 +1,305 @@
+新实例的进程号: 1848；Case: C:\Users\azureuser\Desktop\ChemicalAgent\spikes\ref_cases\three_reactors.hsc
+单元操作 [('R-Conv', 'conversionreactorop'), ('R-Eq', 'equilibriumreactorop'), ('R-Gibbs', 'gibbsreactorop')]
+== 反应器 R-Conv（TypeName=conversionreactorop，界面名 Conversion Reactor）==
+  类型化对象 -> 'ConversionReactor'
+  Moniker -> <PyIUnknown at 0x000002D04BC4D970 with obj at 0x000002D017FF9D20>
+  Feeds.Count -> 1
+  Feeds.Names -> ['F-Conv']
+  Feeds.Item(0) 的类型 -> 'ProcessStream(F-Conv)'
+  VapourProduct -> ProcessStream(R-Conv-V)
+  VapourProduct.Temperature.IsKnown -> True
+  VapourProduct.Temperature.State -> 0
+  VapourProduct.Temperature.CanModify -> False
+  VapourProduct.Pressure.IsKnown -> True
+  VapourProduct.Pressure.State -> 0
+  VapourProduct.Pressure.CanModify -> False
+  VapourProduct.MolarFlow.IsKnown -> True
+  VapourProduct.MolarFlow.State -> 0
+  VapourProduct.MolarFlow.CanModify -> False
+  VapourProduct.T(C) -> 379.2691555050311
+  VapourProduct.F(kgmole/h) -> 108.52955420760267
+  LiquidProduct -> ProcessStream(R-Conv-L)
+  LiquidProduct.Temperature.IsKnown -> True
+  LiquidProduct.Temperature.State -> 0
+  LiquidProduct.Temperature.CanModify -> False
+  LiquidProduct.Pressure.IsKnown -> True
+  LiquidProduct.Pressure.State -> 0
+  LiquidProduct.Pressure.CanModify -> False
+  LiquidProduct.MolarFlow.IsKnown -> True
+  LiquidProduct.MolarFlow.State -> 0
+  LiquidProduct.MolarFlow.CanModify -> False
+  LiquidProduct.T(C) -> 379.2691555050311
+  LiquidProduct.F(kgmole/h) -> 0.0
+  EnergyStream -> 没有连接（取属性抛 com_error）
+  进料 F-Conv.Temperature.IsKnown -> True
+  进料 F-Conv.Temperature.State -> 1
+  进料 F-Conv.Temperature.CanModify -> True
+  进料 F-Conv.MolarFlow.IsKnown -> True
+  进料 F-Conv.MolarFlow.State -> 0
+  进料 F-Conv.MolarFlow.CanModify -> False
+  反应器.ReactionSet -> 'ReactionSet(Conv-Set)'
+  ReactionSet 是否为空 -> False
+  PressureDrop(kPa) -> 0.0
+  PressureDrop.IsKnown -> True
+  PressureDrop.State -> 1
+  PressureDrop.CanModify -> True
+  HeatFlow(kW) -> 0.0
+  HeatFlow.IsKnown -> True
+  HeatFlow.State -> 0
+  HeatFlow.CanModify -> False
+  反应器.VesselType -> 1
+  反应器.FluidPackage -> 'FluidPackage(Basis-1)'
+  反应器.rxnName.Values -> ('Tol-Disp',)
+  反应器.RxnBaseCmpName.Values -> ('Toluene',)
+  反应器.ConversionValue -> (50.0,)
+  反应器.RxnPercentConversionValue -> (50.0,)
+  反应器.HeatOfReactionValue -> (434.5,)
+  反应器.ComponentName.Values -> ('Methane', 'H2O', 'CO', 'CO2', 'Hydrogen', 'Toluene', 'Benzene', 'p-Xylene')
+  反应器.ComponentTotalInValue -> (0.0, 0.0, 0.0, 0.0, 0.0, 0.030147098391000743, 0.0, 0.0)
+  反应器.ComponentTotalReactedValue -> (0.0, 0.0, 0.0, 0.0, 0.0, -0.015073549195500371, 0.007536774597750186, 0.007536774597750186)
+  反应器.ComponentTotalOutValue -> (0.0, 0.0, 0.0, 0.0, 0.0, 0.015073549195500371, 0.007536774597750186, 0.007536774597750186)
+  ComponentTotalIn.GetValues('kgmole/h') -> (0.0, 0.0, 0.0, 0.0, 0.0, 108.52955420760267, 0.0, 0.0)
+  ComponentTotalReacted.GetValues('kgmole/h') -> (0.0, 0.0, 0.0, 0.0, 0.0, -54.264777103801336, 27.132388551900668, 27.132388551900668)
+  ComponentTotalOut.GetValues('kgmole/h') -> (0.0, 0.0, 0.0, 0.0, 0.0, 54.264777103801336, 27.132388551900668, 27.132388551900668)
+== 反应器 R-Eq（TypeName=equilibriumreactorop，界面名 Equilibrium Reactor）==
+  类型化对象 -> 'EquilibriumReactor'
+  Moniker -> <PyIUnknown at 0x000002D04BC4C6E0 with obj at 0x000002D01BAE78D0>
+  Feeds.Count -> 1
+  Feeds.Names -> ['F-Eq']
+  Feeds.Item(0) 的类型 -> 'ProcessStream(F-Eq)'
+  VapourProduct -> ProcessStream(R-Eq-V)
+  VapourProduct.Temperature.IsKnown -> True
+  VapourProduct.Temperature.State -> 1
+  VapourProduct.Temperature.CanModify -> True
+  VapourProduct.Pressure.IsKnown -> True
+  VapourProduct.Pressure.State -> 0
+  VapourProduct.Pressure.CanModify -> False
+  VapourProduct.MolarFlow.IsKnown -> True
+  VapourProduct.MolarFlow.State -> 0
+  VapourProduct.MolarFlow.CanModify -> False
+  VapourProduct.T(C) -> 710.0
+  VapourProduct.F(kgmole/h) -> 4780.726696751178
+  LiquidProduct -> ProcessStream(R-Eq-L)
+  LiquidProduct.Temperature.IsKnown -> True
+  LiquidProduct.Temperature.State -> 0
+  LiquidProduct.Temperature.CanModify -> False
+  LiquidProduct.Pressure.IsKnown -> True
+  LiquidProduct.Pressure.State -> 0
+  LiquidProduct.Pressure.CanModify -> False
+  LiquidProduct.MolarFlow.IsKnown -> True
+  LiquidProduct.MolarFlow.State -> 0
+  LiquidProduct.MolarFlow.CanModify -> False
+  LiquidProduct.T(C) -> 710.0
+  LiquidProduct.F(kgmole/h) -> 0.0
+  EnergyStream -> ProcessStream(Q-R-Eq)
+  EnergyStream.HeatFlow(kW) -> 39989.164025924576
+  EnergyStream.HeatFlow.IsKnown -> True
+  EnergyStream.HeatFlow.State -> 0
+  EnergyStream.HeatFlow.CanModify -> False
+  进料 F-Eq.Temperature.IsKnown -> True
+  进料 F-Eq.Temperature.State -> 1
+  进料 F-Eq.Temperature.CanModify -> True
+  进料 F-Eq.MolarFlow.IsKnown -> True
+  进料 F-Eq.MolarFlow.State -> 1
+  进料 F-Eq.MolarFlow.CanModify -> True
+  反应器.ReactionSet -> 'ReactionSet(Eq-Set)'
+  ReactionSet 是否为空 -> False
+  PressureDrop(kPa) -> 0.0
+  PressureDrop.IsKnown -> True
+  PressureDrop.State -> 1
+  PressureDrop.CanModify -> True
+  HeatFlow(kW) -> 39989.164025924576
+  HeatFlow.IsKnown -> True
+  HeatFlow.State -> 0
+  HeatFlow.CanModify -> False
+  反应器.VesselType -> 1
+  反应器.FluidPackage -> 'FluidPackage(Basis-1)'
+  反应器.rxnName.Values -> ('SMR', 'WGS')
+  反应器.RxnBaseCmpName.Values -> ('Methane', 'CO')
+  反应器.RxnPercentConversionValue -> (54.03038639477978, -32767.0)
+  反应器.EqConstantValue -> (14.918630654256546, 1.5609009457560687)
+  反应器.RxnExtentValue -> (0.15010091593689776, 0.08936964831813278)
+  反应器.HeatOfReactionValue -> (206124.0, -41386.0)
+  反应器.ComponentName.Values -> ('Methane', 'H2O', 'CO', 'CO2', 'Hydrogen', 'Toluene', 'Benzene', 'p-Xylene')
+  反应器.ComponentTotalInValue -> (0.27780833333333327, 0.7499694444444444, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+  反应器.ComponentTotalReactedValue -> (-0.1501009030234943, -0.23947056661871857, 0.06073127093212543, 0.08936965306315098, 0.5396724058555972, 0.0, 0.0, 0.0)
+  反应器.ComponentTotalOutValue -> (0.12770743030983897, 0.5104988778257258, 0.06073127093212543, 0.08936965306315098, 0.5396724058555972, 0.0, 0.0, 0.0)
+  反应器.EquilibriumConstantParameterArrayValue -> (-32767.0, -32767.0, -32767.0, -32767.0, -32767.0, -32767.0, -32767.0, -32767.0)
+  反应器.EquilibriumTemperatureApproachParameterArrayValue -> ((-32767.0, -32767.0),)
+  反应器.EquilibriumFractionalApproachParameterArrayValue -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  ComponentTotalIn.GetValues('kgmole/h') -> (1000.1099999999998, 2699.89, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+  ComponentTotalReacted.GetValues('kgmole/h') -> (-540.3632508845794, -862.0940398273868, 218.63257535565154, 321.7307510273435, 1942.8206610801499, 0.0, 0.0, 0.0)
+  ComponentTotalOut.GetValues('kgmole/h') -> (459.7467491154203, 1837.795960172613, 218.63257535565154, 321.7307510273435, 1942.8206610801499, 0.0, 0.0, 0.0)
+== 反应器 R-Gibbs（TypeName=gibbsreactorop，界面名 Gibbs Reactor）==
+  类型化对象 -> 'GibbsReactor'
+  Moniker -> <PyIUnknown at 0x000002D04BC4C5F0 with obj at 0x000002D01BAE7930>
+  Feeds.Count -> 1
+  Feeds.Names -> ['F-Gibbs']
+  Feeds.Item(0) 的类型 -> 'ProcessStream(F-Gibbs)'
+  VapourProduct -> ProcessStream(R-Gibbs-V)
+  VapourProduct.Temperature.IsKnown -> True
+  VapourProduct.Temperature.State -> 1
+  VapourProduct.Temperature.CanModify -> True
+  VapourProduct.Pressure.IsKnown -> True
+  VapourProduct.Pressure.State -> 0
+  VapourProduct.Pressure.CanModify -> False
+  VapourProduct.MolarFlow.IsKnown -> True
+  VapourProduct.MolarFlow.State -> 0
+  VapourProduct.MolarFlow.CanModify -> False
+  VapourProduct.T(C) -> 710.0
+  VapourProduct.F(kgmole/h) -> 4780.7475990460125
+  LiquidProduct -> ProcessStream(R-Gibbs-L)
+  LiquidProduct.Temperature.IsKnown -> True
+  LiquidProduct.Temperature.State -> 0
+  LiquidProduct.Temperature.CanModify -> False
+  LiquidProduct.Pressure.IsKnown -> True
+  LiquidProduct.Pressure.State -> 0
+  LiquidProduct.Pressure.CanModify -> False
+  LiquidProduct.MolarFlow.IsKnown -> True
+  LiquidProduct.MolarFlow.State -> 0
+  LiquidProduct.MolarFlow.CanModify -> False
+  LiquidProduct.T(C) -> 710.0
+  LiquidProduct.F(kgmole/h) -> 0.0
+  EnergyStream -> ProcessStream(Q-R-Gibbs)
+  EnergyStream.HeatFlow(kW) -> 39989.774499327905
+  EnergyStream.HeatFlow.IsKnown -> True
+  EnergyStream.HeatFlow.State -> 0
+  EnergyStream.HeatFlow.CanModify -> False
+  进料 F-Gibbs.Temperature.IsKnown -> True
+  进料 F-Gibbs.Temperature.State -> 1
+  进料 F-Gibbs.Temperature.CanModify -> True
+  进料 F-Gibbs.MolarFlow.IsKnown -> True
+  进料 F-Gibbs.MolarFlow.State -> 1
+  进料 F-Gibbs.MolarFlow.CanModify -> True
+  反应器.ReactionSet -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  ReactionSet 是否为空 -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  PressureDrop(kPa) -> 0.0
+  PressureDrop.IsKnown -> True
+  PressureDrop.State -> 1
+  PressureDrop.CanModify -> True
+  HeatFlow(kW) -> 39989.774499327905
+  HeatFlow.IsKnown -> True
+  HeatFlow.State -> 0
+  HeatFlow.CanModify -> False
+  反应器.VesselType -> 1
+  反应器.FluidPackage -> 'FluidPackage(Basis-1)'
+  反应器.ReactorType -> 3
+  反应器.ComponentName.Values -> ('Methane', 'H2O', 'CO', 'CO2', 'Hydrogen', 'Toluene', 'Benzene', 'p-Xylene', '')
+  反应器.ComponentTotalFeedValue -> (0.27780833333333327, 0.7499694444444444, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+  反应器.ComponentTotalProductValue -> (0.1277045001324946, 0.5104945867340771, 0.06073280869130044, 0.08937102450953333, 0.5396825241120417, 1.7539834700927146e-18, 7.939336308779429e-16, 2.6489145032188886e-22)
+  反应器.InertSpeciesValue -> (0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+  反应器.FractionSpecifiedValue -> (-32767.0, -32767.0, -32767.0, -32767.0, -32767.0, -32767.0, -32767.0, -32767.0)
+  反应器.FixedSpecificationValue -> (-32767.0, -32767.0, -32767.0, -32767.0, -32767.0, -32767.0, -32767.0, -32767.0)
+  ComponentTotalFeed.GetValues('kgmole/h') -> (1000.1099999999998, 2699.89, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+  ComponentTotalProduct.GetValues('kgmole/h') -> (459.73620047698057, 1837.7805122426776, 218.63811128868159, 321.73568823432, 1942.8570868033498, 6.314340492333773e-15, 2.8581610711605946e-12, 9.536092211587998e-19)
+== 反应（Basis 一侧） ==
+  Reactions.Count -> 3
+  Reactions.Names -> ['Tol-Disp', 'SMR', 'WGS']
+  -- 第 0 个反应：类型 ConversionReaction --
+  反应[0].name -> 'Tol-Disp'
+  反应[0].TypeName -> 'conversionrxn'
+  反应[0].VisibleTypeName -> 'Conversion'
+  反应[0].ReactionPhase -> 0
+  反应[0].HeatOfReactionValue -> 434.5
+  反应[0].BaseComponent -> 'Component(Toluene)'
+  反应[0].Conversion -> 50.0
+  反应[0].ConversionCoefficientsValue -> (50.0, -32767.0, -32767.0)
+  反应[0].ReactantStoichCoefValue -> (-2.0, 1.0, 1.0)
+  反应[0].ReactantName.Values -> ('Toluene', 'Benzene', 'p-Xylene', '')
+  反应[0].Reactants.Names -> ['Toluene', 'Benzene', 'p-Xylene']
+  反应[0].Reactants[0] -> ('Toluene', -2.0)
+  反应[0].Reactants[1] -> ('Benzene', 1.0)
+  反应[0].Reactants[2] -> ('p-Xylene', 1.0)
+  -- 第 1 个反应：类型 EquilibriumReaction --
+  反应[1].name -> 'SMR'
+  反应[1].TypeName -> 'equilibriumrxn'
+  反应[1].VisibleTypeName -> 'Equilibrium'
+  反应[1].ReactionPhase -> 0
+  反应[1].HeatOfReactionValue -> 206124.0
+  反应[1].LnKSource -> 2
+  反应[1].Basis -> 1
+  反应[1].BasisUnits -> ''
+  反应[1].EquilibriumConstant -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  反应[1].LnKEquationAParameter -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  反应[1].LnKEquationBParameter -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  反应[1].LnKEquationCParameter -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  反应[1].LnKEquationDParameter -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  反应[1].MinTemperatureValue -> -273.15
+  反应[1].MaxTemperatureValue -> 3000.0
+  反应[1].TemperatureApproachValue -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  反应[1].KEqValue -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  反应[1].KCalculatedValue -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  反应[1].AutoDetect -> True
+  反应[1].LogBasis -> False
+  反应[1].ActivateKTable -> False
+  反应[1].ReactantStoichCoefValue -> (-1.0, -1.0, 1.0, 3.0)
+  反应[1].ReactantName.Values -> ('Methane', 'H2O', 'CO', 'Hydrogen', '')
+  反应[1].Reactants.Names -> ['Methane', 'H2O', 'CO', 'Hydrogen']
+  反应[1].Reactants[0] -> ('Methane', -1.0)
+  反应[1].Reactants[1] -> ('H2O', -1.0)
+  反应[1].Reactants[2] -> ('CO', 1.0)
+  反应[1].Reactants[3] -> ('Hydrogen', 3.0)
+  -- 第 2 个反应：类型 EquilibriumReaction --
+  反应[2].name -> 'WGS'
+  反应[2].TypeName -> 'equilibriumrxn'
+  反应[2].VisibleTypeName -> 'Equilibrium'
+  反应[2].ReactionPhase -> 0
+  反应[2].HeatOfReactionValue -> -41386.0
+  反应[2].LnKSource -> 2
+  反应[2].Basis -> 1
+  反应[2].BasisUnits -> ''
+  反应[2].EquilibriumConstant -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  反应[2].LnKEquationAParameter -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  反应[2].LnKEquationBParameter -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  反应[2].LnKEquationCParameter -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  反应[2].LnKEquationDParameter -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  反应[2].MinTemperatureValue -> -273.15
+  反应[2].MaxTemperatureValue -> 3000.0
+  反应[2].TemperatureApproachValue -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  反应[2].KEqValue -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  反应[2].KCalculatedValue -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  反应[2].AutoDetect -> True
+  反应[2].LogBasis -> False
+  反应[2].ActivateKTable -> False
+  反应[2].ReactantStoichCoefValue -> (-1.0, -1.0, 1.0, 1.0)
+  反应[2].ReactantName.Values -> ('CO', 'H2O', 'CO2', 'Hydrogen', '')
+  反应[2].Reactants.Names -> ['CO', 'H2O', 'CO2', 'Hydrogen']
+  反应[2].Reactants[0] -> ('CO', -1.0)
+  反应[2].Reactants[1] -> ('H2O', -1.0)
+  反应[2].Reactants[2] -> ('CO2', 1.0)
+  反应[2].Reactants[3] -> ('Hydrogen', 1.0)
+== 反应集和流体包的关联 ==
+  ReactionSets.Count -> 2
+  ReactionSets.Names -> ['Conv-Set', 'Eq-Set']
+  -- 第 0 个反应集：类型 ReactionSet --
+  反应集[0].name -> 'Conv-Set'
+  反应集[0].TypeName -> 'rxnset'
+  反应集[0].SolverMethod -> -32767
+  反应集[0].TraceLevel -> 0
+  反应集[0].ActiveReactions.Names -> ['Tol-Disp']
+  反应集[0].InactiveReactions.Names -> []
+  反应集[0].Operations.Names -> ['R-Conv']
+  反应集[0].ReactionPackage.FluidPackage.name -> ''
+  -- 第 1 个反应集：类型 ReactionSet --
+  反应集[1].name -> 'Eq-Set'
+  反应集[1].TypeName -> 'rxnset'
+  反应集[1].SolverMethod -> -32767
+  反应集[1].TraceLevel -> 0
+  反应集[1].ActiveReactions.Names -> ['SMR', 'WGS']
+  反应集[1].InactiveReactions.Names -> []
+  反应集[1].Operations.Names -> ['R-Eq']
+  反应集[1].ReactionPackage.FluidPackage.name -> ''
+  流体包[0].ReactionPackage.ReactionSets.Names -> ['Conv-Set', 'Eq-Set']
+  流体包[0].ReactionPackage.FluidPackage.name -> 'Basis-1'
+== Q6 XML 路线 ==
+  ProvideXMLForCase(0) 的长度 -> 4523983
+  flags=0: 含 'reaction' 11 次，含 'reactionset' 0 次
+  flags=0: 关键词出现次数 {'Stoich': 0, 'rxnset': 0, 'ReactionSet': 0, 'EquilibriumRxn': 0, 'Rxn-4': 0, 'LnK': 0, 'KEq': 0, 'Conversion': 50}
+  ProvideXMLForCase(1) 的长度 -> 4204547
+  flags=1: 含 'reaction' 7 次，含 'reactionset' 0 次
+  flags=1: 关键词出现次数 {'Stoich': 0, 'rxnset': 0, 'ReactionSet': 0, 'EquilibriumRxn': 0, 'Rxn-4': 0, 'LnK': 0, 'KEq': 0, 'Conversion': 32}
+  GetXMLForCase() 的长度 -> 172288
+  ProvideXMLForOperation('R-Conv', 0) 的长度 -> 2055869
+  开头: '<?xml version="1.0" encoding="windows-1252" standalone="yes" ?>\n<CaseDefinition>\n\t<CaseDescription>\n\t\t<DocumentType>HYSYS XML</DocumentType>\n\t\t<XmlRecallVersion>2.0</XmlRecallVersion>\n\t\t<CaseAuthor>Aspen HYSYS Version 15 (41.0)</CaseAuthor>\n\t\t<BuildNumber>150842</BuildNumber>\n\t\t<HscFileRevision>150842</HscFileRevision>\n\t\t<CaseName>three_reactors</CaseName>\n\t\t<CaseMode>SteadyState</CaseMode>\n\t\t<GenerationDate>Thu Oct  8 03:56:18 2026</GenerationDate>\n\t\t<!-- HYSYS generates a full file, but will also read back partial files. -->\n\t\t<!-- Note: DocumentType must be set for a file to be recognized. -->\n\t</CaseDescription>\n\t<UserVarDatabase>\n\t</UserVarDatabase>\n\t<Basis>\n\t\t<ReactionPackage OwnerType="FluidPkgMgrObject" OwnerName="" Type="ParamSet">\n\t\t\t<ReactionList OwnerType="RxnPackageManagerObject" OwnerName="" Type="ParamSet">\n\t\t\t\t<NumberOfReactions OwnerType="RxnPackageManagerObject" OwnerName="" Type="Param">\n\t\t\t\t\t<Value>3</Value>\n\t\t\t\t\t<ValueType>Real</ValueType>\n\t\t\t\t\t<Status>Specified</Status>\n\t\t\t\t</NumberOfReactions>\n\t\t\t\t<Reaction OwnerType="RxnPackageManagerObject" OwnerName="" Type="ParamSet">\n\t\t\t\t\t<ReactionType OwnerType="ConversionRxnObject" OwnerName="Tol-Disp" Type="Param">\n\t\t'
+  实例 1848 已结束
+结束时的 HYSYS 进程: 无

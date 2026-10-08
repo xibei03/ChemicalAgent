@@ -1,0 +1,158 @@
+新实例的进程号: 10560
+== Basis：组分列表、流体包、物性包 ==
+  组分 ['Methane', 'H2O', 'CO', 'CO2', 'Hydrogen', 'Toluene', 'Benzene', 'p-Xylene']；物性包 Peng-Robinson
+== 反应和反应集 ==
+  Tol-Disp（ConversionReaction）：['Toluene', 'Benzene', 'p-Xylene']，系数 (-2.0, 1.0, 1.0)
+  SMR（EquilibriumReaction）：['Methane', 'H2O', 'CO', 'Hydrogen']，系数 (-1.0, -1.0, 1.0, 3.0)
+  WGS（EquilibriumReaction）：['CO', 'H2O', 'CO2', 'Hydrogen']，系数 (-1.0, -1.0, 1.0, 1.0)
+  Conv-Set：['Tol-Disp']
+  Eq-Set：['SMR', 'WGS']
+  流体包的反应集：['Conv-Set', 'Eq-Set']
+  CanEndBasisChange -> True
+  EndBasisChange() -> None
+== 流程图：进料 ==
+  物流 F-Conv（ProcessStream）
+    读回：T=380.00 C，P=2500.0 kPa，F=108.530 kgmole/h，10000.00 kg/h，气相分率 1.0000
+  物流 F-Eq（ProcessStream）
+    读回：T=520.00 C，P=1350.0 kPa，F=3700.000 kgmole/h，64683.45 kg/h，气相分率 1.0000
+  物流 F-Gibbs（ProcessStream）
+    读回：T=520.00 C，P=1350.0 kPa，F=3700.000 kgmole/h，64683.45 kg/h，气相分率 1.0000
+== 流程图：反应器 ==
+-- R-Conv --
+  物流 R-Conv-V（ProcessStream）
+  物流 R-Conv-L（ProcessStream）
+  Operations.Add('R-Conv', 'ConversionReactorOp') [写法 1] -> <win32com.gen_py.HYSYS 15.0 Type Library.ConversionReactor instance at 0x2967579144272>
+    类型 ConversionReactor，TypeName=conversionreactorop
+  Feeds.Add(进料物流) [写法 1] -> None
+  Feeds.Names -> ['F-Conv']
+  VapourProduct = ... -> None
+  LiquidProduct = ... -> None
+  ReactionSet = ... -> None
+  PressureDrop = 0 kPa -> None
+  -- R-Conv：出料 --
+    气相 T=379.27 C，P=2500.0 kPa，F=108.530 kgmole/h，9999.85 kg/h；液相 F=0.0000 kgmole/h
+    气相摩尔分率 {'Toluene': 0.5, 'Benzene': 0.25, 'p-Xylene': 0.25}
+    气相各组分 kgmole/h {'Toluene': 54.265, 'Benzene': 27.132, 'p-Xylene': 27.132}
+    质量守恒：进 10000.000，出 9999.848 kg/h，相对误差 1.52e-05，通过
+    转化反应器：摩尔分率最大偏差 0.00000（容差 0.001），通过；甲苯进料 108.532 kmol/h；出口 T 379.27 C（进料 380 C）
+-- R-Eq --
+  物流 R-Eq-V（ProcessStream）
+  物流 R-Eq-L（ProcessStream）
+  EnergyStreams.Add('Q-R-Eq') [写法 1] -> <win32com.gen_py.HYSYS 15.0 Type Library.ProcessStream instance at 0x2967579144512>
+  Operations.Add('R-Eq', 'EquilibriumReactorOp') [写法 1] -> <win32com.gen_py.HYSYS 15.0 Type Library.EquilibriumReactor instance at 0x2967579144848>
+    类型 EquilibriumReactor，TypeName=equilibriumreactorop
+  Feeds.Add(进料物流) [写法 1] -> None
+  Feeds.Names -> ['F-Eq']
+  VapourProduct = ... -> None
+  LiquidProduct = ... -> None
+  EnergyStream = ... -> None
+  ReactionSet = ... -> None
+  PressureDrop = 0 kPa -> None
+  气相出料 T = 710.0 C -> None
+  -- R-Eq @ 710 C：出料 --
+    气相 T=710.00 C，P=1350.0 kPa，F=4780.727 kgmole/h，64683.85 kg/h；液相 F=0.0000 kgmole/h
+    气相摩尔分率 {'Methane': 0.0962, 'H2O': 0.3844, 'CO': 0.0457, 'CO2': 0.0673, 'Hydrogen': 0.4064}
+    气相各组分 kgmole/h {'Methane': 459.747, 'H2O': 1837.796, 'CO': 218.633, 'CO2': 321.731, 'Hydrogen': 1942.821}
+    质量守恒：进 64683.454，出 64683.845 kg/h，相对误差 6.05e-06，通过
+      能流热负荷 HeatFlow(kW) -> 39989.17139745568
+      能流热负荷 State/CanModify -> (0, False)
+    R-Eq 710 C Methane: HYSYS 0.0962，参照 0.094，差 0.0022
+    R-Eq 710 C H2O: HYSYS 0.3844，参照 0.381，差 0.0034
+    R-Eq 710 C Hydrogen: HYSYS 0.4064，参照 0.411，差 0.0046
+    R-Eq 710 C CO: HYSYS 0.0457，参照 0.047，差 0.0013
+    R-Eq 710 C CO2: HYSYS 0.0673，参照 0.067，差 0.0003
+    R-Eq 710 C：五个摩尔分率最大偏差 0.0046（容差 0.02），通过；CH4 转化率 54.0%；总流量 4780.7（参照约 4800）
+  气相出料 T = 600.0 C -> None
+  -- R-Eq @ 600 C：出料 --
+    气相 T=600.00 C，P=1350.0 kPa，F=4307.057 kgmole/h，64683.66 kg/h；液相 F=0.0000 kgmole/h
+    气相摩尔分率 {'Methane': 0.1617, 'H2O': 0.4976, 'CO': 0.0117, 'CO2': 0.0588, 'Hydrogen': 0.2702}
+    气相各组分 kgmole/h {'Methane': 696.582, 'H2O': 2143.264, 'CO': 50.43, 'CO2': 253.098, 'Hydrogen': 1163.682}
+    质量守恒：进 64683.454，出 64683.661 kg/h，相对误差 3.20e-06，通过
+      能流热负荷 HeatFlow(kW) -> 20159.81819426772
+      能流热负荷 State/CanModify -> (0, False)
+    R-Eq 600 C Methane: HYSYS 0.1617，参照 0.162，差 0.0003
+    R-Eq 600 C H2O: HYSYS 0.4976，参照 0.499，差 0.0014
+    R-Eq 600 C Hydrogen: HYSYS 0.2702，参照 0.269，差 0.0012
+    R-Eq 600 C CO: HYSYS 0.0117，参照 0.012，差 0.0003
+    R-Eq 600 C CO2: HYSYS 0.0588，参照 0.058，差 0.0008
+    R-Eq 600 C：五个摩尔分率最大偏差 0.0014（容差 0.02），通过；CH4 转化率 30.3%；总流量 4307.1（参照约 4305）
+  气相出料 T = 710.0 C -> None
+  -- R-Eq @ 710 C：出料 --
+    气相 T=710.00 C，P=1350.0 kPa，F=4780.727 kgmole/h，64683.85 kg/h；液相 F=0.0000 kgmole/h
+    气相摩尔分率 {'Methane': 0.0962, 'H2O': 0.3844, 'CO': 0.0457, 'CO2': 0.0673, 'Hydrogen': 0.4064}
+    气相各组分 kgmole/h {'Methane': 459.747, 'H2O': 1837.796, 'CO': 218.633, 'CO2': 321.731, 'Hydrogen': 1942.821}
+    质量守恒：进 64683.454，出 64683.846 kg/h，相对误差 6.05e-06，通过
+      能流热负荷 HeatFlow(kW) -> 39989.164025924576
+      能流热负荷 State/CanModify -> (0, False)
+    R-Eq 710 C Methane: HYSYS 0.0962，参照 0.094，差 0.0022
+    R-Eq 710 C H2O: HYSYS 0.3844，参照 0.381，差 0.0034
+    R-Eq 710 C Hydrogen: HYSYS 0.4064，参照 0.411，差 0.0046
+    R-Eq 710 C CO: HYSYS 0.0457，参照 0.047，差 0.0013
+    R-Eq 710 C CO2: HYSYS 0.0673，参照 0.067，差 0.0003
+    R-Eq 710 C：五个摩尔分率最大偏差 0.0046（容差 0.02），通过；CH4 转化率 54.0%；总流量 4780.7（参照约 4800）
+-- R-Gibbs --
+  物流 R-Gibbs-V（ProcessStream）
+  物流 R-Gibbs-L（ProcessStream）
+  EnergyStreams.Add('Q-R-Gibbs') [写法 1] -> <win32com.gen_py.HYSYS 15.0 Type Library.ProcessStream instance at 0x2967540106688>
+  Operations.Add('R-Gibbs', 'GibbsReactorOp') [写法 1] -> <win32com.gen_py.HYSYS 15.0 Type Library.GibbsReactor instance at 0x2967579144368>
+    类型 GibbsReactor，TypeName=gibbsreactorop
+  Feeds.Add(进料物流) [写法 1] -> None
+  Feeds.Names -> ['F-Gibbs']
+  VapourProduct = ... -> None
+  LiquidProduct = ... -> None
+  EnergyStream = ... -> None
+  PressureDrop = 0 kPa -> None
+  Gibbs ReactorType（默认值） -> 3
+  气相出料 T = 710.0 C -> None
+  -- R-Gibbs @ 710 C：出料 --
+    气相 T=710.00 C，P=1350.0 kPa，F=4780.748 kgmole/h，64683.84 kg/h；液相 F=0.0000 kgmole/h
+    气相摩尔分率 {'Methane': 0.0962, 'H2O': 0.3844, 'CO': 0.0457, 'CO2': 0.0673, 'Hydrogen': 0.4064}
+    气相各组分 kgmole/h {'Methane': 459.736, 'H2O': 1837.781, 'CO': 218.638, 'CO2': 321.736, 'Hydrogen': 1942.857}
+    质量守恒：进 64683.454，出 64683.844 kg/h，相对误差 6.03e-06，通过
+      能流热负荷 HeatFlow(kW) -> 39989.774499327905
+      能流热负荷 State/CanModify -> (0, False)
+    R-Gibbs 710 C Methane: HYSYS 0.0962，参照 0.094，差 0.0022
+    R-Gibbs 710 C H2O: HYSYS 0.3844，参照 0.381，差 0.0034
+    R-Gibbs 710 C Hydrogen: HYSYS 0.4064，参照 0.411，差 0.0046
+    R-Gibbs 710 C CO: HYSYS 0.0457，参照 0.047，差 0.0013
+    R-Gibbs 710 C CO2: HYSYS 0.0673，参照 0.067，差 0.0003
+    R-Gibbs 710 C：五个摩尔分率最大偏差 0.0046（容差 0.02），通过；CH4 转化率 54.0%；总流量 4780.7（参照约 4800）
+  气相出料 T = 600.0 C -> None
+  -- R-Gibbs @ 600 C：出料 --
+    气相 T=600.00 C，P=1350.0 kPa，F=4307.056 kgmole/h，64683.65 kg/h；液相 F=0.0000 kgmole/h
+    气相摩尔分率 {'Methane': 0.1617, 'H2O': 0.4976, 'CO': 0.0117, 'CO2': 0.0588, 'Hydrogen': 0.2702}
+    气相各组分 kgmole/h {'Methane': 696.582, 'H2O': 2143.262, 'CO': 50.428, 'CO2': 253.1, 'Hydrogen': 1163.684}
+    质量守恒：进 64683.454，出 64683.652 kg/h，相对误差 3.05e-06，通过
+      能流热负荷 HeatFlow(kW) -> 20159.81236516146
+      能流热负荷 State/CanModify -> (0, False)
+    R-Gibbs 600 C Methane: HYSYS 0.1617，参照 0.162，差 0.0003
+    R-Gibbs 600 C H2O: HYSYS 0.4976，参照 0.499，差 0.0014
+    R-Gibbs 600 C Hydrogen: HYSYS 0.2702，参照 0.269，差 0.0012
+    R-Gibbs 600 C CO: HYSYS 0.0117，参照 0.012，差 0.0003
+    R-Gibbs 600 C CO2: HYSYS 0.0588，参照 0.058，差 0.0008
+    R-Gibbs 600 C：五个摩尔分率最大偏差 0.0014（容差 0.02），通过；CH4 转化率 30.3%；总流量 4307.1（参照约 4305）
+  气相出料 T = 710.0 C -> None
+  -- R-Gibbs @ 710 C：出料 --
+    气相 T=710.00 C，P=1350.0 kPa，F=4780.748 kgmole/h，64683.84 kg/h；液相 F=0.0000 kgmole/h
+    气相摩尔分率 {'Methane': 0.0962, 'H2O': 0.3844, 'CO': 0.0457, 'CO2': 0.0673, 'Hydrogen': 0.4064}
+    气相各组分 kgmole/h {'Methane': 459.736, 'H2O': 1837.781, 'CO': 218.638, 'CO2': 321.736, 'Hydrogen': 1942.857}
+    质量守恒：进 64683.454，出 64683.844 kg/h，相对误差 6.03e-06，通过
+      能流热负荷 HeatFlow(kW) -> 39989.774499327905
+      能流热负荷 State/CanModify -> (0, False)
+    R-Gibbs 710 C Methane: HYSYS 0.0962，参照 0.094，差 0.0022
+    R-Gibbs 710 C H2O: HYSYS 0.3844，参照 0.381，差 0.0034
+    R-Gibbs 710 C Hydrogen: HYSYS 0.4064，参照 0.411，差 0.0046
+    R-Gibbs 710 C CO: HYSYS 0.0457，参照 0.047，差 0.0013
+    R-Gibbs 710 C CO2: HYSYS 0.0673，参照 0.067，差 0.0003
+    R-Gibbs 710 C：五个摩尔分率最大偏差 0.0046（容差 0.02），通过；CH4 转化率 54.0%；总流量 4780.7（参照约 4800）
+== Gibbs 与平衡反应器（710 C）的摩尔分率最大偏差 0.00001，接近 ==
+  全部求解后 状态 OK：对象数 / 清单 -> (14, (('MaterialStreamObject', 'F-Conv'), ('MaterialStreamObject', 'F-Eq'), ('MaterialStreamObject', 'F-Gibbs'), ('MaterialStreamObject', 'R-Conv-V'), ('MaterialStreamObject', 'R-Conv-L'), ('MaterialStreamObject', 'R-Eq-V'), ('MaterialStreamObject', 'R-Eq-L'), ('MaterialStreamObject', 'R-Gibbs-V'), ('MaterialStreamObject', 'R-Gibbs-L'), ('ConversionReactorOpObject', 'R-Conv'), ('EnergyStreamObject', 'Q-R-Eq'), ('EnergyStreamObject', 'Q-R-Gibbs'), ('EquilibriumReactorOpObject', 'R-Eq'), ('GibbsReactorOpObject', 'R-Gibbs')))
+  全部求解后 状态 NotSolved：对象数 / 清单 -> (0, None)
+  全部求解后 状态 Warning：对象数 / 清单 -> (0, None)
+  全部求解后 状态 UnderSpecified：对象数 / 清单 -> (0, None)
+  全部求解后 状态 Error：对象数 / 清单 -> (0, None)
+  Solver.CanSolve -> True
+  保存 -> None
+参考 Case: C:\Users\azureuser\Desktop\ChemicalAgent\spikes\ref_cases\three_reactors.hsc，178 KB
+  case.Close() -> None
+  实例 10560 已结束

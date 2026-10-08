@@ -4,10 +4,10 @@
 
 ## 当前状态
 
-- 阶段：**0A 已完成**（2026-10-08 10:55，UTC+8）。首次开始于 2026-10-03 09:50，共 3 个会话（见"已完成"的时间表）。任务 1 至 3、5 至 11 都完成，完成标准的 6 条都有实际运行的验证。**任务 4（E0，LLM 连通性）挂起**，等用户给出供应商、模型和密钥所在的环境变量（D1）。**遗留一件等用户动手的事：D11**，在 HYSYS 界面里手工建三种反应器的参考 Case，建好后补跑 E3。下一个会话做阶段 0B。当前没有残留的 HYSYS 进程。
+- 阶段：**0A 已完成**（2026-10-08 10:55，UTC+8）。首次开始于 2026-10-03 09:50，共 3 个会话（见"已完成"的时间表）。任务 1 至 3、5 至 11 都完成，完成标准的 6 条都有实际运行的验证。**任务 4（E0，LLM 连通性）挂起**，等用户给出供应商、模型和密钥所在的环境变量（D1）。**D11（参考 Case）已由助手用代码建成并补跑了 E3，不再等用户。**下一个会话做阶段 0B。当前没有残留的 HYSYS 进程。
 - **用户 2026-10-08 的答复（0A 交接之后）：D11 由助手自行创建参考 Case，建好后补跑 E3；D9 之后的提交署名改为 `xibei03 <jsl_03@163.com>`；"完成后续跑"。** 我的理解和假设：自行创建用 COM 代码做（没有别的手段），所以这部分工作等于提前做了 0B/0C 的一部分探针（E4 至 E9），台账里按探针记录；"完成后续跑"理解为做完这些之后补跑 E3，**不进入阶段 0B**（阶段边界不变，0B 仍在新会话里做，可以直接用这里的结论）。如果用户的意思是连续做 0B，请在回复里明说。
 - 最近通过的闸门：无（G0 在阶段 0B 结束时判）。阶段结束时质量工具全绿：`ruff format --check`、`ruff check`、`mypy src`、`pytest`（13 passed），本阶段没有改 `src/` 和 `tests/`。
-- 最近一次更新：2026-10-08 12:20
+- 最近一次更新：2026-10-08 13:05
 - 时间记法：本机时钟是 UTC，进度文件里的时间一律换算成 UTC+8（加 8 小时）。
 - 推送状态：本阶段每个任务的提交都已推送到 `origin/main`，没有强制推送；推送方式见"环境事实"的"GitHub 凭据"。
 
@@ -25,7 +25,7 @@
 | 输出编码的设置（如 `PYTHONUTF8`） | 实测：没有 `PYTHONUTF8` 和 `PYTHONIOENCODING` 时，输出被管道接走的 Python 进程用 cp1252，打印中文抛 `UnicodeEncodeError`；设 `PYTHONUTF8=1` 后正常。做法：`setx PYTHONUTF8 1`（用户级，对之后新启动的进程生效）。助手的会话进程由宿主预设了 `PYTHONIOENCODING=utf-8:surrogateescape`，所以不依赖 `setx`。探针脚本开头自己 `sys.stdout.reconfigure(encoding="utf-8")`，输出文件由脚本用 `encoding="utf-8"` 写 |
 | HYSYS 版本与 ProgID | `Aspen HYSYS Version 15 (41.0)`（`app.Version` 实测）。通用 ProgID `HYSYS.Application`（= `.Latest`，CurVer 为 `HYSYS.Application.V15.0`），已有实例就复用；每次新开进程的是 `HYSYS.Application.NewInstance`（run3、run5 已验证）。进程名 `AspenHysys.exe`。早绑定用 `gencache.EnsureDispatch`，包装缓存在 `%TEMP%\gen_py\3.12`。详见台账"连接与绑定方式" |
 | HYSYS 安装目录 | `C:\Program Files\AspenTech\Aspen HYSYS V15.0` |
-| 反向探测用的参考 Case 的路径 | 自带示例 `C:\Program Files\AspenTech\Aspen HYSYS V15.0\Samples\Synthesis Gas Production.hsc`（2 台转化反应器、3 台平衡反应器，没有 Gibbs；先复制到临时目录再打开）。三种反应器齐全的 `spikes/ref_cases/three_reactors.hsc` 等用户手工建（D11） |
+| 反向探测用的参考 Case 的路径 | **`spikes/ref_cases/three_reactors.hsc`**（D11，助手用代码建的，178 KB，已提交）：PR 流体包 8 个组分，转化反应器 R-Conv、平衡反应器 R-Eq、Gibbs 反应器 R-Gibbs，全部求解；重建命令 `.venv\Scripts\python.exe spikes\build_reference_case.py`。另有自带示例 `C:\Program Files\AspenTech\Aspen HYSYS V15.0\Samples\Synthesis Gas Production.hsc`（2 台转化、3 台平衡反应器；先复制到临时目录再打开） |
 | LLM 供应商、模型、密钥所在的环境变量名 | 待用户提供（D1） |
 | 远程仓库地址 | `https://github.com/xibei03/ChemicalAgent.git`（2026-10-08 由用户给出，已配置为 `origin`，默认分支 `main`）。远端仓库是公开的，不登录也能 `fetch`，推送需要登录 |
 | GitHub 凭据 | 2026-10-08 接手时这台机器上没有任何凭据；用户随后在应用的终端里运行 `gh auth login`，登录为 `xibei03`（令牌在 Windows 凭据库，协议 https）。`git` 的凭据助手仍然是系统级的 `manager`（GCM），没有运行 `gh auth setup-git`，所以推送时用一次性助手，不改任何持久配置：`git -c credential.helper= -c "credential.helper=!gh auth git-credential" push`。助手不代填、不收口令或令牌 |
@@ -52,34 +52,25 @@
 | 0A | 10 检索官方帮助 | 3a6e467 | `hh.exe -decompile` 解开 4 个 `.chm`（共 2882 个文件），只有 `xhysys.chm` 是 Automation 对象参考：`operation_types.htm` 列出 `Operations.Add` 的类型字符串（`ConversionReactorOp`、`EquilibriumReactorOp`、`GibbsReactorOp`），示例 `Flowsheet.Operations.Add "Pump1", "PumpOp"`；没有 `Reactions.Add`、`ReactionSets.Add` 的说明，枚举页没有界面选项名。台账 L9 |
 | 0A | 11 台账收尾和完成标准核对 | 3a6e467 | 台账 10 个节名俱全；H1、H2、H6、H13、H17、H18、H22 都是已确认；三种反应器的类型名、反应、反应集、反应器的成员已记录；"创建反应的线索"按可能性排序；探索日志 L0 至 L9，每个探针都有一条。`python spikes/e1_connect.py` 原样运行，打印版本 `Aspen HYSYS Version 15 (41.0)` 和进程号。`python tests/test_code_health.py` 与四个质量工具见交接报告 |
 | 0A | 4 LLM 连通性（E0） | 未做 | 挂起：用户说需要密钥的先跳过，等 D1 |
-| 0A（D11） | E4 新建 Case 和 Basis（含 E4b 物性包） | 待补 | `spikes/e4_basis.py`、`e4b_property_package.py`：`SimulationCases.Add("name")` 新建空白 Case，新 Case 一开始就在 Basis 修改状态；`ComponentLists.Add` 加组分列表，`Components.Add(name)`（库名大小写不敏感，分子式不行）；`FluidPackages.Add` 加流体包，`fp.ComponentList = cl`，**`fp.PropertyPackageName = "pengrob"`（物性包内部名；界面名等 10 种写法都 E_INVALIDARG）**；`EndBasisChange()`、`SaveAs`、`Close`、`Open` 重开后 Basis 完好。固体碳 `Carbon` 在库里，`IsSolid` 为 True。H3、H4、H7、H8 已确认，H5、H21、H25 部分确认 |
-| 0A（D11） | E6 创建反应和反应集（含 E6b Keq 来源） | 待补 | `spikes/e6_reaction.py`、`e6b_keq_source.py`：**`Reactions.Add(name, "conversionrxn")` 第一次就成功**，返回类型化的 `ConversionReaction`（`equilibriumrxn`、`kineticrxn` 同理，界面名、整数、省略 `Type` 都 E_FAIL）；`Reactants.Add(组分名)` 加反应物，`StoichiometricCoefficientValue` 写系数（负为反应物），`BaseComponent`、`Conversion = 50.0`；分数系数 0.24 能写；`ReactionSets.Add(name)`、`ActiveReactions.Add(反应名)`、`AssociateFluidPackage(fp)`（挂上之后流体包才列出这个集合）；`EndBasisChange()` 之后也能直接建反应；另存重开后全部保留，系数被质量守恒微调 5e-5。**`LnKSource` 实际取值：1 Ln(K) 公式、2 Gibbs 自由能（默认）、3 固定 K、4 K–T 表，写 0 被忽略**（依据 `equirxn.rdf` 和实测）；固定 K 写 `EquilibriumConstant` 可用。H5、H9 已确认，H10、H11 部分确认 |
+| 0A（D11） | E4 新建 Case 和 Basis（含 E4b 物性包） | 8a7ec7e | `spikes/e4_basis.py`、`e4b_property_package.py`：`SimulationCases.Add("name")` 新建空白 Case，新 Case 一开始就在 Basis 修改状态；`ComponentLists.Add` 加组分列表，`Components.Add(name)`（库名大小写不敏感，分子式不行）；`FluidPackages.Add` 加流体包，`fp.ComponentList = cl`，**`fp.PropertyPackageName = "pengrob"`（物性包内部名；界面名等 10 种写法都 E_INVALIDARG）**；`EndBasisChange()`、`SaveAs`、`Close`、`Open` 重开后 Basis 完好。固体碳 `Carbon` 在库里，`IsSolid` 为 True。H3、H4、H7、H8 已确认，H5、H21、H25 部分确认 |
+| 0A（D11） | E6 创建反应和反应集（含 E6b Keq 来源） | f20af38 | `spikes/e6_reaction.py`、`e6b_keq_source.py`：**`Reactions.Add(name, "conversionrxn")` 第一次就成功**，返回类型化的 `ConversionReaction`（`equilibriumrxn`、`kineticrxn` 同理，界面名、整数、省略 `Type` 都 E_FAIL）；`Reactants.Add(组分名)` 加反应物，`StoichiometricCoefficientValue` 写系数（负为反应物），`BaseComponent`、`Conversion = 50.0`；分数系数 0.24 能写；`ReactionSets.Add(name)`、`ActiveReactions.Add(反应名)`、`AssociateFluidPackage(fp)`（挂上之后流体包才列出这个集合）；`EndBasisChange()` 之后也能直接建反应；另存重开后全部保留，系数被质量守恒微调 5e-5。**`LnKSource` 实际取值：1 Ln(K) 公式、2 Gibbs 自由能（默认）、3 固定 K、4 K–T 表，写 0 被忽略**（依据 `equirxn.rdf` 和实测）；固定 K 写 `EquilibriumConstant` 可用。H5、H9 已确认，H10、H11 部分确认 |
+| 0A（D11） | 参考 Case 构建（E5 物流、E7 转化、E8 平衡、E9 Gibbs） | 本次提交 | `spikes/build_reference_case.py` 从空白 Case 一次建出并求解三种反应器，连续两次运行结果逐项相同：转化反应器出口摩尔分率甲苯 0.5000、苯 0.2500、对二甲苯 0.2500（偏差 < 1e-5）；平衡反应器 710 °C、600 °C 与独立参照值的摩尔分率最大偏差 0.0046、0.0014（容差 0.02），CH4 转化率 54.0%、30.3%，热负荷 +39989 kW、+20160 kW；Gibbs 反应器与平衡反应器最大偏差 1e-5；质量守恒误差 < 2e-5；流程图 14 个对象全是 OK。`Operations.Add(name, "ConversionReactorOp")` 等帮助文件的写法有效；出口温度规定在气相出料物流上。台账 H12、H14、H15、H16、H20 已确认，H19 部分确认，写出"调用序列"三个小节 |
+| 0A（D11） | E9b Gibbs 反应器类型 | 本次提交 | `spikes/e9b_gibbs_type.py`：`ReactorType` 0 = NO Reactions (=Separator)，2 = Specify Equilibrium Reactions（要挂反应集），3 = Gibbs Reactions Only（默认）；1 写得进去但反应器未求解。界面选项原文来自 `Support\OdfRdfVariables.sdb`。台账 H31 |
+| 0A（D11） | E3 补跑：参考 Case | 本次提交 | `spikes/e3_reverse_probe.py --case spikes/ref_cases/three_reactors.hsc --tag three`：三种反应器、3 个反应、2 个反应集的读法与示例一致；`LnKSource` 为 2（Gibbs 自由能）；Gibbs 的 `ReactorType` 为 3。0A 遗留的两个未解决项都已解决 |
 | 0A | 只读勘查（计划模式下完成，无脚本） | 2427c43 | 注册表 ProgID、`hysys.tlb` 的接口名与集合的 `Add` 签名、安装目录里的 `hysys.hh`、定义文件、帮助文件，写入台账 L0 和"创建反应的线索"初稿（均未运行验证） |
 
 ## 进行中
 
-**D11：用 COM 代码从空白 Case 建出三种反应器的参考 Case（2026-10-08 起）。** 目标模型见阶段提示词 0A 任务 7 的清单：PR 流体包（甲烷、水、CO、CO2、氢气、甲苯、苯、对二甲苯）；转化反应 2 甲苯 → 苯 + 对二甲苯（50%）和转化反应集；平衡反应 CH4 + H2O ⇌ CO + 3 H2、CO + H2O ⇌ CO2 + H2（Keq 来源 Gibbs 自由能）和平衡反应集；两个反应集加入流体包；转化反应器、平衡反应器（带能流，出口 710 °C）、Gibbs 反应器（不挂反应集，带能流，出口 710 °C），各带一股进料和气、液两股出料，全部求解。步骤和对应的探针：
-
-| 步骤 | 探针 | 状态 |
-|---|---|---|
-| 新建 Case、Basis、组分、物性包、另存重开 | `spikes/e4_basis.py`、`e4b_property_package.py` | 已完成 |
-| 新建物流、规定 T、P、流量、组成、闪蒸 | `spikes/e5_stream.py`（E2 已验证新物流和写组成，在新 Case 里再验一次） | 未开始 |
-| 反应和反应集（风险最高） | `spikes/e6_reaction.py`、`e6b_keq_source.py` | 已完成 |
-| 三种反应器及其连接、求解 | `spikes/e7_e9_reactors.py`（转化、平衡、Gibbs，沿用 0B/0C 的拆分思路） | 未开始 |
-| 组装并另存参考 Case | `spikes/build_reference_case.py` | 未开始 |
-| 对参考 Case 补跑 E3，解决 `LnKSource` 和 Gibbs `ReactorType` 的对应 | `spikes/e3_reverse_probe.py --case spikes/ref_cases/three_reactors.hsc --tag three` | 未开始 |
+没有进行中的任务。D11（参考 Case）已完成，见"已完成"。
 
 ## 下一步
 
-下一个会话做**阶段 0B**（`docs/prompts/phase-0b.md`）：用代码从空白 Case 建出转化反应器，结果正确（闸门 G0）。开始前先读 `CLAUDE.md`、本文件、阶段提示词，以及台账的"创建反应的线索""对象模型速查""接口事实表"。
+下一个会话做**阶段 0B**（`docs/prompts/phase-0b.md`）：用代码从空白 Case 建出转化反应器，结果正确（闸门 G0）。开始前先读 `CLAUDE.md`、本文件、阶段提示词，以及台账的"调用序列""接口事实表""对象模型速查"。**D11 已经提前跑通了 0B 要做的大部分创建链**，0B 的起点比提示词假定的高得多：
 
-0A 留给 0B 的起点：
-
-1. **创建反应的最有希望的做法**：`BasisManager.StartBasisChange()` 之后，`Case.BasisManager.ReactionPackageManager.Reactions.Add(name, Type)`，`Type` 先试 `"conversionrxn"`（E3 读到的 `TypeName`），不行再试 `"Conversion"`、整数、省略；再用 `ReactionSets.Add(name, ...)` 建反应集，往 `ActiveReactions` 里加反应，`AssociateFluidPackage(流体包)`；反应器用 `Flowsheet.Operations.Add(name, "ConversionReactorOp")`（帮助文件里的字符串）；物流 `MaterialStreams.Add(name)` 已证实只给名字就行。
-2. **反应器的配置**：进料 `op.Feeds.Add(stream)`（`Attachments.Add(Item)`），出料 `op.VapourProduct`、`op.LiquidProduct`、能流 `op.EnergyStream` 是可写的 `ProcessStream`，`op.ReactionSet` 可写；出口温度写在气相出料物流上。
-3. **所有写入带单位、读回比对**；路径一律长路径；求解器写入同步重算，`CanSolve=False` 挂起、`True` 释放时同步求解。
-4. **用户的参考 Case**（D11）：建好后补跑 `.venv\Scripts\python.exe spikes\e3_reverse_probe.py --case spikes\ref_cases\three_reactors.hsc --tag three`，解决 `LnKSource` 读出 4 的映射和 Gibbs 的 `ReactorType`，并向用户确认 Gibbs 类型选项在界面上的名字。
-5. **E0**：用户给出 LLM 信息（D1）之后做，现在不卡。
+1. **直接可用的调用序列**：台账"调用序列"一节（公共步骤、转化、平衡、Gibbs 三小节）和 `spikes/build_reference_case.py`、`e4_basis.py`、`e6_reaction.py`。0B 仍按提示词做 `e4_basis.py`、`e5_stream.py`、`e6_reaction.py`、`e7_conversion_chain.py`，但可以大量沿用，重点放在下面几项没验证过的东西。
+2. **0B 还要验证的**：甲苯歧化的四产物分数系数版本（2 甲苯 → 1 苯 + 0.24 对二甲苯 + 0.52 间二甲苯 + 0.24 邻二甲苯）和与解析解的对比（含 380 °C、2500 kPa、10000 kg/h 的进料）；并行的转化反应和排序设置（任务 5）；"建模期间求解器要不要先挂起"（D11 里没有挂起也能建成）；`ReactionPhase` 对转化反应的影响（默认 5，D11 用了 0）。
+3. **0C 要做的**：固体碳（E10）、平衡反应器的绝热和固定 K 求解、Gibbs 的多股进料、E11、E12、E13、"对工具契约的影响"、"路线对照"。
+4. **E0**：用户给出 LLM 信息（D1）之后做，现在不卡。
 
 ## 待决策
 
@@ -96,7 +87,7 @@
 | D7 | Demo 形态 | 命令行，HYSYS 窗口可见 | 按默认 |
 | D8 | 机动时间先做泛化还是先做加固 | 先泛化 | 按默认 |
 | D9 | Git 署名的名字和邮箱 | 之后的提交署名 `xibei03 <jsl_03@163.com>`，历史提交不改 | **已定**（用户 2026-10-08 指定）。此前 13 个提交署名是 `xibeibei63`，不改写历史（会需要强制推送）；若想让展示统一，可以加 `.mailmap`，没加，等用户说 |
-| D11 | 三种反应器的参考 Case `spikes/ref_cases/three_reactors.hsc`（清单见 `docs/prompts/phase-0a.md` 任务 7）：自带示例里没有 Gibbs 反应器 | **用户 2026-10-08 指示由助手自行创建**，建好后补跑 E3；Gibbs 类型选项在界面上的名字改从 `Support\*.rdf` 等文件和界面截图里找，不再问用户 | 助手创建中（见"进行中"） |
+| D11 | 三种反应器的参考 Case `spikes/ref_cases/three_reactors.hsc` | 用户 2026-10-08 指示由助手自行创建 | **已解决**：助手用代码建成并求解（`build_reference_case.py`），E3 已补跑；Gibbs 类型选项和出口温度规定的位置已查清（台账 H31、E8 小节），不需要用户手工建。用户若想在界面里看一眼，打开这个文件即可 |
 | D10 | GitHub 登录：这台机器原本没有存储的凭据 | 用户登录后，助手补推全部提交 | 已解决（用户 `gh auth login` 登录为 `xibei03`，首次推送 2026-10-08 成功）。可选：用户若想让以后的 `git push` 不再需要一次性助手，自行运行 `gh auth setup-git` |
 
 ## 决策日志

@@ -1,0 +1,44 @@
+新实例的进程号: 12128
+进料摩尔分率 {'Methane': 0.2703, 'H2O': 0.7297}
+  [初始] ReactorType=3；气相 F=4780.75，液相 F=0.00
+      气相摩尔分率 {'Methane': 0.0962, 'H2O': 0.3844, 'CO': 0.0457, 'CO2': 0.0673, 'Hydrogen': 0.4064}
+        热负荷 kW -> 39989.774499327905
+      流程图状态计数 {'OK': 14, 'NotSolved': 0, 'Warning': 0, 'UnderSpecified': 0, 'Error': 0}
+== Q1、Q2 不挂反应集，逐个写 ReactorType ==
+  ReactorType = 0 -> None
+  [写 0] ReactorType=0；气相 F=3700.00，液相 F=0.00
+      气相摩尔分率 {'Methane': 0.2703, 'H2O': 0.7297}
+        热负荷 kW -> 9328.067644866096
+      流程图状态计数 {'OK': 14, 'NotSolved': 0, 'Warning': 0, 'UnderSpecified': 0, 'Error': 0}
+  ReactorType = 1 -> None
+  [写 1] ReactorType=1；气相 F=-32767.00，液相 F=-32767.00
+      气相摩尔分率 {'Methane': -32767.0, 'H2O': -32767.0, 'CO': -32767.0, 'CO2': -32767.0, 'Hydrogen': -32767.0, 'Toluene': -32767.0, 'Benzene': -32767.0, 'p-Xylene': -32767.0}
+        热负荷 kW -> -32767.0
+      流程图状态计数 {'OK': 10, 'NotSolved': 4, 'Warning': 0, 'UnderSpecified': 0, 'Error': 0}
+      NotSolved 的对象: (('MaterialStreamObject', 'R-Gibbs-V'), ('MaterialStreamObject', 'R-Gibbs-L'), ('EnergyStreamObject', 'Q-R-Gibbs'), ('GibbsReactorOpObject', 'R-Gibbs'))
+  ReactorType = 2 -> None
+  [写 2] ReactorType=2；气相 F=-32767.00，液相 F=-32767.00
+      气相摩尔分率 {'Methane': -32767.0, 'H2O': -32767.0, 'CO': -32767.0, 'CO2': -32767.0, 'Hydrogen': -32767.0, 'Toluene': -32767.0, 'Benzene': -32767.0, 'p-Xylene': -32767.0}
+        热负荷 kW -> -32767.0
+      流程图状态计数 {'OK': 10, 'NotSolved': 3, 'Warning': 0, 'UnderSpecified': 1, 'Error': 0}
+      NotSolved 的对象: (('MaterialStreamObject', 'R-Gibbs-V'), ('MaterialStreamObject', 'R-Gibbs-L'), ('EnergyStreamObject', 'Q-R-Gibbs'))
+      UnderSpecified 的对象: (('GibbsReactorOpObject', 'R-Gibbs'),)
+  ReactorType = 3 -> None
+  [写 3] ReactorType=3；气相 F=4780.75，液相 F=0.00
+      气相摩尔分率 {'Methane': 0.0962, 'H2O': 0.3844, 'CO': 0.0457, 'CO2': 0.0673, 'Hydrogen': 0.4064}
+        热负荷 kW -> 39989.774499327905
+      流程图状态计数 {'OK': 14, 'NotSolved': 0, 'Warning': 0, 'UnderSpecified': 0, 'Error': 0}
+== Q3 ReactorType = 2，挂上平衡反应集 ==
+  ReactorType = 2 -> None
+  ReactionSet = Eq-Set -> None
+  [类型 2 + Eq-Set] ReactorType=2；气相 F=4780.75，液相 F=0.00
+      气相摩尔分率 {'Methane': 0.0962, 'H2O': 0.3844, 'CO': 0.0457, 'CO2': 0.0673, 'Hydrogen': 0.4064}
+        热负荷 kW -> 39989.77452595899
+      流程图状态计数 {'OK': 14, 'NotSolved': 0, 'Warning': 0, 'UnderSpecified': 0, 'Error': 0}
+  ReactorType = 3（再回到纯 Gibbs） -> None
+  [类型 3 + Eq-Set] ReactorType=3；气相 F=4780.75，液相 F=0.00
+      气相摩尔分率 {'Methane': 0.0962, 'H2O': 0.3844, 'CO': 0.0457, 'CO2': 0.0673, 'Hydrogen': 0.4064}
+        热负荷 kW -> 39989.774499327905
+      流程图状态计数 {'OK': 14, 'NotSolved': 0, 'Warning': 0, 'UnderSpecified': 0, 'Error': 0}
+  case.Close() -> None
+  实例 12128 已结束
