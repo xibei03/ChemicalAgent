@@ -1,0 +1,105 @@
+######## xml-case-0 ########
+新实例的进程号: 9244
+  供体：Case XML 2539284 字符，操作 XML 1731964 字符
+  导入前（空白 Case，Basis 和反应已建）：操作 []，物流 []
+  ApplyXML -> None
+      用时 0.54 秒；弹窗 0 个 []
+      之后 操作 ['CRV-100']，物流 ['Feed', 'Vap', 'Liq']；状态 {'OK': 0, 'NotSolved': 3, 'Warning': 0, 'UnderSpecified': 1, 'Error': 0}
+        CRV-100.TypeName -> 'conversionreactorop'
+        CRV-100 的进料 -> []
+        CRV-100.VapourProduct -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+        CRV-100.ReactionSet -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+        Feed 的 T(C)、P(kPa)、质量流量(kg/h) -> (380.0, 2500.0, 10000.000008)
+        Vap 的摩尔分率 -> [-32767.0, -32767.0, -32767.0, -32767.0, -32767.0]
+  实例 9244 已结束
+######## xml-operation-0 ########
+新实例的进程号: 9764
+  供体：Case XML 2539284 字符，操作 XML 1731964 字符
+  导入前（空白 Case，Basis 和反应已建）：操作 []，物流 []
+  ApplyXMLForOperation -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+      用时 0.01 秒；弹窗 0 个 []
+      之后 操作 []，物流 []；状态 {'OK': 0, 'NotSolved': 0, 'Warning': 0, 'UnderSpecified': 0, 'Error': 0}
+  实例 9764 已结束
+######## xml-case-128 ########
+新实例的进程号: 7984
+  供体：Case XML 2539284 字符，操作 XML 1731964 字符
+  导入前（空白 Case，Basis 和反应已建）：操作 []，物流 []
+  ApplyXML -> None
+      用时 0.43 秒；弹窗 0 个 []
+      之后 操作 ['CRV-100']，物流 ['Feed', 'Vap', 'Liq']；状态 {'OK': 0, 'NotSolved': 3, 'Warning': 0, 'UnderSpecified': 1, 'Error': 0}
+        CRV-100.TypeName -> 'conversionreactorop'
+        CRV-100 的进料 -> []
+        CRV-100.VapourProduct -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+        CRV-100.ReactionSet -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+        Feed 的 T(C)、P(kPa)、质量流量(kg/h) -> (380.0, 2500.0, 10000.000008)
+        Vap 的摩尔分率 -> [-32767.0, -32767.0, -32767.0, -32767.0, -32767.0]
+  实例 7984 已结束
+######## xml-operation-128 ########
+新实例的进程号: 4568
+  供体：Case XML 2539284 字符，操作 XML 1731964 字符
+  导入前（空白 Case，Basis 和反应已建）：操作 []，物流 []
+  ApplyXMLForOperation -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+      用时 0.07 秒；弹窗 0 个 []
+      之后 操作 []，物流 []；状态 {'OK': 0, 'NotSolved': 0, 'Warning': 0, 'UnderSpecified': 0, 'Error': 0}
+  实例 4568 已结束
+######## script-reactor-hidden ########
+新实例的进程号: 13196
+  case.Visible=False；回放前 操作 []，物流 []
+  [弹窗] 标题='Aspen HYSYS' 文字='Static: Could Not Find Target specified on Line 2 in File C:\\Users\\azureuser\\AppData\\Local\\Temp\\e13b_057tsu6u\\add_reactor.scp' 已点 'OK'
+  PlayScript(add_reactor.scp) -> None
+  用时 0.41 秒；弹窗 1 个 ['Static: Could Not Find Target specified on Line 2 in File C:\\Users\\azureuser\\AppData\\Local\\Temp\\e13b_057tsu6u\\add_reactor.scp']；回放后 操作 []，物流 []
+  实例 13196 已结束
+######## script-reactor-visible ########
+新实例的进程号: 13320
+  case.Visible=True；回放前 操作 []，物流 []
+  PlayScript(add_reactor.scp) -> None
+  用时 0.94 秒；弹窗 0 个 []；回放后 操作 []，物流 []
+  实例 13320 已结束
+######## script-ranks-hidden ########
+新实例的进程号: 10792
+-- 依次 (0,1,2)：预测出口甲苯摩尔分率 0.5731 --
+  脚本内容 ['Specify "FluidPkgMgr.300/RxnPackageManager.300/RxnSet.300(Conv-Set)" ":Index.400.0"   0.000000000000e+00', 'Specify "FluidPkgMgr.300/RxnPackageManager.300/RxnSet.300(Conv-Set)" ":Index.400.1"   1.000000000000e+00', 'Specify "FluidPkgMgr.300/RxnPackageManager.300/RxnSet.300(Conv-Set)" ":Index.400.2"   2.000000000000e+00']
+  回放前排序 ['0', '0', '0']
+  [弹窗] 标题='Aspen HYSYS' 文字='Static: Could Not Find Target specified on Line 1 in File C:\\Users\\azureuser\\AppData\\Local\\Temp\\e13b_2yd1vj_v\\ranks.scp' 已点 'OK'
+  PlayScript(ranks.scp) -> None
+  用时 0.14 秒；弹窗 1 个 ['Static: Could Not Find Target specified on Line 1 in File C:\\Users\\azureuser\\AppData\\Local\\Temp\\e13b_2yd1vj_v\\ranks.scp']
+  回放后排序 ['0', '0', '0']
+  [依次 (0,1,2)] 出口摩尔分率 {'Toluene': 0.5, 'Benzene': 0.25, 'p-Xylene': 0.06, 'm-Xylene': 0.13, 'o-Xylene': 0.06}
+      出口甲苯摩尔分率 0.5000：并行（0.500）
+        reactor.ConversionValue -> (12.0, 26.0, 12.0)
+        reactor.RxnPercentConversionValue -> (12.0, 26.0, 12.0)
+-- 第三个先算 (1,1,0)：预测出口甲苯摩尔分率 0.5456 --
+  脚本内容 ['Specify "FluidPkgMgr.300/RxnPackageManager.300/RxnSet.300(Conv-Set)" ":Index.400.0"   1.000000000000e+00', 'Specify "FluidPkgMgr.300/RxnPackageManager.300/RxnSet.300(Conv-Set)" ":Index.400.1"   1.000000000000e+00', 'Specify "FluidPkgMgr.300/RxnPackageManager.300/RxnSet.300(Conv-Set)" ":Index.400.2"   0.000000000000e+00']
+  回放前排序 ['0', '0', '0']
+  [弹窗] 标题='Aspen HYSYS' 文字='Static: Could Not Find Target specified on Line 1 in File C:\\Users\\azureuser\\AppData\\Local\\Temp\\e13b_2yd1vj_v\\ranks.scp' 已点 'OK'
+  PlayScript(ranks.scp) -> None
+  用时 0.26 秒；弹窗 1 个 ['Static: Could Not Find Target specified on Line 1 in File C:\\Users\\azureuser\\AppData\\Local\\Temp\\e13b_2yd1vj_v\\ranks.scp']
+  回放后排序 ['0', '0', '0']
+  [第三个先算 (1,1,0)] 出口摩尔分率 {'Toluene': 0.5, 'Benzene': 0.25, 'p-Xylene': 0.06, 'm-Xylene': 0.13, 'o-Xylene': 0.06}
+      出口甲苯摩尔分率 0.5000：并行（0.500）
+        reactor.ConversionValue -> (12.0, 26.0, 12.0)
+        reactor.RxnPercentConversionValue -> (12.0, 26.0, 12.0)
+  实例 10792 已结束
+######## script-ranks-visible ########
+新实例的进程号: 12180
+-- 依次 (0,1,2)：预测出口甲苯摩尔分率 0.5731 --
+  脚本内容 ['Specify "FluidPkgMgr.300/RxnPackageManager.300/RxnSet.300(Conv-Set)" ":Index.400.0"   0.000000000000e+00', 'Specify "FluidPkgMgr.300/RxnPackageManager.300/RxnSet.300(Conv-Set)" ":Index.400.1"   1.000000000000e+00', 'Specify "FluidPkgMgr.300/RxnPackageManager.300/RxnSet.300(Conv-Set)" ":Index.400.2"   2.000000000000e+00']
+  回放前排序 ['0', '0', '0']
+  PlayScript(ranks.scp) -> None
+  用时 0.05 秒；弹窗 0 个 []
+  回放后排序 ['0', '1', '2']
+  [依次 (0,1,2)] 出口摩尔分率 {'Toluene': 0.5731, 'Benzene': 0.2135, 'p-Xylene': 0.06, 'm-Xylene': 0.1144, 'o-Xylene': 0.0391}
+      出口甲苯摩尔分率 0.5731：依次（0.573）
+        reactor.ConversionValue -> (12.0, 26.0, 12.0)
+        reactor.RxnPercentConversionValue -> (12.0, 22.88, 7.814399999999999)
+-- 第三个先算 (1,1,0)：预测出口甲苯摩尔分率 0.5456 --
+  脚本内容 ['Specify "FluidPkgMgr.300/RxnPackageManager.300/RxnSet.300(Conv-Set)" ":Index.400.0"   1.000000000000e+00', 'Specify "FluidPkgMgr.300/RxnPackageManager.300/RxnSet.300(Conv-Set)" ":Index.400.1"   1.000000000000e+00', 'Specify "FluidPkgMgr.300/RxnPackageManager.300/RxnSet.300(Conv-Set)" ":Index.400.2"   0.000000000000e+00']
+  回放前排序 ['0', '0', '0']
+  PlayScript(ranks.scp) -> None
+  用时 0.06 秒；弹窗 0 个 []
+  回放后排序 ['1', '1', '0']
+  [第三个先算 (1,1,0)] 出口摩尔分率 {'Toluene': 0.5456, 'Benzene': 0.2272, 'p-Xylene': 0.0528, 'm-Xylene': 0.1144, 'o-Xylene': 0.06}
+      出口甲苯摩尔分率 0.5456：第三个先算、前两个并行（0.546）
+        reactor.ConversionValue -> (12.0, 26.0, 12.0)
+        reactor.RxnPercentConversionValue -> (10.559999999999999, 22.88, 12.0)
+  实例 12180 已结束

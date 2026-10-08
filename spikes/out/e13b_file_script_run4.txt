@@ -1,0 +1,24 @@
+######## script-ranks-app-hidden-case-visible ########
+新实例的进程号: 8428
+  app.Visible = False
+-- 依次 (0,1,2)：预测出口甲苯摩尔分率 0.5731 --
+  脚本内容 ['Specify "FluidPkgMgr.300/RxnPackageManager.300/RxnSet.300(Conv-Set)" ":Index.400.0"   0.000000000000e+00', 'Specify "FluidPkgMgr.300/RxnPackageManager.300/RxnSet.300(Conv-Set)" ":Index.400.1"   1.000000000000e+00', 'Specify "FluidPkgMgr.300/RxnPackageManager.300/RxnSet.300(Conv-Set)" ":Index.400.2"   2.000000000000e+00']
+  回放前排序 ['0', '0', '0']
+  PlayScript(ranks.scp) -> None
+  用时 0.06 秒；弹窗 0 个 []
+  回放后排序 ['0', '1', '2']
+  [依次 (0,1,2)] 出口摩尔分率 {'Toluene': 0.5731, 'Benzene': 0.2135, 'p-Xylene': 0.06, 'm-Xylene': 0.1144, 'o-Xylene': 0.0391}
+      出口甲苯摩尔分率 0.5731：依次（0.573）
+        reactor.ConversionValue -> (12.0, 26.0, 12.0)
+        reactor.RxnPercentConversionValue -> (12.0, 22.88, 7.814399999999999)
+-- 第三个先算 (1,1,0)：预测出口甲苯摩尔分率 0.5456 --
+  脚本内容 ['Specify "FluidPkgMgr.300/RxnPackageManager.300/RxnSet.300(Conv-Set)" ":Index.400.0"   1.000000000000e+00', 'Specify "FluidPkgMgr.300/RxnPackageManager.300/RxnSet.300(Conv-Set)" ":Index.400.1"   1.000000000000e+00', 'Specify "FluidPkgMgr.300/RxnPackageManager.300/RxnSet.300(Conv-Set)" ":Index.400.2"   0.000000000000e+00']
+  回放前排序 ['0', '0', '0']
+  PlayScript(ranks.scp) -> None
+  用时 0.05 秒；弹窗 0 个 []
+  回放后排序 ['1', '1', '0']
+  [第三个先算 (1,1,0)] 出口摩尔分率 {'Toluene': 0.5456, 'Benzene': 0.2272, 'p-Xylene': 0.0528, 'm-Xylene': 0.1144, 'o-Xylene': 0.06}
+      出口甲苯摩尔分率 0.5456：第三个先算、前两个并行（0.546）
+        reactor.ConversionValue -> (12.0, 26.0, 12.0)
+        reactor.RxnPercentConversionValue -> (10.559999999999999, 22.88, 12.0)
+  实例 8428 已结束

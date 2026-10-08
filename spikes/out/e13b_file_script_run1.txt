@@ -1,0 +1,60 @@
+######## Q1 ########
+新实例的进程号: 3552
+== Q1 文本路线：XML 导出再导入空白 Case ==
+  供体 Case：操作 ['CRV-100']，物流 ['Feed', 'Vap', 'Liq']；Case XML 2539284 字符，操作 XML 1731964 字符；用时 2.6 秒
+  ApplyXML(0, 整个 Case 的 XML) -> None
+      之后 操作 ['CRV-100']，物流 ['Feed', 'Vap', 'Liq']；弹窗 0 个
+  ApplyXMLForOperation('CRV-100', 0, 操作 XML) -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+      之后 操作 []，物流 []；弹窗 0 个
+  [弹窗] 标题='Severe Error' 文字='Static: You are low on memory.  Please close some other applications.' 已点 'OK'
+  [弹窗] 标题='Severe Error' 文字='Static: You are low on memory.  Please close some other applications.' 已点 'OK'
+  [弹窗] 标题='Severe Error' 文字='Static: You are low on memory.  Please close some other applications.' 已点 'OK'
+  [弹窗] 标题='Severe Error' 文字='Static: You are low on memory.  Please close some other applications.' 已点 'OK'
+  [弹窗] 标题='Severe Error' 文字='Static: You are low on memory.  Please close some other applications.' 已点 'OK'
+  [弹窗] 标题='Severe Error' 文字='Static: You are low on memory.  Please close some other applications.' 已点 'OK'
+  [弹窗] 标题='Severe Error' 文字='Static: You are low on memory.  Please close some other applications.' 已点 'OK'
+  实例 3552 已结束
+Traceback (most recent call last):
+  File "C:\Users\azureuser\Desktop\ChemicalAgent\spikes\e13b_file_script.py", line 169, in main
+    section(log, app, dialogs)
+  File "C:\Users\azureuser\Desktop\ChemicalAgent\spikes\e13b_file_script.py", line 102, in xml_into_blank_case
+    basis.case.Close()
+  File "C:\Users\AZUREU~1\AppData\Local\Temp\gen_py\3.12\DFC1C58B-AE9F-11CF-8EB2-0020AF119B90x0x3x2.py", line 91253, in Close
+    return self._oleobj_.InvokeTypes(1610874885, LCID, 1, (24, 0), ((12, 17), (12, 17)),SaveChanges
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pywintypes.com_error: (-2147023170, 'The remote procedure call failed.', None, None)
+
+######## Q2 ########
+新实例的进程号: 10724
+== Q2 脚本路线：PlayScript 加一台转化反应器 ==
+  回放前 操作 []，物流 []
+  [弹窗] 标题='Aspen HYSYS' 文字='Static: Could Not Find Target specified on Line 2 in File C:\\Users\\azureuser\\AppData\\Local\\Temp\\e13b_m62562kl\\add_reactor.scp' 已点 'OK'
+  PlayScript(add_reactor.scp) -> None
+  用时 0.34 秒；弹窗 1 个 ['Static: Could Not Find Target specified on Line 2 in File C:\\Users\\azureuser\\AppData\\Local\\Temp\\e13b_m62562kl\\add_reactor.scp']；回放后 操作 []，物流 []
+  实例 10724 已结束
+######## Q3 ########
+新实例的进程号: 9256
+== Q3 脚本路线：写反应集排序 ==
+-- 依次 (0,1,2)：预测出口甲苯摩尔分率 0.5731 --
+  脚本内容 ['Specify "FluidPkgMgr.300/RxnPackageManager.300/RxnSet.300(Conv-Set)" ":Index.400.0"   0.000000000000e+00', 'Specify "FluidPkgMgr.300/RxnPackageManager.300/RxnSet.300(Conv-Set)" ":Index.400.1"   1.000000000000e+00', 'Specify "FluidPkgMgr.300/RxnPackageManager.300/RxnSet.300(Conv-Set)" ":Index.400.2"   2.000000000000e+00']
+  回放前排序 ['0', '0', '0']
+  [弹窗] 标题='Aspen HYSYS' 文字='Static: Could Not Find Target specified on Line 1 in File C:\\Users\\azureuser\\AppData\\Local\\Temp\\e13b_cbfjp9bs\\ranks.scp' 已点 'OK'
+  PlayScript(ranks.scp) -> None
+  用时 0.05 秒；弹窗 1 个 ['Static: Could Not Find Target specified on Line 1 in File C:\\Users\\azureuser\\AppData\\Local\\Temp\\e13b_cbfjp9bs\\ranks.scp']
+  回放后排序 ['0', '0', '0']
+  [依次 (0,1,2)] 出口摩尔分率 {'Toluene': 0.5, 'Benzene': 0.25, 'p-Xylene': 0.06, 'm-Xylene': 0.13, 'o-Xylene': 0.06}
+      出口甲苯摩尔分率 0.5000：并行（0.500）
+        reactor.ConversionValue -> (12.0, 26.0, 12.0)
+        reactor.RxnPercentConversionValue -> (12.0, 26.0, 12.0)
+-- 第三个先算 (1,1,0)：预测出口甲苯摩尔分率 0.5456 --
+  脚本内容 ['Specify "FluidPkgMgr.300/RxnPackageManager.300/RxnSet.300(Conv-Set)" ":Index.400.0"   1.000000000000e+00', 'Specify "FluidPkgMgr.300/RxnPackageManager.300/RxnSet.300(Conv-Set)" ":Index.400.1"   1.000000000000e+00', 'Specify "FluidPkgMgr.300/RxnPackageManager.300/RxnSet.300(Conv-Set)" ":Index.400.2"   0.000000000000e+00']
+  回放前排序 ['0', '0', '0']
+  [弹窗] 标题='Aspen HYSYS' 文字='Static: Could Not Find Target specified on Line 1 in File C:\\Users\\azureuser\\AppData\\Local\\Temp\\e13b_cbfjp9bs\\ranks.scp' 已点 'OK'
+  PlayScript(ranks.scp) -> None
+  用时 0.18 秒；弹窗 1 个 ['Static: Could Not Find Target specified on Line 1 in File C:\\Users\\azureuser\\AppData\\Local\\Temp\\e13b_cbfjp9bs\\ranks.scp']
+  回放后排序 ['0', '0', '0']
+  [第三个先算 (1,1,0)] 出口摩尔分率 {'Toluene': 0.5, 'Benzene': 0.25, 'p-Xylene': 0.06, 'm-Xylene': 0.13, 'o-Xylene': 0.06}
+      出口甲苯摩尔分率 0.5000：并行（0.500）
+        reactor.ConversionValue -> (12.0, 26.0, 12.0)
+        reactor.RxnPercentConversionValue -> (12.0, 26.0, 12.0)
+  实例 9256 已结束

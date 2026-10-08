@@ -1,0 +1,6 @@
+######## script-reactor-visible-create-and-view ########
+新实例的进程号: 13100
+  case.Visible=True；回放前 操作 []，物流 []
+  PlayScript(add_reactor.scp) -> None
+  用时 0.11 秒；弹窗 0 个 []；回放后 操作 ['CRV-100']，物流 []
+  实例 13100 已结束

@@ -1,0 +1,67 @@
+新实例的进程号: 10972
+  COM 建好空白 Case（只有 Basis）；操作 []
+    case.Visible（COM 新建的 Case 默认值） -> False
+    case.Visible = True -> None
+    case.Visible（设置之后） -> True
+== Q1 控件树 ==
+    窗口 pid=10972 类名='HwndWrapper[aspenhysys.exe;;306da850-264b-4fdc-ad36-c0e1c7ff9702]' 标题='Model Palette'
+    窗口 pid=10972 类名='HwndWrapper[aspenhysys.exe;;4a922930-e5dc-458e-be51-fb5c49276de4]' 标题='e13a.hsc - Aspen HYSYS V15 - aspenONE'
+  pywinauto 连接用时 0.0 秒
+  UIA 顶层窗口 [('e13a.hsc - Aspen HYSYS V15 - aspenONE', 'Dialog')]
+  主窗口 'e13a.hsc - Aspen HYSYS V15 - aspenONE' 矩形 (L-9, T-9, R1929, B1039)
+  [主窗口] 后代元素 676 个（记录前 676 个），导出用时 2.4 秒
+      控件类型统计 {'Button': 221, 'Image': 196, 'Text': 99, 'Edit': 33, 'TabItem': 20, 'Custom': 19, 'Thumb': 12, 'Menu': 11, 'ToolBar': 11, 'Pane': 10, 'TreeItem': 10, 'ScrollBar': 9}
+      名字含 ('reactor', 'conversion', 'palette', 'unit op', 'flowsheet', 'pfd', 'object', 'simulation') 的元素 21 个
+        ('Window', 'Model Palette', '', 'Window')
+        ('Custom', 'Model Palette', 'NewPaletteScreenFactory', 'ContentPane')
+        ('Custom', 'Model Palette', 'newPaletteWidnow', 'ScreenContentControl')
+        ('Text', 'Flowsheets', '', 'TextBlock')
+        ('TabItem', 'Reactor', '', 'TabItem')
+        ('Text', 'Reactor', '', 'TextBlock')
+        ('TabItem', 'Flowsheet Case (Main) - Solver Active', '', 'TabItem')
+        ('Text', 'Flowsheet Case (Main) - Solver Active', '', 'TextBlock')
+        ('Custom', 'Flowsheet Case (Main) - Solver Active', '_AnonymousScreen1', 'ContentPane')
+        ('Custom', 'Flowsheet Case (Main) - Solver Active', 'infra:HysysScreenControl_1', 'ScreenContentControl')
+        ('Text', 'Simulation', '', 'TextBlock')
+        ('Custom', 'Simulation', '', 'OutlookBarGroup')
+        ('Text', 'Simulation', '', 'TextBlock')
+        ('TabItem', 'ContextualTabGroup - Key: FlowsheetTabKey, Caption: Flowsheet', 'SelectFirstTab', 'ContextualTabGroup')
+        ('Text', 'Flowsheet', 'CaptionGroupLabel', 'TextBlock')
+        ('ToolBar', 'Simulation', 'grpSimulation', 'RibbonGroup')
+        ('Button', 'Display Flowsheet Summary', 'Flowsheet Sum_mary', 'ButtonTool')
+        ('Text', 'Flowsheet', '', 'TextBlock')
+        ('TabItem', 'Flowsheet/Modify', 'Build', 'TabItem')
+        ('Text', 'Flowsheet/Modify', '', 'TextBlock')
+        ('Button', 'Flowsheet', 'buttonViewFlowsheet', 'ButtonTool')
+      有名字的元素 197 个；前 25 个：
+        ('Window', 'Model Palette', '', 'Window')
+        ('Custom', 'Model Palette', 'NewPaletteScreenFactory', 'ContentPane')
+        ('Custom', 'Model Palette', 'newPaletteWidnow', 'ScreenContentControl')
+        ('Text', 'Views', '', 'TextBlock')
+        ('Text', 'Streams', '', 'TextBlock')
+        ('Text', 'Flowsheets', '', 'TextBlock')
+        ('TabItem', 'All', '', 'TabItem')
+        ('Text', 'All', '', 'TextBlock')
+        ('TabItem', 'Dynamics & Control', '', 'TabItem')
+        ('Text', 'Dynamics & Control', '', 'TextBlock')
+        ('TabItem', 'External Model', '', 'TabItem')
+        ('Text', 'External Model', '', 'TextBlock')
+        ('TabItem', 'Heat Transfer', '', 'TabItem')
+        ('Text', 'Heat Transfer', '', 'TextBlock')
+        ('TabItem', 'Manipulator', '', 'TabItem')
+        ('Text', 'Manipulator', '', 'TextBlock')
+        ('TabItem', 'Piping & Hydraulics', '', 'TabItem')
+        ('Text', 'Piping & Hydraulics', '', 'TextBlock')
+        ('TabItem', 'Pressure Changer', '', 'TabItem')
+        ('Text', 'Pressure Changer', '', 'TextBlock')
+        ('TabItem', 'Reactor', '', 'TabItem')
+        ('Text', 'Reactor', '', 'TextBlock')
+        ('TabItem', 'Separator', '', 'TabItem')
+        ('Text', 'Separator', '', 'TextBlock')
+        ('MenuBar', 'System', 'MenuBar', '')
+== Q2 靠界面加转化反应器：F12（Unit Ops） ==
+    窗口 pid=10972 类名='HwndWrapper[aspenhysys.exe;;4a922930-e5dc-458e-be51-fb5c49276de4]' 标题='e13a.hsc - Aspen HYSYS V15 - aspenONE'
+  F12 之后 HYSYS 的可见窗口 [('e13a.hsc - Aspen HYSYS V15 - aspenONE', 'HwndWrapper[aspenhysys.exe;;4a922930-e5dc-458e-be51-fb5c49276de4]')]
+== Q3 COM 读回 ==
+  操作 []
+  实例 10972 已结束

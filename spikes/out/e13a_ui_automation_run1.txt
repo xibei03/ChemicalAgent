@@ -1,0 +1,42 @@
+新实例的进程号: 14504
+  COM 建好空白 Case（只有 Basis）；操作 []
+== Q1 控件树 ==
+    窗口 pid=14504 类名='HwndWrapper[aspenhysys.exe;;875ab8a4-4f3c-41a9-89d3-3b3043ef4cba]' 标题='Aspen HYSYS V15 - aspenONE'
+  pywinauto 连接用时 0.0 秒
+  UIA 顶层窗口 [('Aspen HYSYS V15 - aspenONE', 'Dialog')]
+  主窗口 'Aspen HYSYS V15 - aspenONE' 矩形 (L-9, T-9, R1929, B1039)
+  [主窗口] 后代元素 91 个（记录前 91 个），导出用时 0.5 秒
+      控件类型统计 {'Text': 25, 'Button': 17, 'Image': 14, 'TabItem': 10, 'MenuItem': 5, 'Custom': 4, 'Tab': 2, 'Edit': 2, 'Separator': 2, 'TitleBar': 1, 'MenuBar': 1, 'ToolBar': 1}
+      名字含 ('reactor', 'conversion', 'palette', 'unit op', 'flowsheet', 'pfd', 'object', 'simulation') 的元素 0 个
+      有名字的元素 54 个；前 25 个：
+        ('MenuBar', 'System', 'MenuBar', '')
+        ('MenuItem', 'System', '', '')
+        ('Button', 'Minimize', '', '')
+        ('Button', 'Restore', '', '')
+        ('Button', 'Close', '', '')
+        ('ToolBar', 'Infragistics XamRibbon', 'xamRibbon', 'XamRibbon')
+        ('TabItem', 'Customize', 'Customize', 'TabItem')
+        ('Text', 'Customize', '', 'TextBlock')
+        ('TabItem', 'Resources', 'Get_Resources', 'TabItem')
+        ('Text', 'Resources', '', 'TextBlock')
+        ('Button', 'Help', 'PART_HelpButton', 'ButtonTool')
+        ('Button', 'File', '', 'ApplicationMenu2010FileTab')
+        ('Custom', 'PART_ZoomControl', 'PART_ZoomControl', 'ScreenZoomControl')
+        ('Button', '100%', 'Part_ZoomDialogButton', 'Button')
+        ('Text', '100%', '', 'TextBlock')
+        ('Button', 'Responsiveness: 5', '', 'Button')
+        ('Text', 'Responsiveness: 5', '', 'TextBlock')
+        ('Menu', 'File', 'menuFile', 'ApplicationMenu2010')
+        ('TabItem', 'New', 'FileNew', 'ApplicationMenu2010Item')
+        ('Text', 'New', 'TextBlock_11', 'TextBlock')
+        ('TabItem', 'Open', 'FileOpen', 'ApplicationMenu2010Item')
+        ('Text', 'Open', 'TextBlock_11', 'TextBlock')
+        ('Custom', 'HL', '', 'FileMenuItem')
+        ('Button', 'Open Case', 'OpenCase', 'Button')
+        ('Text', 'Open Case', '', 'TextBlock')
+== Q2 靠界面加转化反应器：F12（Unit Ops） ==
+    窗口 pid=14504 类名='HwndWrapper[aspenhysys.exe;;875ab8a4-4f3c-41a9-89d3-3b3043ef4cba]' 标题='Aspen HYSYS V15 - aspenONE'
+  F12 之后 HYSYS 的可见窗口 [('Aspen HYSYS V15 - aspenONE', 'HwndWrapper[aspenhysys.exe;;875ab8a4-4f3c-41a9-89d3-3b3043ef4cba]')]
+== Q3 COM 读回 ==
+  操作 []
+  实例 14504 已结束
