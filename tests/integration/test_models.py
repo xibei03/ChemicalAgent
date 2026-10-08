@@ -9,14 +9,18 @@ from hysys_models import (
     CONVERSION_TOLERANCE,
     EQUILIBRIUM_REFERENCE,
     EQUILIBRIUM_TOLERANCE,
+    FIXED_K_FRACTIONS,
+    FIXED_K_TOLERANCE,
     GAS_FRACTION_TOLERANCE,
     GASIFICATION_FEED_KMOL_H,
     REFERENCE_GAS_FRACTIONS,
     REFERENCE_UNREACTED_CARBON_KMOL_H,
     conversion_model,
     equilibrium_model,
+    fixed_k_model,
     fractions_of,
     gasification_model,
+    gibbs_gas_model,
     molar_flows_of,
     stream_of,
 )
@@ -67,6 +71,25 @@ def test_equilibrium_reactor_can_move_between_outlet_temperatures_and_back(execu
     again = fractions_of(stream_of(third, "Vap"))
     for name, value in fractions_of(stream_of(first, "Vap")).items():
         assert again[name] == pytest.approx(value, abs=1e-6)
+
+
+def test_gibbs_reactor_without_carbon_agrees_with_the_equilibrium_reference(executor, fresh_case):
+    snapshot = snapshots(run_steps(executor, gibbs_gas_model(710.0)))[-1]
+    assert snapshot.solve.solved
+    expected_fractions, expected_flow = EQUILIBRIUM_REFERENCE[710.0]
+    outlet = stream_of(snapshot, "Vap")
+    for name, expected in expected_fractions.items():
+        assert fractions_of(outlet)[name] == pytest.approx(expected, abs=EQUILIBRIUM_TOLERANCE)
+    assert outlet.molar_flow_kmol_h == pytest.approx(expected_flow, rel=0.02)
+    assert snapshot.reactors[0].reaction_set is None
+
+
+def test_fixed_equilibrium_constant_gives_the_mass_action_composition(executor, fresh_case):
+    snapshot = snapshots(run_steps(executor, fixed_k_model()))[-1]
+    assert snapshot.solve.solved
+    outlet = fractions_of(stream_of(snapshot, "Vap"))
+    for name, expected in FIXED_K_FRACTIONS.items():
+        assert outlet[name] == pytest.approx(expected, abs=FIXED_K_TOLERANCE), name
 
 
 def test_gibbs_reactor_with_solid_carbon_gives_the_reference_co_yield(executor, fresh_case):

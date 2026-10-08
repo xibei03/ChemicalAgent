@@ -122,8 +122,9 @@ def _create_reaction(case: Any, reactions: Any, args: EnsureReactionArgs) -> Any
         for term in definition.stoichiometry:
             reactant = reaction.Reactants.Add(term.component)
             reactant.StoichiometricCoefficientValue = term.coefficient
-        reaction.ReactionPhase = PHASE_CODES[definition.phase]
         _write_parameters(case, reaction, definition)
+        # 反应相要最后写：写 Basis 会把它重置成合并相（台账 H10、L34）。
+        reaction.ReactionPhase = PHASE_CODES[definition.phase]
     return reaction
 
 

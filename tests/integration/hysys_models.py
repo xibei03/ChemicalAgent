@@ -10,6 +10,7 @@ from pydantic import BaseModel
 
 from reactor_agent.spec.enums import (
     HeatMode,
+    KeqSource,
     PropertyPackage,
     ReactionPhase,
     ReactorType,
@@ -265,6 +266,75 @@ def gasification_model() -> list[Step]:
         ),
         outlet_temperature("CRV-100", OUTLET_TEMPERATURE_C),
         outlet_temperature("GBR-100", OUTLET_TEMPERATURE_C),
+        SOLVE,
+        SNAPSHOT,
+    ]
+
+
+# ---------------------------------------------------------------- Gibbs 反应器，纯气相（台账 L23）
+def gibbs_gas_model(temperature_c: float = 710.0) -> list[Step]:
+    """蒸汽重整的进料直接进 Gibbs 反应器，不挂反应集；结果应当与平衡反应器一致（台账 L23）。"""
+    return [
+        thermo(*STEAM_COMPONENTS),
+        feed("Feed", steam_feed_conditions()),
+        stream("Vap"),
+        stream("Liq"),
+        energy("Q-100"),
+        reactor(
+            name="GBR-100",
+            reactor_type=ReactorType.GIBBS,
+            feeds=("Feed",),
+            vapour_product="Vap",
+            liquid_product="Liq",
+            energy_stream="Q-100",
+            heat_mode=HeatMode.SPECIFIED_OUTLET_TEMPERATURE,
+        ),
+        outlet_temperature("GBR-100", temperature_c),
+        SOLVE,
+        SNAPSHOT,
+    ]
+
+
+# ---------------------------------------------------------------- 固定平衡常数（台账 H10）
+FIXED_K = 4.0
+# CO 和 H2O 各 0.5 进料，变换反应前后摩尔数不变，所以与压力和温度无关：
+# 反应进度 x 满足 x² / (0.5 - x)² = K，x = 1/3，出口摩尔分率可以手算。
+FIXED_K_FRACTIONS = {"CO": 1 / 6, "H2O": 1 / 6, "CO2": 1 / 3, "Hydrogen": 1 / 3}
+FIXED_K_TOLERANCE = 0.001
+
+
+def fixed_k_model() -> list[Step]:
+    """水煤气变换，平衡常数直接给 K = 4（摩尔分率基准），出口组成就是质量作用定律的解。"""
+    shift = EquilibriumReaction(
+        stoichiometry=terms(("CO", -1.0), ("H2O", -1.0), ("CO2", 1.0), ("Hydrogen", 1.0)),
+        keq_source=KeqSource.FIXED_K,
+        equilibrium_constant=FIXED_K,
+    )
+    conditions = FeedConditions(
+        temperature_c=400.0,
+        pressure_bar=5.0,
+        composition=composition(CO=0.5, H2O=0.5),
+        molar_flow_kmol_h=100.0,
+    )
+    return [
+        thermo("CO", "H2O", "CO2", "Hydrogen"),
+        reaction("Rxn-1", shift),
+        reaction_set("RxnSet-1", "Rxn-1"),
+        feed("Feed", conditions),
+        stream("Vap"),
+        stream("Liq"),
+        energy("Q-100"),
+        reactor(
+            name="ERV-100",
+            reactor_type=ReactorType.EQUILIBRIUM,
+            feeds=("Feed",),
+            vapour_product="Vap",
+            liquid_product="Liq",
+            energy_stream="Q-100",
+            reaction_set="RxnSet-1",
+            heat_mode=HeatMode.SPECIFIED_OUTLET_TEMPERATURE,
+        ),
+        outlet_temperature("ERV-100", 400.0),
         SOLVE,
         SNAPSHOT,
     ]
