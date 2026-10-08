@@ -37,7 +37,7 @@ from _common import (
 use_utf8()
 
 PROGID_PREFIX = "HYSYS.Application"
-MEMBERS_TO_TRY = ("Version", "Name", "FullName", "Path", "Visible", "ActiveDocument")
+MEMBERS_TO_TRY = ("Version", "Name", "name", "FullName", "Path", "Visible", "ActiveDocument")
 
 
 def reg_default(root: int, path: str) -> str | None:

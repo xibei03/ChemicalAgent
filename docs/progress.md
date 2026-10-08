@@ -4,11 +4,11 @@
 
 ## 当前状态
 
-- 阶段：0A 进行中。首次开始于 2026-10-03 09:50（UTC+8），当时命令在别的机器上执行，在任务 1 暂停；10:25 在装有 HYSYS 的工作站（主机名 myWin10VM）上恢复，因用量上限在任务 5（E1）中途停止。**第 3 个会话于 2026-10-08 09:50（UTC+8）接手。**任务 1 至 3、5（E1，共 9 次运行）、6（类型库导出）、7（找参考 Case）、8（E2 读写）、9（E3 反向探测，只用了示例 Case，Gibbs 部分等用户的参考 Case）已完成；任务 4（等 D1）、10、11 未开始。当前没有残留的 HYSYS 进程。
-- 最近通过的闸门：无（质量工具 2026-10-08 复核全绿：ruff format/check、mypy src、pytest 13 passed；本阶段不改 `src/`）
-- 最近一次更新：2026-10-08 11:00
+- 阶段：**0A 已完成**（2026-10-08 10:55，UTC+8）。首次开始于 2026-10-03 09:50，共 3 个会话（见"已完成"的时间表）。任务 1 至 3、5 至 11 都完成，完成标准的 6 条都有实际运行的验证。**任务 4（E0，LLM 连通性）挂起**，等用户给出供应商、模型和密钥所在的环境变量（D1）。**遗留一件等用户动手的事：D11**，在 HYSYS 界面里手工建三种反应器的参考 Case，建好后补跑 E3。下一个会话做阶段 0B。当前没有残留的 HYSYS 进程。
+- 最近通过的闸门：无（G0 在阶段 0B 结束时判）。阶段结束时质量工具全绿：`ruff format --check`、`ruff check`、`mypy src`、`pytest`（13 passed），本阶段没有改 `src/` 和 `tests/`。
+- 最近一次更新：2026-10-08 10:55
 - 时间记法：本机时钟是 UTC，进度文件里的时间一律换算成 UTC+8（加 8 小时）。
-- 推送状态：本地 main 已合并远端的初始提交，并已推送（`ea240ed..ff56cdb`）。推送方式见"环境事实"的"GitHub 凭据"。
+- 推送状态：本阶段每个任务的提交都已推送到 `origin/main`，没有强制推送；推送方式见"环境事实"的"GitHub 凭据"。
 
 阶段顺序：0A → 0B → 0C → 1A → 1B → 1C → 2A → 2B → 2C → 3A → 3B（可选）→ 4（可选）→ 5。一个会话只做一个阶段。
 
@@ -36,6 +36,7 @@
 
 | 阶段 | 开始和结束的时间 | 会话数 |
 |---|---|---|
+| 0A | 2026-10-03 09:50 开始，2026-10-08 10:55 结束（UTC+8）。会话 1：10-03 09:50 至 09:58，在别的机器上停在任务 1；会话 2：10-03 10:25 至 10:50，E1 前两次运行，因用量上限中断；会话 3：10-08 09:50 至 10:55。实际工作时间约 1 小时 40 分钟 | 3 |
 
 | 阶段 | 任务 | 提交 | 验证方式 |
 |---|---|---|---|
@@ -43,40 +44,30 @@
 | 0A | 2 仓库和工具 | fbfc7bf | `ruff check .` 通过；`ruff format --check .` 3 个文件已格式化；`mypy src` 无问题；`pytest` 13 passed；`PYTHONUTF8` 的实测见"环境事实" |
 | 0A | 3 建台账 | 029bbe7 | `docs/HYSYS_INTEGRATION.md` 有 10 个固定节名，接口事实表有 H1 至 H26 共 26 行，状态均为"未测试" |
 | 0A | 5 连接 HYSYS（E1），run1 至 run9，已完成 | 2427c43（run1）、4904693（run2）、58c29f4（run3 至 run9、`_common.py`） | run1：`Dispatch("HYSYS.Application")` 冷启动 35.2 秒，`Version` 为 `Aspen HYSYS Version 15 (41.0)`，进程 `AspenHysys.exe`，窗口所属进程与 `tasklist` 一致。run2：已有实例被复用（0.0 秒），`Quit()` 后 3.5 秒内消失。run3、run5：`NewInstance` 每次新开进程，`Quit()` 只结束自己（run5 里 7280 退出，14024 继续运行）。run6：丢掉 COM 引用并 `CoUninitialize()` 后 60 秒内实例仍在。run7：`taskkill /PID /T /F` 1.6 秒内结束。run8、run9：`EnsureDispatch` 返回 `gen_py` 的 `_Application`，属性名区分大小写（`app.Name` 报错，类型库里是 `name`），包装生成后 `Dispatch` 也返回同一个类。H1 升为已确认，新增 H27、H28。每次运行后 `tasklist` 无残留进程 |
-| 0A | 6 导出类型库（`typelib_dump.py`） | 本次提交 | `.venv\Scripts\python.exe spikes/typelib_dump.py` 成功运行：类型库 1140 个类型（726 个 dispatch 接口、377 个枚举、22 个组件类）；42 个接口有 `Add`，多数是 `Add(name: VARIANT[opt], Type: VARIANT[opt])`；`EnsureModule` 2 至 4 秒生成包装（758 个类），`ReactionSets`、`Reactions`、`Operations`、`FluidPackages`、`SimulationCases` 的包装类都有 `Add`。输出 5 个文件，最大 629 KB，都小于 1 MB。三种反应器是 dispatch 接口 `ConversionReactor`、`EquilibriumReactor`、`GibbsReactor`；XML、`PlayScript`、`BackDoor` 三条降级通道在类型库里都有。结论都只在类型库层面，没有运行验证 |
-| 0A | 7 找含反应器的参考 Case | 本次提交 | `spikes/find_ref_case.py` 打开 6 个候选示例：Synthesis Gas Production 含 2 台转化反应器（`conversionreactorop`）和 3 台平衡反应器（`equilibriumreactorop`）；Ammonia Synthesis 含 3 台 PFR；CSTR - Dynamic Model 含 1 台 CSTR；Toluene_Disproportionation_Example 是分子级炼油反应器；Ethanol Dehydration、Ethanol Plant 没有反应器；Green Ammonia Process 弹出 Aspen Properties 模态对话框，`Open` 卡住，看门狗读出文字，`BM_CLICK` 关闭。**没有一个示例含 Gibbs 反应器**，需要用户手工建参考 Case（D11）。`Open` 返回类型化的 `_SimulationCase`，`Item(i)` 返回具体的反应器类型，不需要 `CastTo` |
-| 0A | 8 读写已有 Case（E2、E2b） | 本次提交 | `spikes/e2_read_write.py` 两次运行（run1、run2）：流体包 `Basis-1`、物性包 `PengRobinson`、7 个组分可读；物流 T、P、流量用 `GetValue(unit)`、`SetValue(value, unit)`，写后读回一致，不认识的单位抛错；写入同步重算（热负荷 6558.8 → 6544.7 kW）；`Solver.CanSolve=False` 时改进料流量，出料不变（475.36），`CanSolve=True` 这一句 0.46 秒同步求出新值（523.26）；没有规定的变量 `IsKnown` 为 False、值为 -32767.0；新物流 `MaterialStreams.Add("probe")` 成功并能写组成、闪蒸完成；8.3 短路径打开 Case 失败，长路径成功。`spikes/e2b_quit_with_case.py`：Case 打开着或改过时，`Quit()`、`Close()` 都不弹窗。H2、H6、H13、H17、H22 升为已确认 |
-| 0A | 9 反向探测（E3），示例 Case | 本次提交 | `spikes/e3_reverse_probe.py` 对 Synthesis Gas Production 的 5 台反应器（2 转化、3 平衡）、4 个反应、3 个反应集做只读探测：`Item(i)` 直接返回具体类型；反应 `TypeName` 为 `conversionrxn`、`equilibriumrxn`，反应集为 `rxnset`；出口温度规定在气相出料物流上（`State` 1、`CanModify` True），带能流的反应器热负荷是计算值；反应集成员是 `ActiveReactions`/`InactiveReactions`，与流体包的关联是出现在 `fp.ReactionPackage.ReactionSets` 里；转化率是百分数、同一基准组分的多个转化反应并行按进料算（Reformer 40%+30%，进料甲烷 90.72，反应掉 63.50 kgmole/h）；没连能流时 `op.EnergyStream` 抛 `com_error`。XML 导出 6.5 MB 但不含反应定义。**未解决：**`LnKSource` 读出 4 与类型库枚举对不上；Gibbs 反应器没有样本。H16、H26 部分确认，H18、H20 已确认 |
+| 0A | 6 导出类型库（`typelib_dump.py`） | 6378949 | `.venv\Scripts\python.exe spikes/typelib_dump.py` 成功运行：类型库 1140 个类型（726 个 dispatch 接口、377 个枚举、22 个组件类）；42 个接口有 `Add`，多数是 `Add(name: VARIANT[opt], Type: VARIANT[opt])`；`EnsureModule` 2 至 4 秒生成包装（758 个类），`ReactionSets`、`Reactions`、`Operations`、`FluidPackages`、`SimulationCases` 的包装类都有 `Add`。输出 5 个文件，最大 629 KB，都小于 1 MB。三种反应器是 dispatch 接口 `ConversionReactor`、`EquilibriumReactor`、`GibbsReactor`；XML、`PlayScript`、`BackDoor` 三条降级通道在类型库里都有。结论都只在类型库层面，没有运行验证 |
+| 0A | 7 找含反应器的参考 Case | 0b2cdba | `spikes/find_ref_case.py` 打开 6 个候选示例：Synthesis Gas Production 含 2 台转化反应器（`conversionreactorop`）和 3 台平衡反应器（`equilibriumreactorop`）；Ammonia Synthesis 含 3 台 PFR；CSTR - Dynamic Model 含 1 台 CSTR；Toluene_Disproportionation_Example 是分子级炼油反应器；Ethanol Dehydration、Ethanol Plant 没有反应器；Green Ammonia Process 弹出 Aspen Properties 模态对话框，`Open` 卡住，看门狗读出文字，`BM_CLICK` 关闭。**没有一个示例含 Gibbs 反应器**，需要用户手工建参考 Case（D11）。`Open` 返回类型化的 `_SimulationCase`，`Item(i)` 返回具体的反应器类型，不需要 `CastTo` |
+| 0A | 8 读写已有 Case（E2、E2b） | 7609ad0 | `spikes/e2_read_write.py` 两次运行（run1、run2）：流体包 `Basis-1`、物性包 `PengRobinson`、7 个组分可读；物流 T、P、流量用 `GetValue(unit)`、`SetValue(value, unit)`，写后读回一致，不认识的单位抛错；写入同步重算（热负荷 6558.8 → 6544.7 kW）；`Solver.CanSolve=False` 时改进料流量，出料不变（475.36），`CanSolve=True` 这一句 0.46 秒同步求出新值（523.26）；没有规定的变量 `IsKnown` 为 False、值为 -32767.0；新物流 `MaterialStreams.Add("probe")` 成功并能写组成、闪蒸完成；8.3 短路径打开 Case 失败，长路径成功。`spikes/e2b_quit_with_case.py`：Case 打开着或改过时，`Quit()`、`Close()` 都不弹窗。H2、H6、H13、H17、H22 升为已确认 |
+| 0A | 9 反向探测（E3），示例 Case | b4df369 | `spikes/e3_reverse_probe.py` 对 Synthesis Gas Production 的 5 台反应器（2 转化、3 平衡）、4 个反应、3 个反应集做只读探测：`Item(i)` 直接返回具体类型；反应 `TypeName` 为 `conversionrxn`、`equilibriumrxn`，反应集为 `rxnset`；出口温度规定在气相出料物流上（`State` 1、`CanModify` True），带能流的反应器热负荷是计算值；反应集成员是 `ActiveReactions`/`InactiveReactions`，与流体包的关联是出现在 `fp.ReactionPackage.ReactionSets` 里；转化率是百分数、同一基准组分的多个转化反应并行按进料算（Reformer 40%+30%，进料甲烷 90.72，反应掉 63.50 kgmole/h）；没连能流时 `op.EnergyStream` 抛 `com_error`。XML 导出 6.5 MB 但不含反应定义。**未解决：**`LnKSource` 读出 4 与类型库枚举对不上；Gibbs 反应器没有样本。H16、H26 部分确认，H18、H20 已确认 |
+| 0A | 10 检索官方帮助 | 本次提交 | `hh.exe -decompile` 解开 4 个 `.chm`（共 2882 个文件），只有 `xhysys.chm` 是 Automation 对象参考：`operation_types.htm` 列出 `Operations.Add` 的类型字符串（`ConversionReactorOp`、`EquilibriumReactorOp`、`GibbsReactorOp`），示例 `Flowsheet.Operations.Add "Pump1", "PumpOp"`；没有 `Reactions.Add`、`ReactionSets.Add` 的说明，枚举页没有界面选项名。台账 L9 |
+| 0A | 11 台账收尾和完成标准核对 | 本次提交 | 台账 10 个节名俱全；H1、H2、H6、H13、H17、H18、H22 都是已确认；三种反应器的类型名、反应、反应集、反应器的成员已记录；"创建反应的线索"按可能性排序；探索日志 L0 至 L9，每个探针都有一条。`python spikes/e1_connect.py` 原样运行，打印版本 `Aspen HYSYS Version 15 (41.0)` 和进程号。`python tests/test_code_health.py` 与四个质量工具见交接报告 |
+| 0A | 4 LLM 连通性（E0） | 未做 | 挂起：用户说需要密钥的先跳过，等 D1 |
 | 0A | 只读勘查（计划模式下完成，无脚本） | 2427c43 | 注册表 ProgID、`hysys.tlb` 的接口名与集合的 `Add` 签名、安装目录里的 `hysys.hh`、定义文件、帮助文件，写入台账 L0 和"创建反应的线索"初稿（均未运行验证） |
 
 ## 进行中
 
-当前任务的设计草图（涉及的文件、公开接口、估计行数）写在这里，做完后移到"已完成"。
-
-**阶段 0A 总览（2026-10-03 10:35，2026-10-08 更新）。** 全部是探针，不写 `src/`。每个脚本独立运行，开头自己把 stdout 设成 UTF-8，输出由脚本写到 `spikes/out/`，结束前关闭自己打开的 Case，不留 HYSYS 进程。
-
-| 文件 | 作用 | 估计行数 | 状态 |
-|---|---|---|---|
-| `docs/HYSYS_INTEGRATION.md` | 台账：10 个固定节名，H1–H28 逐项更新，每个探针一条日志 | 约 300 | 持续更新 |
-| `spikes/_common.py` | 探针共用：UTF-8 输出、边打印边落盘的日志、HYSYS 进程和窗口检测、看门狗 | 约 150 | 已完成 |
-| `spikes/e1_connect.py` | 查注册表 ProgID，取 Application，打印版本和进程号，演示退出与保留 | 约 150 | 已完成 |
-| `spikes/typelib_dump.py` | 导出类型库：接口和成员、枚举、关键词命中、反应相关接口的完整签名、早绑定包装检查 | 约 270 | 已完成 |
-| `spikes/e0_llm_ping.py` | 最小 LLM 请求，密钥只读环境变量（等用户给出供应商） | 约 40 | 挂起（D1） |
-| `spikes/find_ref_case.py` | 任务 7：把示例 Case 复制到临时目录，用 COM 打开，列单元操作类型名 | 约 140 | 已完成 |
-| `spikes/e2_read_write.py` | 流体包、物流读写、求解器开关、已知性、空值哨兵 | 约 260 | 已完成 |
-| `spikes/e2b_quit_with_case.py` | 有打开的 Case 时 `Quit()`、`Close()` 会不会弹窗 | 约 110 | 已完成 |
-| `spikes/e3_reverse_probe.py` | 枚举单元操作，对三种反应器、反应、反应集做反向探测 | 约 290 | 示例 Case 已完成，等用户的参考 Case 补跑 |
+阶段 0A 已结束，没有进行中的任务。0A 的文件清单：`docs/HYSYS_INTEGRATION.md`；`spikes/_common.py`、`e1_connect.py`、`typelib_dump.py`、`find_ref_case.py`、`e2_read_write.py`、`e2b_quit_with_case.py`、`e3_reverse_probe.py`；输出在 `spikes/out/`。未做：`spikes/e0_llm_ping.py`（等 D1）。
 
 ## 下一步
 
-先重读 `CLAUDE.md`、本文件和 `docs/prompts/phase-0a.md`，然后按顺序做本阶段剩下的工作：
+下一个会话做**阶段 0B**（`docs/prompts/phase-0b.md`）：用代码从空白 Case 建出转化反应器，结果正确（闸门 G0）。开始前先读 `CLAUDE.md`、本文件、阶段提示词，以及台账的"创建反应的线索""对象模型速查""接口事实表"。
 
-1. **任务 10（帮助文件）。** 用 `hh.exe -decompile` 解包 `ww10_com.chm`、`xhysys.chm` 到 `spikes/out/help_html/`（已在 `.gitignore`），检索 `Reactions.Add`、`ReactionSet`、`ActiveReactions`、`Type` 参数的说明，以及 Gibbs 反应器的类型选项；把有用的页面标题和结论记进台账。
-2. 任务 11（收尾）：核对台账 H1、H2、H6、H13、H17、H18、H22 和三个节；跑 `python tests/test_code_health.py`；写交接报告。
-3. **用户的参考 Case 到了之后**（D11）：补跑 `.venv\Scripts\python.exe spikes\e3_reverse_probe.py --case spikes\ref_cases\three_reactors.hsc --tag three`，解决 `LnKSource` 的数字对应和 Gibbs 的 `ReactorType`，更新台账。
-4. **任务 4（E0）** 等用户给出 LLM 供应商、模型和密钥所在的环境变量（D1）；用户说"需要密钥的先跳过"，所以现在不做，需要时再向用户要。
+0A 留给 0B 的起点：
 
-本阶段沿用的约定：只结束本脚本启动的实例，对已有实例只在没有打开任何 Case 时才退出；示例 Case 先复制到临时目录再打开，不保存回原位置，也不提交 Aspen 的示例文件；用户在 HYSYS 界面里手工建参考 Case 时，探针用 `NewInstance` 另开实例，不碰用户的窗口；COM 调用卡住超过一分钟，先截屏看有没有弹窗（`_common.watch` 会自动打印窗口），再请用户看一眼。每个任务提交后用一次性凭据助手推送（见"环境事实"）。
+1. **创建反应的最有希望的做法**：`BasisManager.StartBasisChange()` 之后，`Case.BasisManager.ReactionPackageManager.Reactions.Add(name, Type)`，`Type` 先试 `"conversionrxn"`（E3 读到的 `TypeName`），不行再试 `"Conversion"`、整数、省略；再用 `ReactionSets.Add(name, ...)` 建反应集，往 `ActiveReactions` 里加反应，`AssociateFluidPackage(流体包)`；反应器用 `Flowsheet.Operations.Add(name, "ConversionReactorOp")`（帮助文件里的字符串）；物流 `MaterialStreams.Add(name)` 已证实只给名字就行。
+2. **反应器的配置**：进料 `op.Feeds.Add(stream)`（`Attachments.Add(Item)`），出料 `op.VapourProduct`、`op.LiquidProduct`、能流 `op.EnergyStream` 是可写的 `ProcessStream`，`op.ReactionSet` 可写；出口温度写在气相出料物流上。
+3. **所有写入带单位、读回比对**；路径一律长路径；求解器写入同步重算，`CanSolve=False` 挂起、`True` 释放时同步求解。
+4. **用户的参考 Case**（D11）：建好后补跑 `.venv\Scripts\python.exe spikes\e3_reverse_probe.py --case spikes\ref_cases\three_reactors.hsc --tag three`，解决 `LnKSource` 读出 4 的映射和 Gibbs 的 `ReactorType`，并向用户确认 Gibbs 类型选项在界面上的名字。
+5. **E0**：用户给出 LLM 信息（D1）之后做，现在不卡。
 
 ## 待决策
 
@@ -84,7 +75,7 @@
 
 | 编号 | 事项 | 默认 | 状态 |
 |---|---|---|---|
-| D1 | LLM 供应商和模型；VM 能否直连 | 待用户提供 | 未定 |
+| D1 | LLM 供应商和模型；VM 能否直连。任务 4（E0）因此挂起；用户 2026-10-08 说需要密钥的先跳过，必要时再要 | 待用户提供 | 未定，到阶段 2A 之前必须解决 |
 | D2 | 场景 3 是否加入氧气 | 不加，按题面建模，在报告中说明 | 按默认 |
 | D3 | "80000 Nm³/h"的含义 | 进料的总摩尔流量 | 按默认 |
 | D4 | 二甲苯异构体分配 | 对 : 间 : 邻 = 24 : 52 : 24 | 按默认 |
@@ -135,3 +126,5 @@
 
 | 日期 | 计划中的说法 | 实际做法 | 原因 |
 |---|---|---|---|
+| 2026-10-08 | §16.4 E3：在 GUI 里手工建好含三种反应器的参考 Case 再反向探测 | 先用自带示例 Synthesis Gas Production 探测转化和平衡反应器、反应、反应集；Gibbs 部分等用户手工建的 Case（D11） | 示例里没有 Gibbs 反应器，不想让探测等人 |
+| 2026-10-08 | §16.2 H3、H9 等把"新建"归给 E4 至 E6 | E2 里顺带验证了新建物流（`MaterialStreams.Add`）和写组成，H12、H14 已部分确认 | 为了读"没有规定的变量"必须新建一股物流，结果可以直接用 |
