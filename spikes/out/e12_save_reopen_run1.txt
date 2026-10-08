@@ -1,0 +1,30 @@
+新实例的进程号: 10372
+  Rxn-1：LnKSource=2（2 即 Gibbs 自由能），Basis=1，AutoDetect=True，ReactionPhase=0，系数 (-1.0, -1.0, 1.0, 3.0)
+  Rxn-2：LnKSource=2（2 即 Gibbs 自由能），Basis=1，AutoDetect=True，ReactionPhase=0，系数 (-1.0, -1.0, 1.0, 1.0)
+  保存前 710 C / 600 C / 回到 710 C 的快照已取
+  [一致] 保存前 710 C 与回到 710 C：摩尔分率最大差 3.87e-08，总流量相对差 9.04e-08，热负荷相对差 1.84e-07；T=710.00 C，状态 {'OK': 5, 'NotSolved': 0, 'Warning': 0, 'UnderSpecified': 0, 'Error': 0}，求解器(CanSolve, IsSolving) (True, False)
+== Q1 另存 ==
+  SaveAs 之前 case.FullName = 'C:\\Windows\\system32\\e12_save.hsc'
+  SaveAs 用时 0.16 秒；之后 case.FullName = 'C:\\Users\\azureuser\\Desktop\\ChemicalAgent\\spikes\\out\\e12_save_reopen_run1.hsc'
+    case.IsDirty -> False
+  旁边的文件和大小 {'e12_save_reopen_run1.hsc': 156458, 'e12_save_reopen_run1.txt': 875}
+  Close 之后 Case 数 0
+== Q2 关闭后重开，不重新求解就读 ==
+  Open 用时 1.70 秒；FullName = 'C:\\Users\\azureuser\\Desktop\\ChemicalAgent\\spikes\\out\\e12_save_reopen_run1.hsc'
+    Open 之后 app.ActiveDocument（Q6） -> None
+    Open 之后 Case 数 -> 1
+  [一致] 重开后 710 C 与保存前：摩尔分率最大差 3.87e-08，总流量相对差 9.04e-08，热负荷相对差 1.84e-07；T=710.00 C，状态 {'OK': 5, 'NotSolved': 0, 'Warning': 0, 'UnderSpecified': 0, 'Error': 0}，求解器(CanSolve, IsSolving) (True, False)
+== Q3 重开后改规定 ==
+  [一致] 重开后改成 600 C 与保存前 600 C：摩尔分率最大差 1.91e-12，总流量相对差 3.18e-12，热负荷相对差 6.42e-12；T=600.00 C，状态 {'OK': 5, 'NotSolved': 0, 'Warning': 0, 'UnderSpecified': 0, 'Error': 0}，求解器(CanSolve, IsSolving) (True, False)
+  [一致] 再改回 710 C 与保存前 710 C：摩尔分率最大差 3.87e-08，总流量相对差 9.04e-08，热负荷相对差 1.84e-07；T=710.00 C，状态 {'OK': 5, 'NotSolved': 0, 'Warning': 0, 'UnderSpecified': 0, 'Error': 0}，求解器(CanSolve, IsSolving) (True, False)
+== Q4 Save()（不带路径） ==
+    reopened.Save() -> None
+  文件修改时间变了吗 True；FullName = 'C:\\Users\\azureuser\\Desktop\\ChemicalAgent\\spikes\\out\\e12_save_reopen_run1.hsc'
+  旁边的文件和大小 {'e12_save_reopen_run1.bk0': 156458, 'e12_save_reopen_run1.hsc': 172421, 'e12_save_reopen_run1.txt': 2330}
+  弹窗 0 个：[]
+  实例 10372 已结束
+== Q5 另一个新实例打开同一个文件 ==
+新实例的进程号: 12968
+  Save() 之后的文件里，出口温度 650.00 C（期望 650），状态 {'OK': 5, 'NotSolved': 0, 'Warning': 0, 'UnderSpecified': 0, 'Error': 0}
+  实例 12968 已结束
+== E12 通过 ==
