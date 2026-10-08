@@ -704,3 +704,31 @@ D11 的实测结果：与平衡反应器的 710 °C 工况相比，各组分摩�
 - **走过的弯路**：run1 里 Gibbs 和平衡反应器的绝热对照用了同一个名字后缀，`MaterialStreams.Add("Vap-ADI")` 对已有的名字返回已经接在 Gibbs 反应器上的那股物流（H12 的幂等），再把它设成平衡反应器的 `VapourProduct`，抛 `com_error`（`E_INVALIDARG`，`-2147024809`）：**一股物流不能同时是两台反应器的出料**。这条也记进鲁棒性观察；run2 改了名字。
 - **结论**：Gibbs 纯气相、多股进料、绝热都已验证；三种热模式（规定出口温度、绝热、规定热负荷）只在平衡反应器上验证了规定热负荷（E8），Gibbs 反应器没有试规定热负荷。H16、H20、H31 补充。
 - **脚本与输出**：`spikes/e9_gibbs_gas.py`；`spikes/out/e9_gibbs_gas_run1.txt`、`run2.txt`、`e9_gibbs_gas_run2.hsc`（Case，199 KB）。
+
+### L24 E10：固体碳在 Gibbs 反应器里的行为（2026-10-08，0C 任务 3）
+
+- **目的**：场景 3（水煤浆气化）只有碳和水进料，要用 Gibbs 反应器的纯自由能最小化得到 1400 °C 的出口组成。要回答五个问题：组分库有没有碳；含固体的进料能不能闪蒸；Gibbs 反应器是否让碳作为固体参与平衡；没反应掉的碳从哪股出料离开；碳元素是否守恒。
+- **做法**：`spikes/e10_gibbs_carbon.py`：碳、水、CO、氢气、CO2、甲烷，PR；进料 40 °C、4000 kPa、3569 kgmole/h、摩尔分率碳 0.710、水 0.290；Gibbs 反应器 GBR-100 带能流，气相出料写 1400 °C。每个变体从空白 Case 开始、只改一样东西：`base`（先接出料再接能流）、`energy-first`（先接能流）、`hold-solver`（建模期间挂起求解器）、`split-feeds`（碳和水两股进料）、`water-rich`（碳 : 水 = 1 : 5，碳应当全部气化）、`no-carbon`（甲烷 + 水蒸气，不含碳）；另在 `energy-first` 的 Case 里依次改出口温度 1000、1200、1600、1400 °C。运行 2 次：run1 只有单一做法（旧版脚本），run2 是最终日志，含全部变体。
+- **结果**（`spikes/out/e10_gibbs_carbon_run2.txt`）：
+  - **Q1 组分库里的碳**：`Components.Add("Carbon")` 成功，名字 `Carbon`，分子式 `C`，`IsSolid` 为 True，固体密度 1642 kg/m³，`HeatOfFormation` 为 0。
+  - **Q2 含固体的进料**：能正常闪蒸，所有量已知。HYSYS 把碳和水的浆料当作**重液相**：`VapourFraction` 0，`LiquidFraction` 1.0，`HeavyLiquidFraction` 1.0；49081.1 kg/h；质量分率读回碳 0.6201、水 0.3799（与 0.62、0.38 相差 1e-4，因为摩尔分率只给了三位）。
+  - **Q3 碳是否作为固体参与平衡：否，结果是错的。**四个含碳的变体（`base`、`energy-first`、`hold-solver`、`split-feeds`）得到**完全相同**的结果：气相 CO 1035.0、CH4 517.5 kgmole/h，**氢气 0、水 0、CO2 0**；热负荷 73.00 MW。与参照值相差很大（参照 CO 1017、H2 981、CH4 22、H2O 11、CO2 3.5）。**出口温度改成 1000、1200、1600、1400 °C，组成一点都不变**（只有热负荷变：61.46、67.03、79.75、73.00 MW），所以这不是平衡计算的结果。
+  - **Q4 没反应掉的碳**：从**液相出料**离开（重液相，100% 碳），981.5 kgmole/h，参照 1491，相差 34%。气相出料里没有碳。
+  - **Q5 碳元素守恒**：进 2533.99，出 2533.99 kgmole/h，误差为 0。**这个检查通过，但结果是错的**：CO 收率 0.4085 落在 38% 至 42% 的范围里，只是因为水是限量反应物，水全部变成了 CO（1035 / 2534）。
+  - 四条通过条件：1 CO 收率 通过（巧合）；2 气相 CO、H2 摩尔分率 未通过（0.667、0 对 0.500、0.482）；3 碳元素守恒 通过；4 固体碳的量 未通过（相差 34%）。**E10 不满足通过条件。**
+  - **对照变体说明问题只出在固体碳上**：`no-carbon`（甲烷 : 水 = 1 : 2.7，1400 °C、4000 kPa）CH4 几乎全部重整（出口 CH4 0.5 kgmole/h），CO 838.5、H2 3018.2、CO2 125.7、H2O 1514.4，水煤气变换的表观平衡常数 0.299；`water-rich`（碳 : 水 = 1 : 5，碳全部反应，没有固体）CO 340.6、H2 849.0、CO2 254.2、H2O 2125.2，表观平衡常数 0.298，与前者一致。气相的 Gibbs 平衡在 1400 °C 是正常的。
+  - **新的弹窗**：`base` 的连接顺序（Gibbs 反应器接完进料和出料、还没接能流）弹出模态对话框 "Since the energy stream is not supplied, the Gibbs Reactor operates at an adiabatic condition. But this condition is not suitable for the system you are simulating. You may specified Gibbs Reactor temperature to find out a reasonable heat duty to the Gibbs Reactor first."，看门狗点了 OK。先接能流再接出料（`energy-first`）不弹。挂起求解器（`hold-solver`）不影响结果。
+- **走过的弯路**：run1 的结果一出来就很可疑（氢气恰好为 0、CH4 恰好是 CO 的一半），没有直接接受；我先怀疑连接顺序、求解器挂起、进料形态（所以有了后面三个变体），三样都不影响；然后怀疑 1400 °C 的气相热力学（`no-carbon`、`water-rich`），也正常；最后看到结果与温度无关，转去查组分库里碳的数据，见 L25。
+- **结论**：**Gibbs 反应器 + 库里的固体碳（PR 物性包）不能给出正确的气化平衡**，原因见 L25。按提示词不自行改用计划 §17.3 的两段式替代做法，已登记进度文件 D14 请用户决定。
+- **脚本与输出**：`spikes/e10_gibbs_carbon.py`；`spikes/out/e10_gibbs_carbon_run1.txt`、`run2.txt`、`e10_gibbs_carbon_run2.hsc`（Case，157 KB）。
+
+### L25 E10b：Gibbs 反应器为什么算错碳，库里碳的热力学数据（2026-10-08，0C 任务 3）
+
+- **目的**：E10 的结果与温度无关，说明不是平衡计算。假设库里的碳的数据有问题，读出来核对。
+- **做法**：`spikes/e10b_carbon_thermo.py`：读六个组分的 `HeatOfFormation`、`EvaluateGibbs(T)`（"Evaluate Gibbs Free Energy at T in K"）、`EvaluateIdealH(T)`，以及碳的蒸气压数据；与教科书的 298.15 K 标准 Gibbs 生成能对照。运行 2 次：run1 读生成焓和 Gibbs 函数，run2 加了碳的蒸气压数据。
+- **结果**（`spikes/out/e10b_carbon_thermo_run1.txt`、`run2.txt`，单位 kJ/kgmole）：
+  - 298.15 K 的 `EvaluateGibbs`：H2O -227833（教科书 -228.6 kJ/mol）、CO -138008（-137.2）、CO2 -394379（-394.4）、CH4 -50273（-50.5）、氢气 0，**与教科书一致**；**碳是 +671285，这是气态碳原子 C(g) 的 Gibbs 生成能（+671.3 kJ/mol），不是石墨的 0。**1673.15 K 时碳还是 +450525。
+  - `HeatOfFormation`：碳 0.0（石墨的值），H2O -241814、CO -110590、CO2 -393790、CH4 -74900。所以**碳的生成焓按石墨给，Gibbs 函数却按气态原子给，两者不一致。**
+  - 碳的蒸气压数据：`EvaluateVPsublim`（升华蒸气压）读出 -32767（空值，没有数据），`VPsublim` 的温度范围是 -273.15 至 -273.15；`EvaluateAntoine(1673.15 K)` 读出 -1.67e9（无意义）；临界温度、临界压力是空值。也就是说，**没有任何数据能把气态碳的化学势修正成固体碳的化学势**。
+- **结论**：Gibbs 反应器用碳的理想气体 Gibbs 生成能（+671 kJ/mol）当它的化学势，碳"特别不稳定"，自由能最小化就把碳尽可能多地转成 CO 和 CH4：全部氧变成 CO、全部氢变成 CH4，数量只受氧和氢的限制，所以结果与温度无关。库里的碳（PR 物性包）不能直接用于石墨平衡。可行的方向都要用户决定（D14）：计划 §17.3 的两段式（先用转化反应器按限量反应物算 C + H2O → CO + H2，再用 Gibbs 反应器算气相平衡，未反应的碳旁路）；或者改库里碳的数据（写 `GibbsCoeffs` 等，没有试，也没有把握）。
+- **脚本与输出**：`spikes/e10b_carbon_thermo.py`；`spikes/out/e10b_carbon_thermo_run1.txt`、`run2.txt`。
