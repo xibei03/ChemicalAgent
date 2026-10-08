@@ -77,24 +77,24 @@ ProgID、早绑定还是晚绑定、怎么取得进程号、怎么退出。由�
 | H6 | 读取流体包、物性包、组分 | 已确认 | `fps = case.BasisManager.FluidPackages`；`fps.Count`、`list(fps.Names)`、`fps.Item(i)`（下标从 0 开始）；`fp.name`、`fp.PropertyPackageName`、`fp.Components.Count`、`list(fp.Components.Names)`；`case.Flowsheet.FluidPackage.name` | `spikes/e2_read_write.py`，2026-10-08，输出 `spikes/out/e2_read_write_run1.txt`、`e2_read_write_run2.txt` | 示例 Synthesis Gas Production：流体包名 `Basis-1`，`PropertyPackageName` 读出 `PengRobinson`（没有空格和连字符），组分 `['Methane', 'H2O', 'CO', 'CO2', 'Hydrogen', 'Nitrogen', 'Oxygen']`，物流的组成向量按这个顺序排。 计划假设：`FluidPackages.Item(i)`、`PropertyPackageName`、`Components`。计划状态：官方文档确认（V7.3 版）。探针 E2 类型库（2026-10-08，未运行验证）：`BasisManager.FluidPackages`（集合）；`FluidPackage.PropertyPackageName`（可读写）、`Components`、`ReactionPackage`、`ComponentList`。 |
 | H7 | 新建流体包并指定物性包 | 未测试 | | | 计划假设：`FluidPackages.Add(...)`。探针 E4 类型库（2026-10-08，未运行验证）：`FluidPackages.Add(name, Type)`；`FluidPackage.PropertyPackageName` 可写；`PropertyPackageType_enum` 有 `ppkg_PR=5891`。 |
 | H8 | 添加库组分 | 未测试 | | | 计划假设：`Components.Add(name)`，以及库中的规范名。探针 E4 类型库（2026-10-08，未运行验证）：`FluidPackage.Components.Add(name, Type)`；`Component` 有 `IsSolid`、`Formula`、`CAS_Number`。 |
-| H9 | 创建转化反应（计量系数、基准组分、转化率） | 未测试 | | | 计划假设：无。计划状态：未知。探针 E6 类型库（2026-10-08，未运行验证）：`ReactionPackageManager.Reactions.Add(name, Type)` 返回 VARIANT；`ConversionReaction`：`Reactants`（集合，有 `Add`）、`Reactant.StoichiometricCoefficientValue`（可写）、`BaseComponent`（可写）、`Conversion`（double，可写）、`ReactionPhase`、`BalanceStoichiometry()`。 |
-| H10 | 创建平衡反应并指定 Keq 来源（Gibbs 自由能、固定值、随温度变化） | 未测试 | | | 计划假设：无。计划状态：未知。探针 E8 类型库（2026-10-08，未运行验证）：`EquilibriumReaction`：`LnKSource`（`eqrxn_Gibbs=0`、`eqrxn_LnKEquation=1`、`eqrxn_FixedK=2`、`eqrxn_Table=3`、`eqrxn_FixedExtent=4`）、`EquilibriumConstant`、`LnKEquationA/B/C/DParameter`、`MinTemperatureValue`、`MaxTemperatureValue`、`Basis`、`ReactionPhase`。 |
-| H11 | 创建反应集、加入成员、挂到流体包 | 未测试 | | | 计划假设：无。计划状态：未知。探针 E6 类型库（2026-10-08，未运行验证）：`ReactionPackageManager.ReactionSets.Add(name, Type)`；`ReactionSet.AssociateFluidPackage(fluidPkg)`；`ActiveReactions` 和 `InactiveReactions`（`Reactions` 集合，加成员的方式待查）；`Operations`、`SolverMethod`。 |
+| H9 | 创建转化反应（计量系数、基准组分、转化率） | 未测试 |  |  | E3 实测（只读）：转化反应的 `TypeName` 是 `conversionrxn`；读到的结构是 `Reactants`（负为反应物、正为产物）、`BaseComponent`、`Conversion`（百分数）。写入路径等 0B。 计划假设：无。计划状态：未知。探针 E6 类型库（2026-10-08，未运行验证）：`ReactionPackageManager.Reactions.Add(name, Type)` 返回 VARIANT；`ConversionReaction`：`Reactants`（集合，有 `Add`）、`Reactant.StoichiometricCoefficientValue`（可写）、`BaseComponent`（可写）、`Conversion`（double，可写）、`ReactionPhase`、`BalanceStoichiometry()`。 |
+| H10 | 创建平衡反应并指定 Keq 来源（Gibbs 自由能、固定值、随温度变化） | 未测试 |  |  | E3 实测（只读）：平衡反应的 `TypeName` 是 `equilibriumrxn`；`LnKSource` 读出的数字和类型库枚举对不上（K–T 表读出 4），要用 Gibbs 来源的参考 Case 核对。写入路径等 0B、0C。 计划假设：无。计划状态：未知。探针 E8 类型库（2026-10-08，未运行验证）：`EquilibriumReaction`：`LnKSource`（`eqrxn_Gibbs=0`、`eqrxn_LnKEquation=1`、`eqrxn_FixedK=2`、`eqrxn_Table=3`、`eqrxn_FixedExtent=4`）、`EquilibriumConstant`、`LnKEquationA/B/C/DParameter`、`MinTemperatureValue`、`MaxTemperatureValue`、`Basis`、`ReactionPhase`。 |
+| H11 | 创建反应集、加入成员、挂到流体包 | 未测试 |  |  | E3 实测（只读）：反应集 `TypeName` 是 `rxnset`；成员是 `ActiveReactions.Names` 和 `InactiveReactions.Names`；与流体包的关联体现为出现在 `fp.ReactionPackage.ReactionSets.Names` 里。怎么加成员、怎么挂到流体包等 0B。 计划假设：无。计划状态：未知。探针 E6 类型库（2026-10-08，未运行验证）：`ReactionPackageManager.ReactionSets.Add(name, Type)`；`ReactionSet.AssociateFluidPackage(fluidPkg)`；`ActiveReactions` 和 `InactiveReactions`（`Reactions` 集合，加成员的方式待查）；`Operations`、`SolverMethod`。 |
 | H12 | 新建物流和能流 | 部分确认 | `stream = flowsheet.MaterialStreams.Add("name")` 返回 `ProcessStream`（只给名字，不给 `Type`）；`flowsheet.MaterialStreams.Item("name")` 按名字取回；`flowsheet.MaterialStreams.Remove("name")` 删除；`Count`、`Names` 随之变化 | `spikes/e2_read_write.py`，2026-10-08，输出 `spikes/out/e2_read_write_run1.txt`、`e2_read_write_run2.txt` | 只在已有流体包的已求解 Case 里试过物流：新物流的组成向量长度是 7，与该 Case 唯一的流体包一致。能流 `EnergyStreams.Add` 没测，空白 Case 里建物流留给 E5。 计划假设：`MaterialStreams.Add(name)`、`EnergyStreams.Add(name)`。探针 E5 类型库（2026-10-08，未运行验证）：`Flowsheet.MaterialStreams`、`Flowsheet.EnergyStreams`（都是 `Streams`，有 `Add(name, Type)`）。 |
 | H13 | 写入 T、P、流量 | 已确认 | 写：`stream.Temperature.SetValue(value, "C")`、`stream.Pressure.SetValue(value, "kPa")`、`stream.MolarFlow.SetValue(value, "kgmole/h")`；读：`GetValue(unit)`。单位字符串见 H29。写入后立即读回一致 | `spikes/e2_read_write.py`，2026-10-08，输出 `spikes/out/e2_read_write_run1.txt`、`e2_read_write_run2.txt` | 写入用时 0.02 秒。写入不认识的单位抛 `com_error`（`E_FAIL`，`-2147467259`），原值不变，不会静默写错。`.Value` 属性是 HYSYS 的内部单位（C、kPa、kgmole/s、kg/s），**不要用**，一律 `GetValue(unit)`、`SetValue(value, unit)`。 计划假设：`Temperature.SetValue(value, unit)` 等。计划状态：官方文档确认（V7.3 版）。探针 E2、E5 类型库（2026-10-08，未运行验证）：`RealVariable.SetValue(val: double, unit: VARIANT[opt])`、`GetValue(unit)`、`Value`；`ProcessStream` 的 `Temperature`/`TemperatureValue`、`Pressure`/`PressureValue`、`MolarFlow`/`MolarFlowValue`、`MassFlow`、`StdLiqVolFlow`。 |
 | H14 | 写入组成 | 部分确认 | `stream.ComponentMolarFraction.Values = (0.9, 0.1, 0, 0, 0, 0, 0)`，或 `.SetValues(tuple)`、`.SetValues(tuple, "")`，三种写法都成功；读 `.Values`、`ComponentMolarFractionValue`（元组）；`ComponentMolarFlow.GetValues("kgmole/h")` | `spikes/e2_read_write.py`，2026-10-08，输出 `spikes/out/e2_read_write_run1.txt`、`e2_read_write_run2.txt` | 条件：在已求解的示例 Case 里新建的物流上，7 个组分，写的是摩尔分数且和为 1。向量顺序是流体包的组分顺序。写 T=25 °C、P=1000 kPa、F=100 kgmole/h 之后闪蒸立即完成：`VapourFractionValue` 0.9029，`MassFlow` 1624.0 kg/h，分组分摩尔流量 (90, 10, 0, ...)。空白 Case 里重新验证留给 E5。 计划假设：`ComponentMolarFraction.Values = [...]`。计划状态：读取有公开示例，写入待验证。探针 E5 类型库（2026-10-08，未运行验证）：`ProcessStream.ComponentMolarFraction`（`RealFlexVariable`：`Values`、`SetValues(val, unit)`、`GetValues(unit)`）和 `ComponentMolarFractionValue`。 |
-| H15 | 新建反应器 | 未测试 | | | 计划假设：`Operations.Add(name, typeName)`，三种反应器的 `typeName` 通过反向探测获得。探针 E3、E7 类型库（2026-10-08，未运行验证）：`Flowsheet.Operations(OperClassOrType[opt]).Add(name, Type)`。反应器接口：`ConversionReactor`、`EquilibriumReactor`、`GibbsReactor`，另有 `KineticReactor`、`PFReactor`、`YieldReactor`。`Type` 的取值（字符串还是枚举）待 E3。 |
-| H16 | 反应器连接与配置（进出料、能流、反应集、压降、Gibbs 模式） | 未测试 | | | 计划假设：无。计划状态：未知。探针 E7 至 E9 类型库（2026-10-08，未运行验证）：三种反应器共有：`Feeds`（`Attachments`，`Add(Item)`）、`VapourProduct`、`LiquidProduct`、`EnergyStream`（可写，`ProcessStream*`）、`PressureDropValue`（可写）、`ReactionSet`（可写）、`HeatFlowValue`（可写）。Gibbs 另有 `ReactorType`（`gr_NoReactions=0`、`gr_SpecdRxnsOnly=2`、`gr_GibbsRxnsOnly=3`）、`InertSpeciesValue`、`FractionSpecifiedValue`、`FixedSpecificationValue`。接口里没有出口温度成员。 |
+| H15 | 新建反应器 | 未测试 |  |  | E3 实测（只读）：转化反应器 `TypeName` 是 `conversionreactorop`，平衡 `equilibriumreactorop`（Gibbs 推测 `gibbsreactorop`，没有样本）。`Operations.Add(name, Type)` 没有调用过，等 0B。 计划假设：`Operations.Add(name, typeName)`，三种反应器的 `typeName` 通过反向探测获得。探针 E3、E7 类型库（2026-10-08，未运行验证）：`Flowsheet.Operations(OperClassOrType[opt]).Add(name, Type)`。反应器接口：`ConversionReactor`、`EquilibriumReactor`、`GibbsReactor`，另有 `KineticReactor`、`PFReactor`、`YieldReactor`。`Type` 的取值（字符串还是枚举）待 E3。 |
+| H16 | 反应器连接与配置（进出料、能流、反应集、压降、Gibbs 模式） | 部分确认 | 只读，见"对象模型速查"：`op.Feeds`（`Names`、`Item(i)`）、`op.VapourProduct`、`op.LiquidProduct`、`op.EnergyStream`（没连接时读取抛 `com_error`）、`op.ReactionSet`、`op.PressureDrop.GetValue("kPa")`、`op.HeatFlow.GetValue("kW")`；出口温度规定在气相出料物流的 `Temperature` 上 | `spikes/e3_reverse_probe.py`，2026-10-08，输出 `spikes/out/e3_reverse_probe_sample.txt` | 条件：只读，在示例的转化和平衡反应器上。写入（连接进出料、挂反应集、规定出口温度）没有试，等 0B。Gibbs 的类型选项没有样本。 计划假设：无。计划状态：未知。探针 E7 至 E9 类型库（2026-10-08，未运行验证）：三种反应器共有：`Feeds`（`Attachments`，`Add(Item)`）、`VapourProduct`、`LiquidProduct`、`EnergyStream`（可写，`ProcessStream*`）、`PressureDropValue`（可写）、`ReactionSet`（可写）、`HeatFlowValue`（可写）。Gibbs 另有 `ReactorType`（`gr_NoReactions=0`、`gr_SpecdRxnsOnly=2`、`gr_GibbsRxnsOnly=3`）、`InertSpeciesValue`、`FractionSpecifiedValue`、`FixedSpecificationValue`。接口里没有出口温度成员。 |
 | H17 | 求解控制 | 已确认 | `solver = case.Solver`；`solver.CanSolve = False` 挂起，`solver.CanSolve = True` 释放；读 `solver.CanSolve`、`solver.IsSolving`、`solver.Mode`（0 为稳态） | `spikes/e2_read_write.py`，2026-10-08，输出 `spikes/out/e2_read_write_run1.txt`、`e2_read_write_run2.txt` | **挂起有效：** `CanSolve=False` 时改进料流量，出料流量保持 475.36 kgmole/h 不变。**释放时同步求解：** `CanSolve=True` 这一句用 0.46 秒返回，返回后 `IsSolving` 已是 False，出料已更新到 523.26 kgmole/h，不需要轮询。`CanSolve` 为 True 时每次写入都会立刻重算（写进料压力、流量后出料立即变，热负荷 6558.8 kW 随进料温度变到 6544.7 kW）。 计划假设：`Solver.CanSolve`。计划状态：官方文档确认（V7.3 版）。探针 E2 类型库（2026-10-08，未运行验证）：`Solver.CanSolve`（可读写）、`IsSolving`、`Mode`；`SimulationCase.Solver`。 |
-| H18 | 变量是否已知，是规定值还是计算值 | 部分确认 | `variable.IsKnown`（bool）、`variable.State`（`VariableStatus_enum`）、`variable.CanModify`。组成向量的 `IsKnown` 是每个组分一个 bool 的元组 | `spikes/e2_read_write.py`，2026-10-08，输出 `spikes/out/e2_read_write_run1.txt`、`e2_read_write_run2.txt` | 实测：没有规定的变量 `IsKnown` 为 False；写入之后为 True。进料温度 `State` 为 1（vsSpecified）、`CanModify` 为 True。**注意：没有规定的变量 `State` 也是 1，所以判断"有没有值"只能靠 `IsKnown`，不能靠 `State`。** 未测：计算出来的变量（`State` 应为 0，`CanModify` 应为 False），留给 E3 在反应器出料上测。 计划假设：`IsKnown`、`State`。计划状态：官方文档确认（V7.3 版）。探针 E2 类型库（2026-10-08，未运行验证）：`RealVariable.IsKnown`、`State`（`vsCalculated=0`、`vsSpecified=1`、`vsDefaultedValue=2`、`vsSpecifiedOutside=4`、`vsDefaultOutside=5`）、`CanModify`。 |
+| H18 | 变量是否已知，是规定值还是计算值 | 已确认 | `variable.IsKnown`、`variable.State`、`variable.CanModify`：规定值 `State=1`、`CanModify=True`，计算值 `State=0`、`CanModify=False`，没有值时 `IsKnown=False` | `spikes/e2_read_write.py`、`spikes/e3_reverse_probe.py`，2026-10-08 | E3 补上了计算值：出料的 P 和流量 `State` 0、`CanModify` False，能流热负荷同。注意没有规定的变量 `State` 也是 1，判断"有没有值"只能靠 `IsKnown`。 实测：没有规定的变量 `IsKnown` 为 False；写入之后为 True。进料温度 `State` 为 1（vsSpecified）、`CanModify` 为 True。**注意：没有规定的变量 `State` 也是 1，所以判断"有没有值"只能靠 `IsKnown`，不能靠 `State`。** 未测：计算出来的变量（`State` 应为 0，`CanModify` 应为 False），留给 E3 在反应器出料上测。 计划假设：`IsKnown`、`State`。计划状态：官方文档确认（V7.3 版）。探针 E2 类型库（2026-10-08，未运行验证）：`RealVariable.IsKnown`、`State`（`vsCalculated=0`、`vsSpecified=1`、`vsDefaultedValue=2`、`vsSpecifiedOutside=4`、`vsDefaultOutside=5`）、`CanModify`。 |
 | H19 | 对象状态文本（未求解、欠规定等提示） | 未测试 | | | 计划假设：无。计划状态：未知。探针 E7 |
-| H20 | 读取结果（T、P、流量、组成、分组分流量、热负荷） | 部分确认 | 物流：`GetValue(unit)` 读 T、P、`MolarFlow`、`MassFlow`；`VapourFractionValue`；`ComponentMolarFraction.Values`；`ComponentMolarFlow.GetValues("kgmole/h")`、`ComponentMassFlow.GetValues("kg/h")`。反应器热负荷：`reactor.HeatFlow.GetValue("kW")` | `spikes/e2_read_write.py`，2026-10-08，输出 `spikes/out/e2_read_write_run1.txt`、`e2_read_write_run2.txt` | 物流和热负荷已实测（转化反应器 Reformer 热负荷读出 6558.76 kW）。反应器自己的结果（分组分进出量、转化率、平衡常数）留给 E3。 计划假设：`GetValue(unit)`、`ComponentMolarFraction.Values`。计划状态：基本读取有官方文档，分组分流量和热负荷待验证。探针 E7 类型库（2026-10-08，未运行验证）：反应器：`ComponentTotalInValue`、`ComponentTotalOutValue`、`ComponentTotalReactedValue`（转化、平衡）；`ComponentTotalFeedValue`、`ComponentTotalProductValue`（Gibbs）；`RxnPercentConversionValue`、`HeatFlowValue`。物流：`ComponentMolarFlow`、`ComponentMassFlow`。 |
+| H20 | 读取结果（T、P、流量、组成、分组分流量、热负荷） | 已确认 | 物流同前；反应器按组分的进出量：`op.ComponentTotalIn.GetValues("kgmole/h")`、`ComponentTotalReacted`、`ComponentTotalOut`（Gibbs 是 `ComponentTotalFeed`、`ComponentTotalProduct`），组分顺序见 `op.ComponentName.Values`；`op.HeatFlow.GetValue("kW")`；转化率 `RxnPercentConversionValue`，平衡常数 `EqConstantValue`、`RxnExtentValue` | `spikes/e2_read_write.py`、`spikes/e3_reverse_probe.py`，2026-10-08 | 转化和平衡反应器已实测；Gibbs 没有样本。`ComponentTotal…` 的 `…Value` 属性是 kgmole/s，一律用 `GetValues("kgmole/h")`。 物流和热负荷已实测（转化反应器 Reformer 热负荷读出 6558.76 kW）。反应器自己的结果（分组分进出量、转化率、平衡常数）留给 E3。 计划假设：`GetValue(unit)`、`ComponentMolarFraction.Values`。计划状态：基本读取有官方文档，分组分流量和热负荷待验证。探针 E7 类型库（2026-10-08，未运行验证）：反应器：`ComponentTotalInValue`、`ComponentTotalOutValue`、`ComponentTotalReactedValue`（转化、平衡）；`ComponentTotalFeedValue`、`ComponentTotalProductValue`（Gibbs）；`RxnPercentConversionValue`、`HeatFlowValue`。物流：`ComponentMolarFlow`、`ComponentMassFlow`。 |
 | H21 | 固体碳组分及其在 Gibbs 反应器中的行为 | 未测试 | | | 计划假设：库组分 `Carbon`。计划状态：未知。探针 E10 类型库（2026-10-08，未运行验证）：`Component.IsSolid` 可以读，库里能不能加固体碳要实测。 |
 | H22 | 空值的表示方式 | 已确认 | 空值是 **-32767.0**：`variable.Value`、`GetValue(unit)`、组成向量里的每个元素都是 -32767.0；同时 `IsKnown` 为 False（组成是全 False 的元组） | `spikes/e2_read_write.py`，2026-10-08，输出 `spikes/out/e2_read_write_run1.txt`、`e2_read_write_run2.txt` | 对空值调 `GetValue("C")` 也返回 -32767.0，不做单位换算，所以不能靠数值是否合理判断，要先看 `IsKnown`。后面"结果是否存在"一律用 `IsKnown`，-32767.0 只作为兜底校验。 计划假设：约定的哨兵值。探针 E2 |
 | H23 | 模态弹窗对 COM 调用的阻塞 | 部分确认 | 阻塞：`SimulationCases.Open` 在弹窗出现时不返回。检测：枚举 HYSYS 进程的顶层窗口，类名 `#32770` 的是对话框，读它的 `Static` 子控件得到文字（`spikes/_common.py` 的 `windows_of`、`child_texts`、`watch`）。关闭：对 OK 按钮发 `BM_CLICK`（`win32gui.PostMessage`） | `spikes/find_ref_case.py`，2026-10-08，输出 `spikes/out/find_ref_case_scan.txt` | 只见过一种弹窗：打开用到 Aspen Properties 的 Case（Green Ammonia Process）时的 "To use Aspen Properties in HYSYS, at least one databank should be installed..."。`BM_CLICK` 能关闭对话框；阻塞的调用在对话框关闭后能否返回没测到。计划假设：无。探针 E11 |
 | H24 | 降级通道：内部变量访问、脚本回放 | 未测试 | | | 计划假设：无。计划状态：未知。仅在 E6 至 E9 受阻时探测 类型库（2026-10-08，未运行验证）：`Application.BackDoor(obj[opt])` 返回 `BackDoor`：`BackDoorVariable(moniker)`、`BackDoorRealVariable`、`BackDoorTextVariable`、`BackDoorVariables(monikers)`、`SendBackDoorMessage(message)`；`Application.PlayScript(ScriptFileName)`。 |
 | H25 | 组分库的枚举或检索（按名称、分子式查到规范名） | 未测试 | | | 计划假设：无。计划状态：未知。探针 E4 |
-| H26 | Case 导出为可读文本并重新导入 | 未测试 | | | 计划假设：无。计划状态：未知。探针 E13 类型库（2026-10-08，未运行验证）：`SimulationCase.GetXMLForCase()`、`ProvideXMLForCase(flags)`、`ApplyXML(flags, sXML)`、`ApplyXMLFromFile(flags, filePath)`、`ProvideXMLForOperation(tagName, flags)`、`ApplyXMLForOperation(tagName, flags, sXML)`；`XMLOptionFlags_enum` 的取值见 `typelib_enums.txt`。这是文件路线最有希望的入口，E13 再测。 |
+| H26 | Case 导出为可读文本并重新导入 | 部分确认 | 导出：`case.ProvideXMLForCase(flags)`（flags 0 或 1）得到 6.5 或 6.1 MB 的字符串，`case.GetXMLForCase()` 0.47 MB，`case.ProvideXMLForOperation(name, flags)` 2.4 MB。导入没有试 | `spikes/e3_reverse_probe.py`，2026-10-08，输出 `spikes/out/e3_reverse_probe_sample.txt` | **XML 里没有反应和反应集的定义**：'Stoich'、'rxnset'、'ReactionSet'、'LnK'、'Rxn-4' 出现 0 次，只有反应器上引用反应名的 `ConReactionInfo`。所以这条路线不能创建或修改反应，只能改反应器等对象的设置，在"创建反应的线索"里排在最后。 计划假设：无。计划状态：未知。探针 E13 类型库（2026-10-08，未运行验证）：`SimulationCase.GetXMLForCase()`、`ProvideXMLForCase(flags)`、`ApplyXML(flags, sXML)`、`ApplyXMLFromFile(flags, filePath)`、`ProvideXMLForOperation(tagName, flags)`、`ApplyXMLForOperation(tagName, flags, sXML)`；`XMLOptionFlags_enum` 的取值见 `typelib_enums.txt`。这是文件路线最有希望的入口，E13 再测。 |
 | H27 | 同时运行多个实例；按进程号管理实例 | 已确认 | `Dispatch("HYSYS.Application.NewInstance")` 新开进程；连接前后的 `tasklist` 差集得到新进程号；`app.Quit()` 只结束该实例；`taskkill /PID <pid> /T /F` 强制结束 | `spikes/e1_connect.py` run3、run5、run7，2026-10-08 | 释放 COM 引用不会让实例退出（run6）。两个实例的窗口标题相同，只能靠进程号区分。非计划内的能力，Backend 的会话管理会用到 |
 | H28 | 早绑定（gen_py 包装）与类型库 | 已确认 | `gencache.EnsureModule("{DFC1C58B-AE9F-11CF-8EB2-0020AF119B90}", 0, 3, 2)` 生成包装；`pythoncom.LoadRegTypeLib(guid, 3, 2, 0)` 读类型信息 | `spikes/e1_connect.py` run8、run9，2026-10-08 | 包装缓存在 `%TEMP%\gen_py\3.12`。属性名区分大小写；生成之后 `Dispatch` 也返回包装类。集合 `Item()` 返回 `IDispatch`，是否需要 `CastTo` 待 E3 |
 | H29 | 单位字符串 | 已确认 | 温度 `C`、`K`、`F`、`R`；压力 `kPa`、`bar`、`psia`、`atm`、`MPa`；摩尔流量 `kgmole/h`、`lbmole/h`、`gmole/s`；质量流量 `kg/h`、`lb/hr`、`kg/s` | `spikes/e2_read_write.py` run1，2026-10-08 | 不认识的：`degC`、`kmol/h`、`t/h`、`foo`（`GetValue`、`SetValue` 都抛 `com_error` `E_FAIL`）。摩尔流量的单位是 `kgmole/h`，不是 `kmol/h`。体积流量、能量单位等没测 |
@@ -117,6 +117,8 @@ ProgID、早绑定还是晚绑定、怎么取得进程号、怎么退出。由�
 | Gibbs 反应器 | `GibbsReactor`（`_GibbsReactor`） | 推测是 `gibbsreactorop`，没有样本核实（示例里都没有 Gibbs 反应器），等用户的参考 Case |
 | 其他（本项目暂不用，留给阶段 3B） | `KineticReactor`（`TypeName` 为 `kineticreactorop`，示例 CSTR - Dynamic Model 里是 CSTR）、`PFReactor`（`pfreactorop`，示例 Ammonia Synthesis）、`YieldReactor` | 见左 |
 
+反应的 `TypeName`：转化 `conversionrxn`、平衡 `equilibriumrxn`；反应集 `rxnset`（E3 实测）。
+
 三种反应器都不是组件类（coclass）：类型库里只有 22 个组件类（`Application`、`SimulationCase` 及其单实例、Plant/Process/Engine 变体）。反应器对象只能从 `Operations.Add` 或 `Operations.Item` 取得。
 
 ### 集合对象的通用形状
@@ -128,6 +130,16 @@ ProgID、早绑定还是晚绑定、怎么取得进程号、怎么退出。由�
 - `Flowsheet.Operations` 是带参数的属性：`Operations(OperClassOrType: VARIANT[opt])`。
 
 ### 反应对象
+
+**实测（E3，示例 Synthesis Gas Production，2026-10-08）。**
+
+- 取得：`case.BasisManager.ReactionPackageManager.Reactions`：`Count`（4）、`Names`、`Item(i)`（下标从 0 开始）。`Item(i)` 返回**具体类型** `ConversionReaction`、`EquilibriumReaction`，不需要 `CastTo`。
+- `TypeName`：转化反应 `conversionrxn`（界面名 `Conversion`），平衡反应 `equilibriumrxn`（`Equilibrium`）。这很可能就是 `Reactions.Add(name, Type)` 的 `Type` 字符串，0B 验证。
+- 计量系数：`Reactants` 集合：`Names`、`Item(j).Component.name`、`Item(j).StoichiometricCoefficientValue`；**负数是反应物，正数是产物**。Rxn-1 读出 Methane -1、H2O -1、CO 1、Hydrogen 3，即 CH4 + H2O → CO + 3 H2。向量形式 `ReactantStoichCoefValue`（元组，顺序同 `Reactants`）；`ReactantName.Values` 末尾多一个空字符串，是界面留给"新增一行"的空行。
+- 基准组分 `BaseComponent`（`Component`，取 `.name`）。转化率 `Conversion`：**百分数**，40.0 表示 40%。`ConversionCoefficientsValue` 有三个数（C0、C1、C2），没用的是 -32767，第一个是常数项。
+- 相态 `ReactionPhase`：0 即 `ptVapourPhase`（示例里全是 0）。反应热 `HeatOfReactionValue`（Rxn-1 读出 205310.0，单位没验证，应为 kJ/kgmole）。
+- 平衡反应 Rxn-4（CO + H2O → CO2 + H2）：`LnKSource` 读出 **4**；`Basis` 读出 2（即 `rbPartialPressBasis`），`BasisUnits` 为 `atm`；`LnKEquationAParameter` 至 `DParameter` 为 -12.1076、5318.69、1.01205、0.000114369；`MinTemperatureValue` -273.15、`MaxTemperatureValue` 3000（单位 °C）；`TemperatureApproachValue` 0.0；`ActivateKTable` 为 True，`KEqValue` 是 35 个点的 K–T 表（4523.0 递减到 0.3843），`KCalculatedValue` 是按公式算的对照值；`AutoDetect` True，`LogBasis` False。`EquilibriumConstant`（固定 K）读取抛 `com_error`，因为当前来源不是固定 K。
+- **`LnKSource` 的取值和类型库枚举对不上**：这个反应用的是 K–T 表，类型库里 `eqrxn_Table=3`、`eqrxn_FixedExtent=4`，读出的却是 4。要等用户的参考 Case（Keq 来源为 Gibbs 自由能）读到另一个数字，才能确定数字和界面选项的对应。只读到一个数字而不知道对应哪个选项，是没有用的。
 
 **`ConversionReaction`（类型库）。**
 
@@ -146,6 +158,14 @@ ProgID、早绑定还是晚绑定、怎么取得进程号、怎么退出。由�
 
 ### 反应集对象
 
+**实测（E3，2026-10-08）。**
+
+- 取得：`ReactionPackageManager.ReactionSets` 与 `fp.ReactionPackage.ReactionSets`（`fp = case.BasisManager.FluidPackages.Item(0)`）是同一批对象，示例里 3 个：`Reformer Rxn Set`、`Combustor Rxn Set`、`Shift Rxn Set`。`Item(i)` 返回 `ReactionSet`，`TypeName` 为 `rxnset`。
+- **反应集与流体包的关联**：这三个集合都出现在 `fp.ReactionPackage.ReactionSets.Names` 里；`fp.ReactionPackage.FluidPackage.name` 读出 `Basis-1`。从集合反查流体包（`rset.ReactionPackage.FluidPackage.name`）读出空字符串，**不要用**。
+- **集合成员**：`ActiveReactions.Names`（参加反应的）和 `InactiveReactions.Names`（在集合里但没启用的）。Reformer 集：Active `['Rxn-1', 'Rxn-2']`，Inactive `['Rxn-4']`，`Rxn-3` 根本不在这个集合里。所以"在不在集合里"和"启用不启用"是两层。
+- `rset.Operations.Names`：用了这个集合的操作（反向引用），如 `Shift Rxn Set` 对应 `['Combustor Shift', 'Shift Reactor 1', 'Shift Reactor 2']`。
+- `SolverMethod` 读出 -32767（未指定），`TraceLevel` 0。
+
 **`ReactionSets` 和 `ReactionSet`（类型库）。**
 
 - 取得方式有两条：`Case.BasisManager.ReactionPackageManager.ReactionSets`，或 `FluidPackage.ReactionPackage.ReactionSets`。
@@ -153,6 +173,17 @@ ProgID、早绑定还是晚绑定、怎么取得进程号、怎么退出。由�
 - `ReactionPackage`：`FluidPackage`、`ReactionSets`、`ReactionPackageManager`。`ReactionPackageManager`：`BasisManager`、`ReactionSets`、`Reactions`、`Components`。
 
 ### 反应器对象
+
+**实测（E3，2026-10-08）。**
+
+- **进料**：`op.Feeds`（`Attachments`）：`Count`、`Names`、`Item(i)` 返回 `ProcessStream`。**出料**：`op.VapourProduct`、`op.LiquidProduct`（`ProcessStream`）。**能流**：`op.EnergyStream`（`ProcessStream`），热负荷用 `.HeatFlow.GetValue("kW")` 读。**没有连接能流时，读 `op.EnergyStream` 抛 `com_error`（E_FAIL），不是返回 None**，判断有没有能流要用 try/except。
+- **反应集**：`op.ReactionSet`（`ReactionSet`，取 `.name`）。**压降**：`op.PressureDrop.GetValue("kPa")`，`State` 为 1（规定值，示例里是 0）。**热负荷**：`op.HeatFlow.GetValue("kW")`，等于能流的热负荷，`State` 为 0、`CanModify` 为 False（计算值）。`VesselType` 读出 1，含义没验证。
+- **出口温度规定在气相出料物流上。** 带能流的反应器（Reformer、Shift Reactor 1、Shift Reactor 2）：`VapourProduct.Temperature` 的 `State` 为 1、`CanModify` 为 True（规定值，分别是 926.67、454.44、398.89 °C），能流热负荷是计算值。没有能流的绝热反应器（Combustor、Combustor Shift）：`VapourProduct.Temperature` 是计算值（`State` 0，`CanModify` False）。液相出料的 T、P、流量永远是计算值。所以"出口温度 710 °C、带能流"的配置是：连上能流，对气相出料写 `Temperature.SetValue(710, "C")`。
+- **计算值和规定值**：规定值 `State=1`、`CanModify=True`；计算值 `State=0`、`CanModify=False`（出料的 P 和流量、能流热负荷都是）。
+- **结果**：转化反应器：`rxnName.Values`、`RxnBaseCmpName.Values`、`ConversionValue`（设置，百分数）、`RxnPercentConversionValue`（实际转化百分数）。平衡反应器：`rxnName.Values`、`EqConstantValue`、`RxnExtentValue`、`RxnPercentConversionValue`。两者都有 `HeatOfReactionValue`、`ComponentName.Values`，以及按组分的进出量 `ComponentTotalIn`、`ComponentTotalReacted`、`ComponentTotalOut`：**用 `.GetValues("kgmole/h")` 带单位读**，同名的 `…Value` 属性是 kgmole/s。`Reacted` 的符号：消耗为负，生成为正。
+- **同一个基准组分的多个转化反应，转化率都是对进料里的基准组分算的（并行），不是对剩余量算。** Reformer：Rxn-1 40%、Rxn-2 30%，进料甲烷 90.72，反应掉 63.50 kgmole/h，正好是 70%，出口剩 27.22。若转化率之和超过 100%（Combustor 的 35、65、100），`RxnPercentConversionValue` 被缩放成 18.09、33.60、48.31（和为 100%），原因未深究。
+- 平衡反应器的 `EquilibriumConstantParameterArrayValue` 读出一排 -32767，`EquilibriumFractionalApproachParameterArrayValue` 读取抛 `com_error`：示例里没有设这些。
+- **Gibbs 反应器没有实测**（示例里没有）。`ReactorType` 的数字与界面选项的对应要等用户的参考 Case。
 
 **三种反应器共有（类型库）。**
 
@@ -182,16 +213,16 @@ ProgID、早绑定还是晚绑定、怎么取得进程号、怎么退出。由�
 
 类型库里看起来能用来创建反应、反应集、反应器的接口和方法，按可能性排序。这是阶段 0B 的起点。由阶段 0A 写。
 
-**依据：类型库（2026-10-08，`spikes/typelib_dump.py`），尚未运行验证。** E3 会补上 `Operations.Add` 的类型字符串和 `Item()` 取出对象的行为，到时按实测重排。
+**依据：类型库（2026-10-08，`spikes/typelib_dump.py`）加 E3 的只读实测。创建本身（`Add`）没有运行过。** E3 补上了：`Item()` 取出的对象直接是具体类型（不需要 `CastTo`）；反应、反应集、反应器的 `TypeName`（`conversionrxn`、`equilibriumrxn`、`rxnset`、`conversionreactorop`、`equilibriumreactorop`）；反应集成员在 `ActiveReactions`；出口温度规定在气相出料物流上。
 
 | 序 | 线索 | 依据 | 下一步 |
 |---|---|---|---|
-| 1 | **COM 直接创建（降级阶梯的 I1）**：`Case.BasisManager.ReactionPackageManager.Reactions.Add(name, Type)` 建反应；同一个管理器的 `ReactionSets.Add(name, Type)` 建反应集；`Flowsheet.Operations.Add(name, Type)` 建反应器 | 三个集合都有 `Add(name: VARIANT[opt], Type: VARIANT[opt]) -> VARIANT`，说明 HYSYS 把创建统一成这一种接口。设置路径是完整的：反应对象有可写的 `Reactants`、`BaseComponent`、`Conversion`、`LnKSource`；反应器有可写的 `ReactionSet`、`VapourProduct`、`LiquidProduct`、`EnergyStream`、`Feeds.Add` | 0B：先试 `Reactions.Add("R1", <类型>)`，`Type` 依次试省略、字符串（如 `"Conversion"`）、整数，读回 `Count` 和 `Names`；用 E3 得到的 `TypeName` 试 `Operations.Add`。建反应要在 `StartBasisChange()` 之后 |
+| 1 | **COM 直接创建（降级阶梯的 I1）**：`Case.BasisManager.ReactionPackageManager.Reactions.Add(name, Type)` 建反应；同一个管理器的 `ReactionSets.Add(name, Type)` 建反应集；`Flowsheet.Operations.Add(name, Type)` 建反应器 | 三个集合都有 `Add(name: VARIANT[opt], Type: VARIANT[opt]) -> VARIANT`，说明 HYSYS 把创建统一成这一种接口。设置路径是完整的：反应对象有可写的 `Reactants`、`BaseComponent`、`Conversion`、`LnKSource`；反应器有可写的 `ReactionSet`、`VapourProduct`、`LiquidProduct`、`EnergyStream`、`Feeds.Add` | 0B：先试 `Reactions.Add("R1", "conversionrxn")`（E3 读到的 `TypeName`），不行再试 `"Conversion"`（`VisibleTypeName`）、整数、省略；用 `conversionreactorop` 试 `Operations.Add`；读回 `Count`、`Names`。建反应要在 `StartBasisChange()` 之后。物流已经证实只给名字就能 `Add`（H12），先按这个模式试 |
 | 2 | **反应集成员**：`ReactionSet.ActiveReactions.Add(反应名)`，再 `ReactionSet.AssociateFluidPackage(流体包)` | `ActiveReactions` 是 `Reactions` 集合，有 `Add`；`AssociateFluidPackage` 的签名明确 | 0B：试 `Add(反应名)`；不行就看 E3 里 GUI 建好的反应集的 `ActiveReactions.Names`，或查 `Support\rxnset.rdf` 里反应集成员的内部变量名 |
-| 3 | **从 GUI 建好的 Case 反推**（E3） | 用户或示例里已有的 Case 是"标准答案"：可以读出 `TypeName`、反应集成员的名字和各成员取值的含义 | 本阶段任务 9 |
-| 4 | **XML 路线**：`SimulationCase.GetXMLForCase()`、`ProvideXMLForCase(flags)`、`ApplyXML(flags, sXML)`、`ApplyXMLFromFile(flags, path)`，以及按操作的 `ProvideXMLForOperation(tagName, flags)`、`ApplyXMLForOperation(tagName, flags, sXML)` | 类型库里有。`XMLOptionFlags_enum` 有 14 个选项（`opt_SpecsOnly=1`、`opt_UseUserUnitSet=2`、`opt_IncludeAttachments=4`、`opt_NoBasisData=2048` 等）。如果导出的 XML 含反应和反应集，就能改文本再导回，绕开"COM 不能创建"的缺口；也是 H26 的入口 | 在 E3 的参考 Case 上 `GetXMLForCase()`，看是否含反应；0B 里 COM 创建受阻时才用 |
-| 5 | **脚本回放**：`Application.PlayScript(ScriptFileName)`、`PlayScriptRelativeTo` | 类型库里有；脚本格式未知 | 只在 1 至 4 受阻时 |
-| 6 | **内部变量通道**：`Application.BackDoor(obj[opt])` 返回 `BackDoor`，有 `BackDoorVariable(moniker)`、`BackDoorRealVariable`、`BackDoorTextVariable`、`BackDoorVariables(monikers)`、`SendBackDoorMessage(message)`；安装目录的 `Support\*.rdf`、`*.sgxml`（`convrxn.rdf`、`equirxn.rdf`、`rxnset.rdf`、`rxnop.rdf`）给出内部变量名，`ExtSDK\hysys.hh` 可查签名 | 类型库里有；moniker 的写法要靠 rdf 文件和 E3 里读到的 `Moniker` 属性猜 | 只在 1 至 4 受阻时 |
+| 3 | **以 GUI 建好的 Case 为"标准答案"核对**（E3，已做了一半） | 示例已给出：`TypeName`、反应集成员的读法、出口温度的位置、`Reactants` 的符号约定、转化率是百分数。缺的是 Gibbs 和 Keq 来源为 Gibbs 自由能的平衡反应（`LnKSource` 数字对不上） | 用户的 `three_reactors.hsc` 到了之后，补跑 `e3_reverse_probe.py --case spikes/ref_cases/three_reactors.hsc --tag three` |
+| 4 | **脚本回放**：`Application.PlayScript(ScriptFileName)`、`PlayScriptRelativeTo` | 类型库里有；脚本格式未知 | 只在 1 至 4 受阻时 |
+| 5 | **XML 路线（E3 实测：不能创建反应）**：`SimulationCase.GetXMLForCase()`、`ProvideXMLForCase(flags)`、`ApplyXML(flags, sXML)`、`ApplyXMLFromFile(flags, path)`，以及按操作的 `ProvideXMLForOperation(tagName, flags)`、`ApplyXMLForOperation(tagName, flags, sXML)` | 类型库里有，E3 导出成功（6.5 MB）。但**导出的 XML 里没有反应和反应集的定义**（'Stoich'、'rxnset'、'LnK' 都是 0 次），所以不能靠它创建反应；最多用来改反应器的设置 | 0B 里 COM 创建受阻时，只可能用来配反应器，不必先试 |
+| 6 | **内部变量通道（BackDoor）**：`Application.BackDoor(obj[opt])` 返回 `BackDoor`，有 `BackDoorVariable(moniker)`、`BackDoorRealVariable`、`BackDoorTextVariable`、`BackDoorVariables(monikers)`、`SendBackDoorMessage(message)`；安装目录的 `Support\*.rdf`、`*.sgxml`（`convrxn.rdf`、`equirxn.rdf`、`rxnset.rdf`、`rxnop.rdf`）给出内部变量名，`ExtSDK\hysys.hh` 可查签名 | 类型库里有；moniker 的写法要靠 rdf 文件和 E3 里读到的 `Moniker` 属性猜 | 只在 1 至 4 受阻时 |
 | — | 暂不考虑 | `KineticReaction`、`SimpleRateReaction`、`LHKineticReaction`、`RYieldLumpOrDeLumpReaction` 是动力学类反应，三种目标反应器用不到 | 阶段 3B 才可能用 PFR、CSTR |
 
 ---
@@ -395,3 +426,20 @@ ProgID、早绑定还是晚绑定、怎么取得进程号、怎么退出。由�
 - **结果**：三种情况都**没有弹窗**。`Quit()` 0.0 秒返回，进程 0.5 秒内消失；`Close()` 0.2 秒返回。`IsDirty` 在刚打开、没改过的 Case 上也是 True。
 - **结论**：脚本里可以放心 `Close()` 和 `Quit()`，不会被保存确认卡住；H4 记为部分确认。要保存必须自己调用 `Save`/`SaveAs`（E4、E12）。
 - **脚本与输出**：`spikes/e2b_quit_with_case.py`；`spikes/out/e2b_quit_with_case.txt`。
+
+### L8 E3：反向探测（2026-10-08，示例 Synthesis Gas Production）
+
+- **目的**：看 GUI 建出来的反应器、反应、反应集在 COM 里长什么样：各成员是哪个，出口温度规定在哪里，反应集成员怎么读，XML 路线能不能创建反应。
+- **做法**：`spikes/e3_reverse_probe.py`：复制示例到临时目录，用 `NewInstance` 打开，只读。对 5 台反应器（2 台转化、3 台平衡）读进料、出料、能流、反应集、压降、热负荷、每个变量的 `IsKnown`/`State`/`CanModify`、反应结果和按组分的进出量；对 4 个反应读计量系数、基准组分、转化率、Keq 设置；对 3 个反应集读成员和与流体包的关联；导出 XML 并检索关键词。默认用示例；用户的参考 Case 建好后用 `--case` 补跑。
+- **结果**：见"对象模型速查"各节的"实测"段落。要点：
+  - `Item(i)` 直接返回具体类型，不需要 `CastTo`。反应 `TypeName`：`conversionrxn`、`equilibriumrxn`；反应集 `rxnset`。
+  - 出口温度规定在气相出料物流上（`State` 1、`CanModify` True），带能流的反应器热负荷是计算值；没有能流的绝热反应器出口温度是计算值。
+  - 反应集成员是 `ActiveReactions` 和 `InactiveReactions`；与流体包的关联是出现在 `fp.ReactionPackage.ReactionSets` 里。
+  - 计量系数：负为反应物，正为产物；转化率是百分数；同一基准组分的多个转化反应并行地按进料算（Reformer：40% + 30% = 70%）。
+  - 反应器进出量用 `ComponentTotalIn/Reacted/Out.GetValues("kgmole/h")` 读。
+  - 没有连接能流时读 `op.EnergyStream` 抛 `com_error`，不是 None。
+  - XML 导出 6.5 MB，但**不含反应和反应集的定义**。
+  - **没有解决的**：`LnKSource` 读出 4，与类型库枚举（Table=3、FixedExtent=4）对不上；Gibbs 反应器没有样本，`ReactorType` 数字与界面选项的对应未知。
+- **走过的弯路**：第一次运行在第二台反应器（Combustor）上崩溃：它没有连能流，`op.EnergyStream` 抛 `com_error`，而脚本只捕获了 `AttributeError`。改成 `optional_attr`（把 `com_error` 当作"没有连接"）后通过。
+- **结论**：H16、H26 升为部分确认，H18、H20 升为已确认；H9、H10、H11、H15 仍是未测试，备注里写了读到的 `TypeName` 和结构。"创建反应的线索"据此重排：XML 路线降到最后，以 GUI Case 核对为第 3 条。
+- **脚本与输出**：`spikes/e3_reverse_probe.py`；`spikes/out/e3_reverse_probe_sample.txt`。
