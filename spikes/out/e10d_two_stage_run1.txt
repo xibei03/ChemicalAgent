@@ -1,0 +1,41 @@
+新实例的进程号: 2540
+== 第一段：转化反应器 ==
+  连完的状态 {'OK': 1, 'NotSolved': 4, 'Warning': 0, 'UnderSpecified': 0, 'Error': 0}
+  写出口温度之后的状态 {'OK': 5, 'NotSolved': 0, 'Warning': 0, 'UnderSpecified': 0, 'Error': 0}
+  -- 第一段气相出料 --
+    T=1400.00 C，P=4000.0 kPa，F=2070.020 kgmole/h，31078.1 kg/h
+    各组分 kgmole/h {'Carbon': 0.0, 'H2O': 0.0, 'CO': 1035.01, 'Hydrogen': 1035.01, 'CO2': 0.0, 'Methane': 0.0}
+      VapourFractionValue -> 1.0
+      LiquidFractionValue -> 0.0
+      HeavyLiquidFractionValue -> 0.0
+    质量分率 {'Carbon': 0.0, 'H2O': 0.0, 'CO': 0.93286, 'Hydrogen': 0.06714, 'CO2': 0.0, 'Methane': 0.0}
+  -- 第一段液相出料（没反应掉的碳） --
+    T=1400.00 C，P=4000.0 kPa，F=1498.980 kgmole/h，18003.9 kg/h
+    各组分 kgmole/h {'Carbon': 1498.98, 'H2O': 0.0, 'CO': 0.0, 'Hydrogen': 0.0, 'CO2': 0.0, 'Methane': 0.0}
+      VapourFractionValue -> 0.0
+      LiquidFractionValue -> 1.0
+      HeavyLiquidFractionValue -> 1.0
+    质量分率 {'Carbon': 1.0, 'H2O': 0.0, 'CO': 0.0, 'Hydrogen': 0.0, 'CO2': 0.0, 'Methane': 0.0}
+  第一段热负荷 85.76 MW
+== 第二段：Gibbs 反应器 ==
+  -- 第二段气相出料 --
+    T=1400.00 C，P=4000.0 kPa，F=2033.698 kgmole/h，31078.1 kg/h
+    各组分 kgmole/h {'Carbon': 0.0, 'H2O': 13.89, 'CO': 1012.578, 'Hydrogen': 984.798, 'CO2': 4.271, 'Methane': 18.161}
+      VapourFractionValue -> 1.0
+      LiquidFractionValue -> 0.0
+      HeavyLiquidFractionValue -> 0.0
+    质量分率 {'Carbon': 0.0, 'H2O': 0.00805, 'CO': 0.91264, 'Hydrogen': 0.06388, 'CO2': 0.00605, 'Methane': 0.00937}
+  第二段热负荷 -1.17 MW；流程图状态 {'OK': 9, 'NotSolved': 0, 'Warning': 0, 'UnderSpecified': 0, 'Error': 0}
+== 判定（四条通过条件） ==
+  [通过] 1 CO 收率 0.3996（要求 (0.38, 0.42)）
+      气相 CO 摩尔分率 0.4979，参照 0.5，差 0.0021
+      气相 Hydrogen 摩尔分率 0.4842，参照 0.482，差 0.0022
+  [通过] 2 气相 CO、H2 与参照值各自相差 ≤ 0.02
+  [通过] 3 碳元素守恒：进 2533.990，出 2533.990 kgmole/h，相对误差 3.59e-16（要求 ≤ 0.001）
+      气相出料里的碳（Carbon 组分）0.000 kgmole/h
+      液相出料里的碳（Carbon 组分）1498.980 kgmole/h
+  [通过] 4 未反应的碳从“液相出料”离开 1498.980 kgmole/h，参照 1491.0，相差 0.5%（要求 ≤ 5%）
+      外供热 84.60 MW（参照约 85.0 MW）
+  Case 已另存为 C:\Users\azureuser\Desktop\ChemicalAgent\spikes\out\e10d_two_stage_run1.hsc
+  实例 2540 已结束
+== E10d 两段式：四条通过条件都满足 ==
