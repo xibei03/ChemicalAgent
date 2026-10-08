@@ -20,7 +20,9 @@ def backend():
     faulthandler.disable()
     hysys = HysysComBackend()
     yield hysys
+    dialogs = hysys.dialog_messages()
     hysys.shutdown()
+    assert dialogs == (), f"测试期间 HYSYS 弹出过对话框，正常的建模流程不应该这样：{dialogs}"
 
 
 @pytest.fixture(scope="session")

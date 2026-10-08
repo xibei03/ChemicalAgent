@@ -10,10 +10,11 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from reactor_agent.backends.hysys_com.com_errors import com_call
+from reactor_agent.backends.hysys_com.com_errors import attempt_cleanup, com_call
 from reactor_agent.errors import ErrorCode, ReactorAgentError
 from reactor_agent.spec.enums import CaseMode, ResultStatus
 from reactor_agent.spec.tool_args import EnsureCaseArgs
+from reactor_agent.spec.tool_results import SaveData
 
 ILLEGAL_FILENAME_CHARACTERS = frozenset('<>:"/|?*\\')
 
@@ -74,7 +75,11 @@ def _create(app: Any, path: Path) -> Any:
         )
     with com_call(ErrorCode.CASE_OPEN, "新建 Case"):
         case = app.SimulationCases.Add(path.stem)
-    _save_as(case, path)
+    try:
+        _save_as(case, path)
+    except ReactorAgentError:
+        attempt_cleanup(case.Close)  # 另存失败：别留下一个没人跟踪的 Case
+        raise
     return case
 
 
@@ -102,23 +107,30 @@ def ensure_case(app: Any, active: Any | None, args: EnsureCaseArgs) -> EnsuredCa
     return EnsuredCase(_create(app, path), ResultStatus.CREATED)
 
 
-def save_case(active: Any, path: Path | None) -> tuple[Path, int]:
-    """保存 Case，返回路径和字节数。path 为空时写回当前路径。"""
+def save_case(active: Any, path: Path | None) -> SaveData:
+    """保存 Case，返回写出的文件。path 为空时写回当前路径。"""
     if path is None:
         target = case_path(active)
         with com_call(ErrorCode.IO, "保存 Case"):
             active.Save()
         _verify_identity(active, target)
-        return target, _verify_file(target)
+        return SaveData(path=target, size_bytes=_verify_file(target))
     target = normalize_path(path)
-    return target, _save_as(active, target)
+    return SaveData(path=target, size_bytes=_save_as(active, target))
 
 
-def close_case(active: Any, save: bool) -> Path:
-    """关闭 Case（save 为真时先保存），返回被关闭的 Case 的路径。"""
+def close_case(app: Any, active: Any, save: bool) -> Path:
+    """关闭 Case（save 为真时先保存），返回被关闭的 Case 的路径。读回确认打开的 Case 少了一个。"""
     path = case_path(active)
     if save:
         save_case(active, None)
     with com_call(ErrorCode.CASE_OPEN, "关闭 Case"):
+        before = int(app.SimulationCases.Count)
         active.Close()
+        after = int(app.SimulationCases.Count)
+    if after != before - 1:
+        raise ReactorAgentError(
+            ErrorCode.READBACK_MISMATCH,
+            f"关闭 Case 之后打开的 Case 数是 {after}，应当是 {before - 1}",
+        )
     return path

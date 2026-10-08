@@ -89,7 +89,11 @@ def connect(mode: ConnectMode, visible: bool) -> Session:
         app = gencache.EnsureDispatch(progid)
         version = str(app.Version)
         app.Visible = visible
-    process_id, reused = _locate_process(mode, before)
+    try:
+        process_id, reused = _locate_process(mode, before)
+    except ReactorAgentError:
+        attempt_cleanup(app.Quit)  # 进程号不明，没法按进程号结束，至少让这个实例正常退出
+        raise
     session = Session(app, process_id, reused, version)
     if EXPECTED_VERSION_MARKER not in version:
         shutdown(session)

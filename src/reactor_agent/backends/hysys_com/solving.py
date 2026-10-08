@@ -51,25 +51,34 @@ def _wait_until_idle(case: Any, timeout_s: float) -> SolveStatus:
 
 
 def _raise_unless_solved(status: SolveStatus) -> None:
+    if status.solved:
+        return
     if not status.objects:
         raise ReactorAgentError(ErrorCode.NOT_SOLVED, "流程图里还没有任何对象")
     unsolved = {
         item.name: item.state.value for item in status.objects if item.state in UNSOLVED_STATES
     }
-    if not unsolved:
-        return
     # 台账 H30 没有不收敛的样本：这里把 Error 状态当作不收敛，缺规定和未求解当作欠规定，没有验证过。
     errored = ObjectState.ERROR.value in unsolved.values()
     code = ErrorCode.NOT_CONVERGED if errored else ErrorCode.NOT_SOLVED
     raise ReactorAgentError(code, f"模型没有解出来：{unsolved}", unsolved)
 
 
+def _release_solver(case: Any) -> None:
+    """确保求解器放开（放开时同步求解，台账 H17），读回确认。"""
+    with com_call(ErrorCode.NOT_SOLVED, "放开求解器"):
+        solver = case.Solver
+        if not bool(solver.CanSolve):
+            solver.CanSolve = True
+        released = bool(solver.CanSolve)
+    if not released:
+        raise ReactorAgentError(ErrorCode.READBACK_MISMATCH, "求解器没有放开：CanSolve 读回为假")
+
+
 def solve(case: Any, args: SolveArgs) -> Outcome[SolveData]:
     """确认模型已经求解完成。超时、缺规定、不收敛分别用不同的错误码。"""
     started = time.monotonic()
-    with com_call(ErrorCode.NOT_SOLVED, "放开求解器"):
-        if not bool(case.Solver.CanSolve):
-            case.Solver.CanSolve = True
+    _release_solver(case)
     status = _wait_until_idle(case, args.timeout_s)
     _raise_unless_solved(status)
     return Outcome(

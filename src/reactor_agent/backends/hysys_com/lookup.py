@@ -36,3 +36,24 @@ def flowsheet_of(case: Any) -> Any:
         )
     with com_call(ErrorCode.NOT_FOUND, "取流程图"):
         return case.Flowsheet
+
+
+def fluid_package_of(case: Any) -> Any | None:
+    """Case 的流体包（本阶段只有一个）；还没有时是 None。"""
+    with com_call(ErrorCode.NOT_FOUND, "取流体包"):
+        packages = case.BasisManager.FluidPackages
+        return packages.Item(0) if int(packages.Count) > 0 else None
+
+
+def require_fluid_package(case: Any) -> Any:
+    """Case 的流体包；还没有时是 E_NOT_FOUND。"""
+    package = fluid_package_of(case)
+    if package is None:
+        raise ReactorAgentError(ErrorCode.NOT_FOUND, "还没有流体包，先调用 basis.ensure_thermo")
+    return package
+
+
+def reaction_manager_of(case: Any) -> Any:
+    """Case 的反应管理器，反应和反应集都挂在它下面。"""
+    with com_call(ErrorCode.NOT_FOUND, "取反应管理器"):
+        return case.BasisManager.ReactionPackageManager

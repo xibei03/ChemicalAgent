@@ -8,8 +8,15 @@
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
+from pydantic import ValidationError
+
 from reactor_agent.backends.hysys_com.com_errors import com_call
-from reactor_agent.backends.hysys_com.lookup import find_by_name, names_of
+from reactor_agent.backends.hysys_com.lookup import (
+    find_by_name,
+    names_of,
+    reaction_manager_of,
+    require_fluid_package,
+)
 from reactor_agent.backends.hysys_com.thermo import component_names
 from reactor_agent.backends.hysys_com.variables import read_plain
 from reactor_agent.errors import ErrorCode, ReactorAgentError
@@ -82,19 +89,26 @@ def reaction_kind(reaction: Any) -> ReactionKind:
 
 
 def read_reaction(reaction: Any) -> ReactionSnapshot:
-    """读一个反应的定义和质量不守恒量。"""
+    """读一个反应的定义和质量不守恒量。HYSYS 里的值不符合工具契约时是 E_READBACK_MISMATCH。"""
     kind = reaction_kind(reaction)
     with com_call(ErrorCode.NOT_FOUND, "读取反应"):
+        try:
+            definition = _read_definition(reaction, kind)
+        except ValidationError as error:
+            reason = error.errors()[0]["msg"]
+            raise ReactorAgentError(
+                ErrorCode.READBACK_MISMATCH, f"读回的反应不符合工具契约：{reason}"
+            ) from error
         return ReactionSnapshot(
             name=str(reaction.name),
-            definition=_read_definition(reaction, kind),
+            definition=definition,
             balance_error_kg_per_kmol=read_plain(reaction.BalanceErrorValue),
         )
 
 
 def _write_parameters(case: Any, reaction: Any, definition: ReactionDefinition) -> None:
     if isinstance(definition, ConversionReaction):
-        package = case.BasisManager.FluidPackages.Item(0)
+        package = require_fluid_package(case)
         reaction.BaseComponent = package.Components.Item(definition.base_component)
         reaction.Conversion = definition.conversion_percent
     elif definition.keq_source is KeqSource.FIXED_K:
@@ -146,14 +160,9 @@ def _reaction_data(snapshot: ReactionSnapshot) -> ReactionData:
     )
 
 
-def _reactions_of(case: Any) -> Any:
-    with com_call(ErrorCode.NOT_FOUND, "取反应集合"):
-        return case.BasisManager.ReactionPackageManager.Reactions
-
-
 def ensure_reaction(case: Any, args: EnsureReactionArgs) -> Outcome[ReactionData]:
     """确保反应存在，计量系数和类型参数读回一致。已有同名反应只确认，不一致是冲突。"""
-    reactions = _reactions_of(case)
+    reactions = reaction_manager_of(case).Reactions
     subject = f"反应 {args.name}"
     existing = find_by_name(reactions, args.name, "反应")
     if existing is not None:
@@ -171,15 +180,10 @@ def ensure_reaction(case: Any, args: EnsureReactionArgs) -> Outcome[ReactionData
     return Outcome(ResultStatus.CREATED, _reaction_data(created))
 
 
-def _manager_of(case: Any) -> Any:
-    with com_call(ErrorCode.NOT_FOUND, "取反应管理器"):
-        return case.BasisManager.ReactionPackageManager
-
-
 def read_reaction_set(case: Any, reaction_set: Any) -> ReactionSetSnapshot:
     """读一个反应集的成员，以及有没有挂到流体包。"""
+    package = require_fluid_package(case)
     with com_call(ErrorCode.NOT_FOUND, "读取反应集"):
-        package = case.BasisManager.FluidPackages.Item(0)
         name = str(reaction_set.name)
         return ReactionSetSnapshot(
             name=name,
@@ -190,7 +194,7 @@ def read_reaction_set(case: Any, reaction_set: Any) -> ReactionSetSnapshot:
 
 def reaction_set_kinds(case: Any, name: str) -> frozenset[ReactionKind] | None:
     """反应集里各个成员的反应类型；没有这个反应集返回 None。"""
-    manager = _manager_of(case)
+    manager = reaction_manager_of(case)
     reaction_set = find_by_name(manager.ReactionSets, name, "反应集")
     if reaction_set is None:
         return None
@@ -210,7 +214,7 @@ def _check_members_exist(manager: Any, args: EnsureReactionSetArgs) -> None:
 
 def ensure_reaction_set(case: Any, args: EnsureReactionSetArgs) -> Outcome[ReactionSetData]:
     """确保反应集存在、成员一致并且已挂到流体包。已有同名反应集只确认，不一致是冲突。"""
-    manager = _manager_of(case)
+    manager = reaction_manager_of(case)
     subject = f"反应集 {args.name}"
     existing = find_by_name(manager.ReactionSets, args.name, "反应集")
     if existing is not None:
@@ -219,11 +223,12 @@ def ensure_reaction_set(case: Any, args: EnsureReactionSetArgs) -> Outcome[React
         data = ReactionSetData(name=args.name, reactions=snapshot.reactions)
         return Outcome(ResultStatus.UNCHANGED, data)
     _check_members_exist(manager, args)
+    package = require_fluid_package(case)
     with com_call(ErrorCode.ATTACH_FAILED, f"创建反应集 {args.name}"):
         reaction_set = manager.ReactionSets.Add(args.name)
         for member in args.reactions:
             reaction_set.ActiveReactions.Add(member)
-        reaction_set.AssociateFluidPackage(case.BasisManager.FluidPackages.Item(0))
+        reaction_set.AssociateFluidPackage(package)
     created = read_reaction_set(case, reaction_set)
     require_match(ErrorCode.READBACK_MISMATCH, subject, reaction_set_differences(created, args))
     return Outcome(

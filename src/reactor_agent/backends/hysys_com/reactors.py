@@ -10,13 +10,13 @@ from collections.abc import Callable
 from typing import Any
 
 from reactor_agent.backends.hysys_com.com_errors import com_call, read_optional
-from reactor_agent.backends.hysys_com.lookup import find_by_name, names_of
+from reactor_agent.backends.hysys_com.lookup import find_by_name, names_of, reaction_manager_of
 from reactor_agent.backends.hysys_com.reactions import reaction_set_kinds
 from reactor_agent.backends.hysys_com.reactor_kinds import ReactorKind, kind_of, reactor_type_of
 from reactor_agent.backends.hysys_com.variables import Quantity, read_quantity, write_quantity
 from reactor_agent.errors import ErrorCode, ReactorAgentError
 from reactor_agent.spec.enums import ResultStatus, SpecVariable
-from reactor_agent.spec.matching import VALUE_REL_TOLERANCE, reactor_differences, require_match
+from reactor_agent.spec.matching import reactor_differences, require_match, values_close
 from reactor_agent.spec.snapshot import ReactorSnapshot
 from reactor_agent.spec.tool_args import EnsureReactorArgs, SetSpecArgs
 from reactor_agent.spec.tool_results import Outcome, ReactorData, SetSpecData
@@ -40,7 +40,7 @@ def read_reactor(operation: Any) -> ReactorSnapshot | None:
         reactor_type = reactor_type_of(str(operation.TypeName))
         if reactor_type is None:
             return None
-        # 没有连接的引用，HYSYS 读取时抛 com_error，而不是返回空（台账 H16）。
+        # 没有连接的引用，HYSYS 读取时抛 COM 异常，而不是返回空（台账 H16）。
         return ReactorSnapshot(
             name=str(operation.name),
             reactor_type=reactor_type,
@@ -71,7 +71,7 @@ def _check_streams_exist(flowsheet: Any, args: EnsureReactorArgs) -> None:
         )
 
 
-def _check_reaction_set(case: Any, kind: ReactorKind, args: EnsureReactorArgs) -> None:
+def check_reaction_set(case: Any, kind: ReactorKind, args: EnsureReactorArgs) -> None:
     """反应集的反应类型必须与反应器匹配，否则 HYSYS 会弹模态对话框并且不挂上（台账 H23）。"""
     wanted = args.reaction_set
     if kind.reaction_kind is None:
@@ -106,7 +106,7 @@ def _connect(case: Any, flowsheet: Any, kind: ReactorKind, args: EnsureReactorAr
         reactor.VapourProduct = streams.Item(args.vapour_product)
         reactor.LiquidProduct = streams.Item(args.liquid_product)
         if args.reaction_set is not None:
-            sets = case.BasisManager.ReactionPackageManager.ReactionSets
+            sets = reaction_manager_of(case).ReactionSets
             reactor.ReactionSet = sets.Item(args.reaction_set)
         write_quantity(reactor.PressureDrop, args.pressure_drop_bar, Quantity.PRESSURE_DROP)
     return reactor
@@ -132,7 +132,7 @@ def ensure_reactor(case: Any, flowsheet: Any, args: EnsureReactorArgs) -> Outcom
         require_match(ErrorCode.CONFLICT, subject, reactor_differences(snapshot, args))
         return Outcome(ResultStatus.UNCHANGED, data)
     _check_streams_exist(flowsheet, args)
-    _check_reaction_set(case, kind, args)
+    check_reaction_set(case, kind, args)
     reactor = _connect(case, flowsheet, kind, args)
     created = read_reactor(reactor)
     if created is None:
@@ -151,11 +151,7 @@ def _require_reactor(flowsheet: Any, name: str) -> Any:
 def _write_spec(variable: Any, quantity: Quantity, value: float) -> bool:
     """写入规定值，返回是否真的改了。已经是同值的规定值就不写。"""
     current = read_quantity(variable, quantity)
-    unchanged = (
-        current is not None
-        and int(variable.State) == SPECIFIED_STATE
-        and abs(current - value) <= VALUE_REL_TOLERANCE * max(1.0, abs(value))
-    )
+    unchanged = values_close(current, value) and int(variable.State) == SPECIFIED_STATE
     if not unchanged:
         write_quantity(variable, value, quantity)
     return not unchanged
@@ -180,7 +176,7 @@ def set_spec(flowsheet: Any, args: SetSpecArgs) -> Outcome[SetSpecData]:
             )
         changed = _write_spec(variable, quantity, args.value)
         after = read_quantity(variable, quantity)
-    if after is None or abs(after - args.value) > VALUE_REL_TOLERANCE * max(1.0, abs(args.value)):
+    if after is None or not values_close(after, args.value):
         raise ReactorAgentError(
             ErrorCode.READBACK_MISMATCH,
             f"{args.object_name} 的 {args.variable.value} 写入 {args.value}，读回 {after}",

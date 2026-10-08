@@ -39,7 +39,7 @@ def read_stream(stream: Any, components: tuple[str, ...]) -> StreamSnapshot:
             pressure_bar=read_quantity(stream.Pressure, Quantity.PRESSURE),
             molar_flow_kmol_h=read_quantity(stream.MolarFlow, Quantity.MOLAR_FLOW),
             mass_flow_kg_h=read_quantity(stream.MassFlow, Quantity.MASS_FLOW),
-            # 组成写入之前读相分率会抛 com_error（台账 H14），当作还没有值。
+            # 组成写入之前读相分率会抛 COM 异常（台账 H14），当作还没有值。
             vapour_fraction=read_optional(lambda: read_plain(stream.VapourFractionValue)),
             heavy_liquid_fraction=read_optional(
                 lambda: read_plain(stream.HeavyLiquidFractionValue)
@@ -86,15 +86,18 @@ def _check_components(conditions: FeedConditions, order: tuple[str, ...]) -> Non
 
 def _create(case: Any, collection: Any, args: EnsureStreamArgs) -> None:
     subject = f"物流 {args.name}"
+    conditions = args.conditions
+    order: tuple[str, ...] = ()
+    if conditions is not None:
+        order = component_names(case)
+        _check_components(conditions, order)  # 先校验再创建：失败时不留下一股空物流
     with com_call(ErrorCode.READBACK_MISMATCH, f"创建{subject}"):
         stream = collection.Add(args.name)
-    if args.conditions is None:
+    if conditions is None:
         return
-    order = component_names(case)
-    _check_components(args.conditions, order)
     with com_call(ErrorCode.READBACK_MISMATCH, f"写入{subject}"):
-        _write_conditions(stream, order, args.conditions)
-    differences = stream_differences(read_stream(stream, order), args.conditions)
+        _write_conditions(stream, order, conditions)
+    differences = stream_differences(read_stream(stream, order), conditions)
     require_match(ErrorCode.READBACK_MISMATCH, subject, differences)
 
 

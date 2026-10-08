@@ -19,9 +19,9 @@ from reactor_agent.spec.tool_args import EnsureCaseArgs
 class FakeCase:
     """新建时路径在 HYSYS 的当前目录里；SaveAs 写文件并改路径，write=False 模拟静默不写文件。"""
 
-    def __init__(self, name, write=True):
+    def __init__(self, cases, name, write=True):
+        self.cases, self.write, self.calls = cases, write, []
         self.FullName = f"C:\\Windows\\system32\\{name}.hsc"
-        self.write, self.calls = write, []
 
     def SaveAs(self, path):
         self.calls.append(("SaveAs", path))
@@ -35,20 +35,31 @@ class FakeCase:
 
     def Close(self):
         self.calls.append(("Close", self.FullName))
+        if not self.cases.keep_closed_case_open:
+            self.cases.open_cases.remove(self)
 
 
 class FakeCases:
-    def __init__(self, write=True, opened_as=None):
-        self.write, self.opened_as, self.added, self.opened = write, opened_as, [], []
+    def __init__(self, write=True, opened_as=None, keep_closed_case_open=False):
+        self.write, self.opened_as = write, opened_as
+        self.keep_closed_case_open = keep_closed_case_open
+        self.added, self.opened, self.open_cases = [], [], []
+
+    @property
+    def Count(self):
+        return len(self.open_cases)
 
     def Add(self, name):
         self.added.append(name)
-        return FakeCase(name, self.write)
+        case = FakeCase(self, name, self.write)
+        self.open_cases.append(case)
+        return case
 
     def Open(self, path):
         self.opened.append(path)
-        case = FakeCase("opened")
+        case = FakeCase(self, "opened")
         case.FullName = self.opened_as or path
+        self.open_cases.append(case)
         return case
 
 
@@ -86,10 +97,11 @@ def test_new_case_never_overwrites_an_existing_file(tmp_path):
     assert path.read_bytes() == b"precious"
 
 
-def test_saveas_that_silently_writes_nothing_is_detected(tmp_path):
+def test_saveas_that_silently_writes_nothing_is_detected_and_the_new_case_is_closed(tmp_path):
     app = FakeApp(write=False)
     error = error_of(lambda: ensure_case(app, None, new_args(tmp_path / "model.hsc")))
     assert error.code is ErrorCode.IO
+    assert app.SimulationCases.Count == 0
 
 
 def test_open_case_for_the_same_path_is_unchanged_and_other_path_is_a_conflict(tmp_path):
@@ -122,21 +134,29 @@ def test_path_is_validated_before_hysys_is_involved(tmp_path):
 
 def test_save_without_a_path_rewrites_the_current_file(tmp_path):
     case = ensure_case(FakeApp(), None, new_args(tmp_path / "model.hsc")).case
-    path, size = save_case(case, None)
-    assert path == tmp_path / "model.hsc"
-    assert size == len(b"case again")
+    saved = save_case(case, None)
+    assert saved.path == tmp_path / "model.hsc"
+    assert saved.size_bytes == len(b"case again")
     assert case.calls[-1][0] == "Save"
 
 
 def test_save_to_a_new_path_changes_the_case_path(tmp_path):
     case = ensure_case(FakeApp(), None, new_args(tmp_path / "model.hsc")).case
-    path, size = save_case(case, tmp_path / "copy.hsc")
-    assert path == tmp_path.resolve() / "copy.hsc"
-    assert size > 0
+    saved = save_case(case, tmp_path / "copy.hsc")
+    assert saved.path == tmp_path.resolve() / "copy.hsc"
+    assert saved.size_bytes > 0
     assert case_path(case).name == "copy.hsc"
 
 
 def test_close_returns_the_path_and_can_save_first(tmp_path):
-    case = ensure_case(FakeApp(), None, new_args(tmp_path / "model.hsc")).case
-    assert close_case(case, save=True) == tmp_path.resolve() / "model.hsc"
+    app = FakeApp()
+    case = ensure_case(app, None, new_args(tmp_path / "model.hsc")).case
+    assert close_case(app, case, save=True) == tmp_path.resolve() / "model.hsc"
     assert [name for name, _ in case.calls][-2:] == ["Save", "Close"]
+    assert app.SimulationCases.Count == 0
+
+
+def test_close_that_leaves_the_case_open_is_detected(tmp_path):
+    app = FakeApp(keep_closed_case_open=True)
+    case = ensure_case(app, None, new_args(tmp_path / "model.hsc")).case
+    assert error_of(lambda: close_case(app, case, save=False)).code is ErrorCode.READBACK_MISMATCH

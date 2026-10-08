@@ -130,7 +130,3 @@ def test_every_ensure_called_again_is_unchanged_and_creates_nothing(executor, fr
     assert len(after.reactions) == len(before.reactions)
     assert len(after.reaction_sets) == len(before.reaction_sets)
     assert len(after.reactors) == len(before.reactors)
-
-
-def test_normal_modelling_does_not_trigger_any_dialog(backend):
-    assert backend.dialog_messages() == ()
