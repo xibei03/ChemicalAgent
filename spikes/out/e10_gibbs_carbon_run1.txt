@@ -1,0 +1,52 @@
+新实例的进程号: 3636
+== Q1 组分库里的碳 ==
+    Carbon: 名字 / 分子式 / IsSolid -> ('Carbon', 'C            ', True)
+    H2O: 名字 / 分子式 / IsSolid -> ('H2O', 'H2O          ', False)
+    CO: 名字 / 分子式 / IsSolid -> ('CO', 'CO           ', False)
+    Hydrogen: 名字 / 分子式 / IsSolid -> ('Hydrogen', 'H2           ', False)
+    CO2: 名字 / 分子式 / IsSolid -> ('CO2', 'CO2          ', False)
+    Methane: 名字 / 分子式 / IsSolid -> ('Methane', 'CH4          ', False)
+== Q2 含固体的进料物流（40 C，4000 kPa） ==
+  -- 进料 --
+    T=40.00 C，P=4000.0 kPa，F=3569.000 kgmole/h，49081.1 kg/h
+    各组分 kgmole/h {'Carbon': 2533.99, 'H2O': 1035.01, 'CO': 0.0, 'Hydrogen': 0.0, 'CO2': 0.0, 'Methane': 0.0}
+    摩尔分率 {'Carbon': 0.71, 'H2O': 0.29, 'CO': 0.0, 'Hydrogen': 0.0, 'CO2': 0.0, 'Methane': 0.0}
+      VapourFractionValue -> 0.0
+      LiquidFractionValue -> 1.0
+      HeavyLiquidFractionValue -> 1.0
+      质量分率 -> {'Carbon': 0.620101720957001, 'H2O': 0.37989827904299905, 'CO': 0.0, 'Hydrogen': 0.0, 'CO2': 0.0, 'Methane': 0.0}
+    [通过] 质量分率 碳 0.62010、水 0.37990，与 0.62、0.38 最大差 0.00010
+  [弹窗] 标题='Aspen HYSYS' 文字='Static: Since the energy stream is not supplied, the Gibbs Reactor operates\nat an adiabatic condition. But this condition is not suitable for the\nsystem you are simulating. You may specified Gibbs Reactor temperature\nto find out a reasonable heat duty to the Gibbs Reactor first.' 已点 'OK'
+  ReactorType 3；连接完的状态 {'OK': 1, 'NotSolved': 4, 'Warning': 0, 'UnderSpecified': 0, 'Error': 0}
+  写出口温度 1400.0 C 之后的状态 {'OK': 5, 'NotSolved': 0, 'Warning': 0, 'UnderSpecified': 0, 'Error': 0}
+== Q3、Q4 Gibbs 反应器的出料 ==
+  -- 气相出料 --
+    T=1400.00 C，P=4000.0 kPa，F=1552.515 kgmole/h，37293.8 kg/h
+    各组分 kgmole/h {'Carbon': 0.0, 'H2O': 0.0, 'CO': 1035.01, 'Hydrogen': 0.0, 'CO2': 0.0, 'Methane': 517.505}
+    摩尔分率 {'Carbon': 0.0, 'H2O': 0.0, 'CO': 0.66667, 'Hydrogen': 0.0, 'CO2': 0.0, 'Methane': 0.33333}
+      VapourFractionValue -> 1.0
+      LiquidFractionValue -> 0.0
+      HeavyLiquidFractionValue -> 0.0
+      质量分率 -> {'Carbon': 0.0, 'H2O': 2.4342207905105225e-23, 'CO': 0.7773820415731387, 'Hydrogen': 2.071095286215022e-08, 'CO2': 4.799959817492219e-17, 'Methane': 0.22261793771590827}
+  -- 液相出料 --
+    T=1400.00 C，P=4000.0 kPa，F=981.475 kgmole/h，11788.3 kg/h
+    各组分 kgmole/h {'Carbon': 981.475, 'H2O': 0.0, 'CO': 0.0, 'Hydrogen': 0.0, 'CO2': 0.0, 'Methane': 0.0}
+    摩尔分率 {'Carbon': 1.0, 'H2O': 0.0, 'CO': 0.0, 'Hydrogen': 0.0, 'CO2': 0.0, 'Methane': 0.0}
+      VapourFractionValue -> 0.0
+      LiquidFractionValue -> 1.0
+      HeavyLiquidFractionValue -> 1.0
+      质量分率 -> {'Carbon': 1.0, 'H2O': 0.0, 'CO': 0.0, 'Hydrogen': 0.0, 'CO2': 0.0, 'Methane': 0.0}
+    质量守恒相对误差 2.21e-05
+== 判定 ==
+  [通过] 1 CO 收率 0.4085（要求 (0.38, 0.42)）
+      气相 CO 摩尔分率 0.6667，参照 0.5，差 0.1667
+      气相 Hydrogen 摩尔分率 0.0000，参照 0.482，差 0.4820
+  [未通过] 2 气相 CO、H2 摩尔分率与参照值相差 ≤ 0.02
+  [通过] 3 碳元素守恒：进 2533.990，出 2533.990 kgmole/h，相对误差 0.00e+00（要求 ≤ 0.001）
+      气相出料里的碳（Carbon 组分）0.000 kgmole/h
+      液相出料里的碳（Carbon 组分）981.475 kgmole/h
+  [未通过] 4 未反应的碳从“液相出料”离开 981.475 kgmole/h，参照 1491.0（要求 ±5%）
+      外供热 73.00 MW（参照约 85.0 MW）
+  Case 已另存为 C:\Users\azureuser\Desktop\ChemicalAgent\spikes\out\e10_gibbs_carbon_run1.hsc
+  实例 3636 已结束
+== E10 有未通过的条件 ==

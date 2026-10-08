@@ -1,0 +1,201 @@
+新实例的进程号: 14952
+######## 变体 base ########
+  [弹窗] 标题='Aspen HYSYS' 文字='Static: Since the energy stream is not supplied, the Gibbs Reactor operates\nat an adiabatic condition. But this condition is not suitable for the\nsystem you are simulating. You may specified Gibbs Reactor temperature\nto find out a reasonable heat duty to the Gibbs Reactor first.' 已点 'OK'
+  ReactorType 3；状态 {'OK': 5, 'NotSolved': 0, 'Warning': 0, 'UnderSpecified': 0, 'Error': 0}
+  -- 气相出料 --
+    T=1400.00 C，P=4000.0 kPa，F=1552.515 kgmole/h，37293.8 kg/h
+    各组分 kgmole/h {'Carbon': 0.0, 'H2O': 0.0, 'CO': 1035.01, 'Hydrogen': 0.0, 'CO2': 0.0, 'Methane': 517.505}
+      VapourFractionValue -> 1.0
+      LiquidFractionValue -> 0.0
+      HeavyLiquidFractionValue -> 0.0
+    质量分率 {'Carbon': 0.0, 'H2O': 0.0, 'CO': 0.77738, 'Hydrogen': 0.0, 'CO2': 0.0, 'Methane': 0.22262}
+  -- 液相出料 --
+    T=1400.00 C，P=4000.0 kPa，F=981.475 kgmole/h，11788.3 kg/h
+    各组分 kgmole/h {'Carbon': 981.475, 'H2O': 0.0, 'CO': 0.0, 'Hydrogen': 0.0, 'CO2': 0.0, 'Methane': 0.0}
+      VapourFractionValue -> 0.0
+      LiquidFractionValue -> 1.0
+      HeavyLiquidFractionValue -> 1.0
+    质量分率 {'Carbon': 1.0, 'H2O': 0.0, 'CO': 0.0, 'Hydrogen': 0.0, 'CO2': 0.0, 'Methane': 0.0}
+      反应器.ComponentTotalFeed(kgmole/h) -> {'Carbon': 2533.99, 'H2O': 1035.01, 'CO': 0.0, 'Hydrogen': 0.0, 'CO2': 0.0, 'Methane': 0.0}
+      反应器.ComponentTotalProduct(kgmole/h) -> {'Carbon': 981.475, 'H2O': 0.0, 'CO': 1035.01, 'Hydrogen': 0.0, 'CO2': 0.0, 'Methane': 517.505}
+    质量守恒相对误差 2.21e-05
+== 判定（四条通过条件） ==
+  [通过] 1 CO 收率 0.4085（要求 (0.38, 0.42)）
+      气相 CO 摩尔分率 0.6667，参照 0.5，差 0.1667
+      气相 Hydrogen 摩尔分率 0.0000，参照 0.482，差 0.4820
+  [未通过] 2 气相 CO、H2 与参照值各自相差 ≤ 0.02
+  [通过] 3 碳元素守恒：进 2533.990，出 2533.990 kgmole/h，相对误差 0.00e+00（要求 ≤ 0.001）
+      气相出料里的碳（Carbon 组分）0.000 kgmole/h
+      液相出料里的碳（Carbon 组分）981.475 kgmole/h
+  [未通过] 4 未反应的碳从“液相出料”离开 981.475 kgmole/h，参照 1491.0，相差 34.2%（要求 ≤ 5%）
+      外供热 73.00 MW（参照约 85.0 MW）
+######## 变体 energy-first ########
+== Q1 组分库里的碳 ==
+    Carbon: 名字 / 分子式 / IsSolid -> ('Carbon', 'C            ', True)
+    H2O: 名字 / 分子式 / IsSolid -> ('H2O', 'H2O          ', False)
+    CO: 名字 / 分子式 / IsSolid -> ('CO', 'CO           ', False)
+    Hydrogen: 名字 / 分子式 / IsSolid -> ('Hydrogen', 'H2           ', False)
+    CO2: 名字 / 分子式 / IsSolid -> ('CO2', 'CO2          ', False)
+    Methane: 名字 / 分子式 / IsSolid -> ('Methane', 'CH4          ', False)
+== Q2 含固体的进料物流（40 C，4000 kPa） ==
+  -- 进料 --
+    T=40.00 C，P=4000.0 kPa，F=3569.000 kgmole/h，49081.1 kg/h
+    各组分 kgmole/h {'Carbon': 2533.99, 'H2O': 1035.01, 'CO': 0.0, 'Hydrogen': 0.0, 'CO2': 0.0, 'Methane': 0.0}
+      VapourFractionValue -> 0.0
+      LiquidFractionValue -> 1.0
+      HeavyLiquidFractionValue -> 1.0
+    质量分率 {'Carbon': 0.6201, 'H2O': 0.3799, 'CO': 0.0, 'Hydrogen': 0.0, 'CO2': 0.0, 'Methane': 0.0}
+  ReactorType 3；状态 {'OK': 5, 'NotSolved': 0, 'Warning': 0, 'UnderSpecified': 0, 'Error': 0}
+  -- 气相出料 --
+    T=1400.00 C，P=4000.0 kPa，F=1552.515 kgmole/h，37293.8 kg/h
+    各组分 kgmole/h {'Carbon': 0.0, 'H2O': 0.0, 'CO': 1035.01, 'Hydrogen': 0.0, 'CO2': 0.0, 'Methane': 517.505}
+      VapourFractionValue -> 1.0
+      LiquidFractionValue -> 0.0
+      HeavyLiquidFractionValue -> 0.0
+    质量分率 {'Carbon': 0.0, 'H2O': 0.0, 'CO': 0.77738, 'Hydrogen': 0.0, 'CO2': 0.0, 'Methane': 0.22262}
+  -- 液相出料 --
+    T=1400.00 C，P=4000.0 kPa，F=981.475 kgmole/h，11788.3 kg/h
+    各组分 kgmole/h {'Carbon': 981.475, 'H2O': 0.0, 'CO': 0.0, 'Hydrogen': 0.0, 'CO2': 0.0, 'Methane': 0.0}
+      VapourFractionValue -> 0.0
+      LiquidFractionValue -> 1.0
+      HeavyLiquidFractionValue -> 1.0
+    质量分率 {'Carbon': 1.0, 'H2O': 0.0, 'CO': 0.0, 'Hydrogen': 0.0, 'CO2': 0.0, 'Methane': 0.0}
+      反应器.ComponentTotalFeed(kgmole/h) -> {'Carbon': 2533.99, 'H2O': 1035.01, 'CO': 0.0, 'Hydrogen': 0.0, 'CO2': 0.0, 'Methane': 0.0}
+      反应器.ComponentTotalProduct(kgmole/h) -> {'Carbon': 981.475, 'H2O': 0.0, 'CO': 1035.01, 'Hydrogen': 0.0, 'CO2': 0.0, 'Methane': 517.505}
+    质量守恒相对误差 2.21e-05
+== 判定（四条通过条件） ==
+  [通过] 1 CO 收率 0.4085（要求 (0.38, 0.42)）
+      气相 CO 摩尔分率 0.6667，参照 0.5，差 0.1667
+      气相 Hydrogen 摩尔分率 0.0000，参照 0.482，差 0.4820
+  [未通过] 2 气相 CO、H2 与参照值各自相差 ≤ 0.02
+  [通过] 3 碳元素守恒：进 2533.990，出 2533.990 kgmole/h，相对误差 0.00e+00（要求 ≤ 0.001）
+      气相出料里的碳（Carbon 组分）0.000 kgmole/h
+      液相出料里的碳（Carbon 组分）981.475 kgmole/h
+  [未通过] 4 未反应的碳从“液相出料”离开 981.475 kgmole/h，参照 1491.0，相差 34.2%（要求 ≤ 5%）
+      外供热 73.00 MW（参照约 85.0 MW）
+== 温度路径：1000、1200、1600，再回到 1400 C ==
+  1000 C: 气相 {'CO': 1035.0, 'Methane': 517.5}；液相 {'Carbon': 981.5}；热负荷 61.46 MW
+  1200 C: 气相 {'CO': 1035.0, 'Methane': 517.5}；液相 {'Carbon': 981.5}；热负荷 67.03 MW
+  1600 C: 气相 {'CO': 1035.0, 'Methane': 517.5}；液相 {'Carbon': 981.5}；热负荷 79.75 MW
+  1400 C: 气相 {'CO': 1035.0, 'Methane': 517.5}；液相 {'Carbon': 981.5}；热负荷 73.00 MW
+  Case 已另存为 C:\Users\azureuser\Desktop\ChemicalAgent\spikes\out\e10_gibbs_carbon_run2.hsc
+######## 变体 hold-solver ########
+  ReactorType 3；状态 {'OK': 5, 'NotSolved': 0, 'Warning': 0, 'UnderSpecified': 0, 'Error': 0}
+  -- 气相出料 --
+    T=1400.00 C，P=4000.0 kPa，F=1552.515 kgmole/h，37293.8 kg/h
+    各组分 kgmole/h {'Carbon': 0.0, 'H2O': 0.0, 'CO': 1035.01, 'Hydrogen': 0.0, 'CO2': 0.0, 'Methane': 517.505}
+      VapourFractionValue -> 1.0
+      LiquidFractionValue -> 0.0
+      HeavyLiquidFractionValue -> 0.0
+    质量分率 {'Carbon': 0.0, 'H2O': 0.0, 'CO': 0.77738, 'Hydrogen': 0.0, 'CO2': 0.0, 'Methane': 0.22262}
+  -- 液相出料 --
+    T=1400.00 C，P=4000.0 kPa，F=981.475 kgmole/h，11788.3 kg/h
+    各组分 kgmole/h {'Carbon': 981.475, 'H2O': 0.0, 'CO': 0.0, 'Hydrogen': 0.0, 'CO2': 0.0, 'Methane': 0.0}
+      VapourFractionValue -> 0.0
+      LiquidFractionValue -> 1.0
+      HeavyLiquidFractionValue -> 1.0
+    质量分率 {'Carbon': 1.0, 'H2O': 0.0, 'CO': 0.0, 'Hydrogen': 0.0, 'CO2': 0.0, 'Methane': 0.0}
+      反应器.ComponentTotalFeed(kgmole/h) -> {'Carbon': 2533.99, 'H2O': 1035.01, 'CO': 0.0, 'Hydrogen': 0.0, 'CO2': 0.0, 'Methane': 0.0}
+      反应器.ComponentTotalProduct(kgmole/h) -> {'Carbon': 981.475, 'H2O': 0.0, 'CO': 1035.01, 'Hydrogen': 0.0, 'CO2': 0.0, 'Methane': 517.505}
+    质量守恒相对误差 2.21e-05
+== 判定（四条通过条件） ==
+  [通过] 1 CO 收率 0.4085（要求 (0.38, 0.42)）
+      气相 CO 摩尔分率 0.6667，参照 0.5，差 0.1667
+      气相 Hydrogen 摩尔分率 0.0000，参照 0.482，差 0.4820
+  [未通过] 2 气相 CO、H2 与参照值各自相差 ≤ 0.02
+  [通过] 3 碳元素守恒：进 2533.990，出 2533.990 kgmole/h，相对误差 0.00e+00（要求 ≤ 0.001）
+      气相出料里的碳（Carbon 组分）0.000 kgmole/h
+      液相出料里的碳（Carbon 组分）981.475 kgmole/h
+  [未通过] 4 未反应的碳从“液相出料”离开 981.475 kgmole/h，参照 1491.0，相差 34.2%（要求 ≤ 5%）
+      外供热 73.00 MW（参照约 85.0 MW）
+######## 变体 split-feeds ########
+  ReactorType 3；状态 {'OK': 6, 'NotSolved': 0, 'Warning': 0, 'UnderSpecified': 0, 'Error': 0}
+  -- 气相出料 --
+    T=1400.00 C，P=4000.0 kPa，F=1552.515 kgmole/h，37293.8 kg/h
+    各组分 kgmole/h {'Carbon': 0.0, 'H2O': 0.0, 'CO': 1035.01, 'Hydrogen': 0.0, 'CO2': 0.0, 'Methane': 517.505}
+      VapourFractionValue -> 1.0
+      LiquidFractionValue -> 0.0
+      HeavyLiquidFractionValue -> 0.0
+    质量分率 {'Carbon': 0.0, 'H2O': 0.0, 'CO': 0.77738, 'Hydrogen': 0.0, 'CO2': 0.0, 'Methane': 0.22262}
+  -- 液相出料 --
+    T=1400.00 C，P=4000.0 kPa，F=981.475 kgmole/h，11788.3 kg/h
+    各组分 kgmole/h {'Carbon': 981.475, 'H2O': 0.0, 'CO': 0.0, 'Hydrogen': 0.0, 'CO2': 0.0, 'Methane': 0.0}
+      VapourFractionValue -> 0.0
+      LiquidFractionValue -> 1.0
+      HeavyLiquidFractionValue -> 1.0
+    质量分率 {'Carbon': 1.0, 'H2O': 0.0, 'CO': 0.0, 'Hydrogen': 0.0, 'CO2': 0.0, 'Methane': 0.0}
+      反应器.ComponentTotalFeed(kgmole/h) -> {'Carbon': 2533.99, 'H2O': 1035.01, 'CO': 0.0, 'Hydrogen': 0.0, 'CO2': 0.0, 'Methane': 0.0}
+      反应器.ComponentTotalProduct(kgmole/h) -> {'Carbon': 981.475, 'H2O': 0.0, 'CO': 1035.01, 'Hydrogen': 0.0, 'CO2': 0.0, 'Methane': 517.505}
+    质量守恒相对误差 2.21e-05
+== 判定（四条通过条件） ==
+  [通过] 1 CO 收率 0.4085（要求 (0.38, 0.42)）
+      气相 CO 摩尔分率 0.6667，参照 0.5，差 0.1667
+      气相 Hydrogen 摩尔分率 0.0000，参照 0.482，差 0.4820
+  [未通过] 2 气相 CO、H2 与参照值各自相差 ≤ 0.02
+  [通过] 3 碳元素守恒：进 2533.990，出 2533.990 kgmole/h，相对误差 0.00e+00（要求 ≤ 0.001）
+      气相出料里的碳（Carbon 组分）0.000 kgmole/h
+      液相出料里的碳（Carbon 组分）981.475 kgmole/h
+  [未通过] 4 未反应的碳从“液相出料”离开 981.475 kgmole/h，参照 1491.0，相差 34.2%（要求 ≤ 5%）
+      外供热 73.00 MW（参照约 85.0 MW）
+######## 变体 water-rich ########
+  ReactorType 3；状态 {'OK': 5, 'NotSolved': 0, 'Warning': 0, 'UnderSpecified': 0, 'Error': 0}
+  -- 气相出料 --
+    T=1400.00 C，P=4000.0 kPa，F=3568.983 kgmole/h，60724.9 kg/h
+    各组分 kgmole/h {'Carbon': 0.0, 'H2O': 2125.151, 'CO': 340.634, 'Hydrogen': 848.999, 'CO2': 254.191, 'Methane': 0.008}
+      VapourFractionValue -> 1.0
+      LiquidFractionValue -> 0.0
+      HeavyLiquidFractionValue -> 0.0
+    质量分率 {'Carbon': 0.0, 'H2O': 0.63046, 'CO': 0.15713, 'Hydrogen': 0.02819, 'CO2': 0.18422, 'Methane': 0.0}
+  -- 液相出料 --
+    T=1400.00 C，P=4000.0 kPa，F=0.000 kgmole/h，0.0 kg/h
+    各组分 kgmole/h {'Carbon': 0.0, 'H2O': 0.0, 'CO': 0.0, 'Hydrogen': 0.0, 'CO2': 0.0, 'Methane': 0.0}
+      VapourFractionValue -> 0.0
+      LiquidFractionValue -> 1.0
+      HeavyLiquidFractionValue -> 0.5
+    质量分率 {'Carbon': 0.0, 'H2O': 0.63046, 'CO': 0.15713, 'Hydrogen': 0.02819, 'CO2': 0.18422, 'Methane': 0.0}
+      反应器.ComponentTotalFeed(kgmole/h) -> {'Carbon': 594.833, 'H2O': 2974.167, 'CO': 0.0, 'Hydrogen': 0.0, 'CO2': 0.0, 'Methane': 0.0}
+      反应器.ComponentTotalProduct(kgmole/h) -> {'Carbon': 0.0, 'H2O': 2125.151, 'CO': 340.634, 'Hydrogen': 848.999, 'CO2': 254.191, 'Methane': 0.008}
+    质量守恒相对误差 8.54e-06
+== 判定（四条通过条件） ==
+  [未通过] 1 CO 收率 0.5727（要求 (0.38, 0.42)）
+      气相 CO 摩尔分率 0.0954，参照 0.5，差 0.4046
+      气相 Hydrogen 摩尔分率 0.2379，参照 0.482，差 0.2441
+  [未通过] 2 气相 CO、H2 与参照值各自相差 ≤ 0.02
+  [通过] 3 碳元素守恒：进 594.833，出 594.833 kgmole/h，相对误差 5.73e-16（要求 ≤ 0.001）
+      气相出料里的碳（Carbon 组分）0.000 kgmole/h
+      液相出料里的碳（Carbon 组分）0.000 kgmole/h
+  [未通过] 4 未反应的碳从“气相出料”离开 0.000 kgmole/h，参照 1491.0，相差 100.0%（要求 ≤ 5%）
+      外供热 106.84 MW（参照约 85.0 MW）
+######## 变体 no-carbon ########
+  ReactorType 3；状态 {'OK': 5, 'NotSolved': 0, 'Warning': 0, 'UnderSpecified': 0, 'Error': 0}
+  -- 气相出料 --
+    T=1400.00 C，P=4000.0 kPa，F=5497.314 kgmole/h，62394.1 kg/h
+    各组分 kgmole/h {'Carbon': 0.0, 'H2O': 1514.445, 'CO': 838.46, 'Hydrogen': 3018.168, 'CO2': 125.697, 'Methane': 0.544}
+      VapourFractionValue -> 1.0
+      LiquidFractionValue -> 0.0
+      HeavyLiquidFractionValue -> 0.0
+    质量分率 {'Carbon': 0.0, 'H2O': 0.43727, 'CO': 0.37641, 'Hydrogen': 0.09752, 'CO2': 0.08866, 'Methane': 0.00014}
+  -- 液相出料 --
+    T=1400.00 C，P=4000.0 kPa，F=0.000 kgmole/h，0.0 kg/h
+    各组分 kgmole/h {'Carbon': 0.0, 'H2O': 0.0, 'CO': 0.0, 'Hydrogen': 0.0, 'CO2': 0.0, 'Methane': 0.0}
+      VapourFractionValue -> 0.0
+      LiquidFractionValue -> 1.0
+      HeavyLiquidFractionValue -> 0.5
+    质量分率 {'Carbon': 0.0, 'H2O': 0.43727, 'CO': 0.37641, 'Hydrogen': 0.09752, 'CO2': 0.08866, 'Methane': 0.00014}
+      反应器.ComponentTotalFeed(kgmole/h) -> {'Carbon': 0.0, 'H2O': 2604.299, 'CO': 0.0, 'Hydrogen': 0.0, 'CO2': 0.0, 'Methane': 964.701}
+      反应器.ComponentTotalProduct(kgmole/h) -> {'Carbon': 0.0, 'H2O': 1514.445, 'CO': 838.46, 'Hydrogen': 3018.168, 'CO2': 125.697, 'Methane': 0.544}
+    质量守恒相对误差 1.33e-05
+== 全程看门狗处理过的弹窗 1 个 ==
+  Static: Since the energy stream is not supplied, the Gibbs Reactor operates
+at an adiabatic condition. But this condition is not suitable for the
+system you are simulating. You may specified Gibbs Reactor temperature
+to find out a reasonable heat duty to the Gibbs Reactor first.
+  实例 14952 已结束
+== 各变体摘要（kgmole/h） ==
+  base: 气相 {'CO': 1035.0, 'Methane': 517.5}；液相 {'Carbon': 981.5}；热负荷 73.00 MW
+  energy-first: 气相 {'CO': 1035.0, 'Methane': 517.5}；液相 {'Carbon': 981.5}；热负荷 73.00 MW
+  hold-solver: 气相 {'CO': 1035.0, 'Methane': 517.5}；液相 {'Carbon': 981.5}；热负荷 73.00 MW
+  split-feeds: 气相 {'CO': 1035.0, 'Methane': 517.5}；液相 {'Carbon': 981.5}；热负荷 73.00 MW
+  water-rich: 气相 {'H2O': 2125.2, 'CO': 340.6, 'Hydrogen': 849.0, 'CO2': 254.2}；液相 {}；热负荷 106.84 MW
+  no-carbon: 气相 {'H2O': 1514.4, 'CO': 838.5, 'Hydrogen': 3018.2, 'CO2': 125.7, 'Methane': 0.5}；液相 {}；热负荷 156.87 MW
+== E10 正式变体 energy-first：有未通过的条件 ==
