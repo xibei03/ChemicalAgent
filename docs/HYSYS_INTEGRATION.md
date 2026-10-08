@@ -461,6 +461,25 @@ Keq 来源：Gibbs 自由能（默认）已验证；固定 K（摩尔分率基�
 | R11 | `gibbs` Recipe 遇到含固体碳的体系时不能直接用 Gibbs 反应器 + 库里的碳，两段式或别的做法等 D14 的决定 | L24、L25 | 已确认（D14 选方案 A：两段式，用户 2026-10-08） |
 | R12 | `PlayScript` 只作为 Backend 内部的第二级通道，P0 不使用：当前只有设反应集排序这一个用途，并且按 D13 不启用 | H24、L29；脚本失败不抛异常、要求 Case 可见，只验证了 `Specify` 数值和 `Message … CreateAndView` 两类命令 | 已确认（D15，用户 2026-10-08） |
 
+### 四、1A 的实现（2026-10-08）
+
+R1 至 R12 在阶段 1A 已经按"已确认"的内容实现，`src/reactor_agent/backends/hysys_com/` 里一个关注点一个文件，
+集成测试 `tests/integration/`（38 个）通过 `ToolExecutor` 验证，见 L32。与计划 §9.3 工具契约不同的地方：
+
+| 工具 | 实现与计划的差别 |
+|---|---|
+| `session.connect` | 入参 `mode`（`launch` 默认、`attach` 只用于调试）和 `visible`；结果有版本、进程号、`reused_instance`（R1）。`session.restart` 属于阶段 4 |
+| `case.ensure` | 路径必须是绝对路径、扩展名 `.hsc`（"在 run 目录内"由 harness 保证）；`new` 之后立刻 `SaveAs`，已有文件是 `E_CONFLICT`；已经打开了另一个 Case 也是 `E_CONFLICT`（R2）；`open` 模式打开已有文件 |
+| `basis.ensure_thermo` | 末尾 `EndBasisChange()`（R3）；组分必须是库里的规范名，大小写也要一致，否则 `E_COMPONENT_NOT_FOUND` 且细节里给出规范名；物性包枚举只有 `peng_robinson`（内部名 `pengrob`） |
+| `basis.ensure_reaction` | 反应的定义是按 `kind` 区分的联合类型；转化率是百分数；`phase` 开放气相和合并相（R4 的补充：两段式第一台转化反应器的进料是碳水浆料）；Keq 来源开放 Gibbs 自由能和固定 K；质量不守恒量（`BalanceErrorValue`，kg/kmol）超过 0.1 是 `E_REACTION_INVALID` |
+| `basis.ensure_reaction_set` | 没有流体包参数（只有一个）；与反应器类型是否兼容放在 `ensure_reactor` 里连接之前检查，不兼容是 `E_SET_INCOMPATIBLE`，不会触发 HYSYS 的模态对话框（H23） |
+| `flowsheet.ensure_stream` | `kind`（物料流、能流）；规定（`conditions`）可以不给；流量在摩尔流量和质量流量里二选一；能流没有规定，热负荷用 `set_spec` |
+| `flowsheet.ensure_reactor` | 入参是类型、连接（按名字）、反应集、压降和热模式，没有 Gibbs 模式；转化和平衡反应器必须挂反应集，Gibbs 反应器不挂；PFR、CSTR 和未验证的热模式组合是 `E_UNSUPPORTED`（R5）；名字已存在时绝不调用 `Add`（L26）。"每个出料物流只属于一台反应器"没有预检，靠 HYSYS 在连接时拒绝（`E_CONNECT_FAILED`），没有测试 |
+| `flowsheet.set_spec` | 变量白名单是 `outlet_temperature_c`（写在气相出料上）和 `duty_kw`（写在能流上），单位由变量名决定，没有 `unit` 参数；对象一律是反应器；变量当前是计算值（`CanModify` 为假）时是 `E_RULE` |
+| `solver.solve` | 是"检查"不是"触发"（R6）：放开求解器、轮询 `IsSolving` 到空闲、读流程图状态；`E_TIMEOUT`、`E_NOT_SOLVED`（细节是各对象的状态）、`E_NOT_CONVERGED`（把 Error 状态当作不收敛，没有样本验证，H30）。**R6 说的"超时由看门狗线程结束进程"没有做**：`timeout_s` 只覆盖"求解器还在求解"的轮询等待；COM 调用本身卡死而又不是弹窗时没有保护，留给阶段 4 |
+| `model.read_snapshot` | 只做不带参数的全量读取 |
+| 信封 | 没有 `readback` 和 `duration_ms`：读回比对在工具内部，耗时在 `ToolCallEvent` 里 |
+
 ---
 
 ## 探索日志
@@ -896,3 +915,27 @@ Keq 来源：Gibbs 自由能（默认）已验证；固定 K（摩尔分率基�
 - **结果**（`spikes/out/e14_basis_order_run1.txt`）：两个变体都通过。`direct`：流体包的反应集列出 `Conv-Set`，成员 `['Tol-Disp']`，求解后流程图 4 个对象全是 OK，出口摩尔分率 0.5 / 0.25 / 0.06 / 0.13 / 0.06，与解析解的最大偏差 0.00000。`wrapped` 结果相同。`ReactionPhase`：转化反应新建时读出 5（合并相），显式写 0 读回 0，写 5 读回 5。两个实例都已结束，没有残留进程。
 - **结论**：Basis 结束之后建反应、反应集并关联流体包完全可用，不需要 `StartBasisChange()`。`ensure_thermo` 末尾结束 Basis 的做法（R3）成立。两段式第一台转化反应器的反应相用合并相（5），气相反应用 0，两个取值都能显式写入。
 - **脚本与输出**：`spikes/e14_basis_order.py`；`spikes/out/e14_basis_order_run1.txt`、`e14_basis_order_run1.hsc`（Case，约 150 KB）。
+
+### L32 1A：Backend 的实现和集成测试（2026-10-08）
+
+- **目的**：把探针验证过的 COM 调用收敛成 `HysysComBackend`，再在它上面加有契约的工具层，只靠调用工具就能建出三个模型并读回正确的结果；幂等、冲突、读回、隔离四件事都要有测试。
+- **做法**：`src/reactor_agent/backends/hysys_com/` 按关注点分文件：`com_errors.py`（`com_error` 只出现在这里）、`variables.py`（单位字符串和空值哨兵只出现在这里）、`dialogs.py`（弹窗看门狗，D12 批准的唯一线程）、`session.py`、`cases.py`、`thermo.py`、`reactions.py`、`streams.py`、`reactor_kinds.py`（三种反应器的差别全在这张表里）、`reactors.py`、`solving.py`、`snapshot.py`、`backend.py`。集成测试 `tests/integration/`：三个模型各用一串工具调用建成（`hysys_models.py` 手写的步骤，等价于 1B 的 Recipe 要编译出来的东西）。
+- **结果**（`pytest -m hysys tests/integration`，共完整运行 8 次：7 次 38 个全部通过，每次约 70 秒；1 次因为 HYSYS 自己崩溃而失败，见 L33）：
+  - **转化反应器（甲苯歧化）**：出口摩尔分率 0.5000 / 0.2500 / 0.0600 / 0.1300 / 0.0600，与解析解（计划 §17.2）偏差 0.00000（容差 0.001）；出口温度 378.59 °C，质量流量 10000.0 kg/h。
+  - **平衡反应器（蒸汽重整）**：710 °C 出口总流量 4780.7 kmol/h，摩尔分率 CH4 0.0962 / H2O 0.3844 / CO 0.0457 / CO2 0.0673 / H2 0.4064，热负荷 +39989 kW；600 °C 为 4307.1 kmol/h，0.1617 / 0.4976 / 0.0117 / 0.0588 / 0.2702，+20160 kW；与参照值（计划 §17.1）的偏差都在 0.02 内（最大 0.0046、0.0014），710 → 600 → 710 °C 往返复现（偏差小于 1e-6）。
+  - **含固体碳的气化（D14 方案 A，两段式）**：第一段转化反应器（C + H2O → CO + H2，基准组分水，转化率 100%，反应相用合并相，带能流，气相出料 1400 °C）气相 CO、H2 各 1035.07 kmol/h，液相出料是没反应掉的碳 1499.06 kmol/h，热负荷 85.77 MW；第二段 Gibbs 反应器（进料是第一段的气相）出口 CO 1012.63、H2 984.85、CH4 18.16、H2O 13.89、CO2 4.27 kmol/h，**CO 收率 39.96%**（落在 38% 至 42%），气相 CO、H2 摩尔分率 0.4979、0.4842（参照 0.500、0.482），热负荷 −1.17 MW；与 E10d 的结果一致（第一段热负荷 85.76 与 85.77 MW 的差别在舍入内）。
+  - **幂等**：三个模型的每个 `ensure_*`、`set_spec`、`solve`、`read_snapshot` 紧接着再调一次，全部是"未改变"，反应、反应集、物流、能流、反应器的个数不增加。
+  - **冲突**：对已有物流用不同温度调 `ensure_stream` 是 `E_CONFLICT`，细节里有"温度"，物流本身没有被修改；同名不同类型的反应器是 `E_CONFLICT`，不调用 `Add`，没有弹窗；组分表不同、计量系数不同的反应也是 `E_CONFLICT`。
+  - **读回与哨兵数**：快照里没有 -32767；未规定的物流所有量是 `None`；气相反应的液相出料流量为 0 或 `None`。
+  - **不触发弹窗**：反应集与反应器类型不兼容在连接之前就被拒绝（`E_SET_INCOMPATIBLE`），看门狗没有处理过任何对话框；看门狗本身用一个真实的 Win32 模态对话框（`MessageBoxW`）测试，不到 1 秒读出文字并点掉。
+  - **走过的弯路**：（1）看门狗的单元测试第一次失败，因为虚拟环境里的 `python.exe` 是个启动器，真正的解释器是它的子进程，对话框属于后者，`Popen.pid` 不是对话框的所有者——让子进程自己打印进程号；（2）pytest 的 faulthandler 会把 `Quit()` 时的 RPC 异常 0x800706ba 当作致命错误打印，它在配置阶段才启用，所以在夹具里关掉，不能在 conftest 导入时关。
+- **结论**：1A 的完成标准里与 HYSYS 有关的几条通过；台账 R1 至 R12 全部落实。Backend 共 14 个模块文件（加 `__init__.py`），`com_error` 只在 `com_errors.py`，单位字符串和哨兵数只在 `variables.py`。
+- **脚本与输出**：`src/reactor_agent/backends/hysys_com/`、`tests/integration/`、`tests/unit/test_com_errors.py`、`test_variables.py`、`test_cases.py`、`test_reactor_kinds.py`、`test_dialog_guard.py`。
+
+### L33 HYSYS 自己偶发崩溃（2026-10-08，1A 集成测试时发现）
+
+- **目的**：1A 集成测试有一次运行在第 16 个测试之后 HYSYS 进程消失，后面的测试全部报 `E_COM_DISCONNECTED`，要弄清是不是代码的问题。
+- **做法**：查 Windows 应用程序事件日志（`Application Error`、`.NET Runtime`），再连续重跑 4 次完整集成测试。
+- **结果**：事件日志（UTC，当天 11:44 至 13:47）里 `aspenhysys.exe` 有 **11 次** .NET 未处理异常终止，**全部是 `HysysEng.dll` 里的访问冲突**（异常码 `0xc0000005`）：故障偏移 `0x13d8272` 8 次（11:51 至 12:11 的探针会话，以及这次集成测试的 13:47:14），故障偏移 `0x90540` 3 次（11:44 至 11:48）；另有 1 次堆损坏（`0xc0000374`，ntdll，12:23:21）。除了 13:47 这一次，其余都发生在阶段 0C 的探针会话期间（UTC+8 的 19:44 至 20:23），没有逐次对应到具体的探针。崩溃之后又连续完整运行了 6 次集成测试（含加入自愈夹具之后的 1 次），全部通过，没有再崩溃。崩溃时 Python 一侧的表现和 L26 一致：之后每次调用立刻 `E_COM_DISCONNECTED`（`-2147023174`），不会卡住。
+- **结论**：这是 HYSYS 自己的偶发缺陷，集成测试里 8 次完整运行出现 1 次（样本很小），不是 Backend 的问题（错误被正确转成了 `E_COM_DISCONNECTED`，它不在可重试集合里，恢复走 R1 重启）。对策：（1）集成测试的自动夹具在每个测试前检查进程（`HysysComBackend.is_running()`，只看进程号），崩溃了就重新连接，让一次崩溃只影响一个测试；（2）阶段 4 的 `session.restart` 和执行器的 R1 策略要覆盖它；（3）报告里如实说明，不把偶发崩溃说成已经解决。
+- **脚本与输出**：事件日志 `Application` 的 `Application Error` 事件；`tests/integration/conftest.py` 的 `reconnect_if_hysys_crashed`。
