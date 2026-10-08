@@ -84,6 +84,11 @@ def _equilibrium_differences(
     return found
 
 
+def name_differences(actual: str, wanted: str) -> tuple[str, ...]:
+    """HYSYS 有时会自己给同名的新对象改名（台账 L26），创建之后读回的名字必须是请求的名字。"""
+    return () if actual == wanted else (_difference("名字", actual, wanted),)
+
+
 def reaction_differences(
     existing: ReactionDefinition, wanted: ReactionDefinition
 ) -> tuple[str, ...]:
@@ -115,7 +120,7 @@ def reaction_set_differences(
     existing: ReactionSetSnapshot, wanted: EnsureReactionSetArgs
 ) -> tuple[str, ...]:
     """已有的反应集与期望的成员有哪些不同。成员的顺序无关，但必须已经挂到流体包。"""
-    found = []
+    found = [*name_differences(existing.name, wanted.name)]
     if set(existing.reactions) != set(wanted.reactions):
         found.append(_difference("反应集的成员", existing.reactions, wanted.reactions))
     if not existing.attached_to_fluid_package:
@@ -153,7 +158,7 @@ def stream_differences(existing: StreamSnapshot, wanted: FeedConditions) -> tupl
 
 def reactor_differences(existing: ReactorSnapshot, wanted: EnsureReactorArgs) -> tuple[str, ...]:
     """已有的反应器与期望的类型、连接、反应集和压降有哪些不同。进料的顺序无关。"""
-    found = []
+    found = [*name_differences(existing.name, wanted.name)]
     if existing.reactor_type != wanted.reactor_type:
         found.append(_difference("反应器类型", existing.reactor_type, wanted.reactor_type))
     if set(existing.feeds) != set(wanted.feeds):

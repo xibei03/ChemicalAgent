@@ -11,6 +11,7 @@ from reactor_agent.spec.enums import (
     ReactorType,
 )
 from reactor_agent.spec.matching import (
+    name_differences,
     reaction_differences,
     reaction_set_differences,
     reactor_differences,
@@ -294,3 +295,19 @@ class TestRequireMatch:
         assert "物流 Feed" in error.message
         assert "温度不同" in error.message
         assert error.details == {"differences": "温度不同；压力不同"}
+
+
+class TestNames:
+    def test_name_that_hysys_changed_is_reported(self):
+        assert name_differences("Rxn-1", "Rxn-1") == ()
+        found = name_differences("Rxn-2", "Rxn-1")
+        assert len(found) == 1
+        assert "Rxn-2" in found[0]
+
+    def test_reaction_set_and_reactor_with_another_name_are_reported(self):
+        renamed_set = ReactionSetSnapshot(
+            name="Set-1", reactions=("Rxn-1",), attached_to_fluid_package=True
+        )
+        wanted_set = EnsureReactionSetArgs(name="RxnSet-1", reactions=("Rxn-1",))
+        assert reaction_set_differences(renamed_set, wanted_set)
+        assert reactor_differences(reactor_snapshot(name="CRV-100_2"), reactor_args())
