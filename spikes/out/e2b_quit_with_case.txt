@@ -1,0 +1,22 @@
+== Q1 没改过的 Case，直接 Quit ==
+  实例 10256，已打开 C:\Users\azureuser\AppData\Local\Temp\hysys_e2b_f4pk1fjf\Synthesis Gas Production.hsc
+  case.IsDirty -> True
+  app.Quit() -> None
+  app.Quit() 用时 0.0 秒，返回
+  弹窗情况: 没有记录
+  实例 10256 在 0.5 秒内退出
+== Q2 改过的 Case，先 Close ==
+  实例 9764，已打开 C:\Users\azureuser\AppData\Local\Temp\hysys_e2b_p5n3uwkw\Synthesis Gas Production.hsc
+  case.IsDirty -> True
+  case.Close() -> None
+  case.Close() 用时 0.2 秒，返回
+  弹窗情况: 没有记录
+  实例 9764 仍在运行，按进程号结束
+== Q3 改过的 Case，直接 Quit ==
+  实例 3396，已打开 C:\Users\azureuser\AppData\Local\Temp\hysys_e2b_hwykyj4v\Synthesis Gas Production.hsc
+  case.IsDirty -> True
+  app.Quit() -> None
+  app.Quit() 用时 0.0 秒，返回
+  弹窗情况: 没有记录
+  实例 3396 在 0.5 秒内退出
+结束时的 HYSYS 进程: 无

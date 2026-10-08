@@ -1,0 +1,188 @@
+新实例的进程号: 1732
+== Q0 路径形式对 Open 的影响（同一个副本，同一种复制方式） ==
+  目录短名、文件名长名: C:\Users\AZUREU~1\AppData\Local\Temp\HYSYS_~3\Synthesis Gas Production.hsc
+  Open(目录短名、文件名长名) -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147024891), None)
+  目录和文件名都是短名: C:\Users\AZUREU~1\AppData\Local\Temp\HYSYS_~3\SYNTHE~1.HSC
+  Open(目录和文件名都是短名) -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147024891), None)
+  长路径: C:\Users\azureuser\AppData\Local\Temp\hysys_e2_zflglbng\Synthesis Gas Production.hsc
+  Open(长路径) -> <win32com.gen_py.HYSYS 15.0 Type Library._SimulationCase instance at 0x2346069800192>
+  case.FullName -> 'C:\\Users\\azureuser\\AppData\\Local\\Temp\\hysys_e2_zflglbng\\Synthesis Gas Production.hsc'
+  case.Close() -> None
+反应器 Reformer（conversionreactorop），进料 ['Natural Gas', 'Reformer Steam']
+进料 Natural Gas，出料 Combustor Feed
+== Q1 流体包、物性包、组分 ==
+  FluidPackages.Count -> 1
+  FluidPackages.Names -> ['Basis-1']
+  [0].name -> 'Basis-1'
+  [0].PropertyPackageName -> 'PengRobinson'
+  [0].Components.Count -> 7
+  [0].Components.Names -> ['Methane', 'H2O', 'CO', 'CO2', 'Hydrogen', 'Nitrogen', 'Oxygen']
+  Flowsheet.FluidPackage.name -> 'Basis-1'
+== Q2 读物流 进料 ==
+  进料.Temperature.Value -> 371.1111111111111
+  进料.Temperature.GetValue('C') -> 371.1111111111111
+  进料.Temperature.GetValue('K') -> 644.2611111111111
+  进料.Temperature.GetValue('F') -> 700.0
+  进料.Temperature.GetValue('R') -> 1159.67
+  进料.Temperature.GetValue('degC') -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  进料.Temperature.GetValue('foo') -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  进料.Pressure.Value -> 3447.379543387685
+  进料.Pressure.GetValue('kPa') -> 3447.379543387685
+  进料.Pressure.GetValue('bar') -> 34.47379543387685
+  进料.Pressure.GetValue('psia') -> 500.0
+  进料.Pressure.GetValue('atm') -> 34.02299195312667
+  进料.Pressure.GetValue('MPa') -> 3.447379543387685
+  进料.MolarFlow.Value -> 0.02519983468908444
+  进料.MolarFlow.GetValue('kgmole/h') -> 90.71940488070398
+  进料.MolarFlow.GetValue('kmol/h') -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  进料.MolarFlow.GetValue('lbmole/h') -> 200.0
+  进料.MolarFlow.GetValue('gmole/s') -> 25.19983468908444
+  进料.MassFlow.Value -> 0.40427843008681896
+  进料.MassFlow.GetValue('kg/h') -> 1455.4023483125482
+  进料.MassFlow.GetValue('lb/hr') -> 3208.613491343855
+  进料.MassFlow.GetValue('kg/s') -> 0.40427843008681896
+  进料.MassFlow.GetValue('t/h') -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  进料.TemperatureValue -> 371.1111111111111
+  进料.ComponentMolarFraction.Values -> (1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+  进料.ComponentMolarFractionValue -> (1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+  进料.ComponentMolarFlow.GetValues('kgmole/h') -> (90.71940488070398, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+  进料.ComponentMassFlow.GetValues('kg/h') -> (1455.4023483125482, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+  进料.VapourFractionValue -> 1.0
+== Q2 读物流 出料 ==
+  出料.Temperature.Value -> 926.6666666666666
+  出料.Temperature.GetValue('C') -> 926.6666666666666
+  出料.Temperature.GetValue('K') -> 1199.8166666666666
+  出料.Temperature.GetValue('F') -> 1700.0
+  出料.Temperature.GetValue('R') -> 2159.67
+  出料.Temperature.GetValue('degC') -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  出料.Temperature.GetValue('foo') -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  出料.Pressure.Value -> 3447.379543387685
+  出料.Pressure.GetValue('kPa') -> 3447.379543387685
+  出料.Pressure.GetValue('bar') -> 34.47379543387685
+  出料.Pressure.GetValue('psia') -> 500.0
+  出料.Pressure.GetValue('atm') -> 34.02299195312667
+  出料.Pressure.GetValue('MPa') -> 3.447379543387685
+  出料.MolarFlow.Value -> 0.12599692398092105
+  出料.MolarFlow.GetValue('kgmole/h') -> 453.5889263313158
+  出料.MolarFlow.GetValue('kmol/h') -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  出料.MolarFlow.GetValue('lbmole/h') -> 999.9821469900188
+  出料.MolarFlow.GetValue('gmole/s') -> 125.99692398092105
+  出料.MassFlow.Value -> 1.5846291426822503
+  出料.MassFlow.GetValue('kg/h') -> 5704.664913656101
+  出料.MassFlow.GetValue('lb/hr') -> 12576.635475939254
+  出料.MassFlow.GetValue('kg/s') -> 1.5846291426822503
+  出料.MassFlow.GetValue('t/h') -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  出料.TemperatureValue -> 926.6666666666666
+  出料.ComponentMolarFraction.Values -> (0.060001071199723026, 0.3200057130651893, 0.08000142826629739, 0.060001071199723026, 0.4799907162690673, 0.0, 0.0)
+  出料.ComponentMolarFractionValue -> (0.060001071199723026, 0.3200057130651893, 0.08000142826629739, 0.060001071199723026, 0.4799907162690673, 0.0, 0.0)
+  出料.ComponentMolarFlow.GetValues('kgmole/h') -> (27.2158214642112, 145.15104780912634, 36.287761952281606, 27.2158214642112, 217.71847364148547, 0.0, 0.0)
+  出料.ComponentMassFlow.GetValues('kg/h') -> (436.62070449376455, 2614.9107109318297, 1016.4528893200231, 1197.760158989744, 438.9204499207403, 0.0, 0.0)
+  出料.VapourFractionValue -> 1.0
+== 进料和出料各自的已知性 ==
+  进料.Temperature.IsKnown -> True
+  进料.Temperature.State -> 1
+  进料.Temperature.CanModify -> True
+  进料.Temperature.IsInconsistent -> False
+  进料.Temperature.UnitConversionType -> 1
+  出料.Temperature.IsKnown -> True
+  出料.Temperature.State -> 1
+  出料.Temperature.CanModify -> True
+  出料.Temperature.IsInconsistent -> False
+  出料.Temperature.UnitConversionType -> 1
+== Q3 写入并读回（进料），并观察出料 ==
+  出料写入前 {'T_C': 926.6666666666666, 'P_kPa': 3447.379543387685, 'F_kgmole_h': 453.5889263313158}
+  写入前 Reformer 热负荷 kW -> 6558.758664984707
+  feed.Temperature.SetValue(381.1111111111111, 'C') -> None
+  写入用时 0.02 秒
+  读回 T(C) -> 381.1111111111111
+  读回 T(K) -> 654.2611111111111
+  写入后 Reformer 热负荷 kW -> 6544.700660344461
+  出料写入后 {'T_C': 926.6666666666666, 'P_kPa': 3447.379543387685, 'F_kgmole_h': 453.5889263313158}
+结论: 改进料温度之后出料没变：没有自动重算，或者出料不受影响
+  feed.Pressure.SetValue(3619.75, 'kPa') -> None
+  读回 P(kPa) -> 3619.7485205570692
+  读回 P(bar) -> 36.19748520557069
+  feed.MolarFlow.SetValue(99.79, 'kgmole/h') -> None
+  读回 F(kgmole/h) -> 99.79134536877439
+  读回 F 的 MassFlow(kg/h) -> 1600.9425831438032
+  写入一个不认识的单位 -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  T 写入之后仍是原值吗 -> 381.1111111111111
+  出料最后 {'T_C': 926.6666666666666, 'P_kPa': 3619.7485205570692, 'F_kgmole_h': 475.3607736954644}
+== Q4 求解器的挂起和释放（改进料流量，出料流量会随之变） ==
+  Solver.CanSolve（初值） -> True
+  Solver.IsSolving -> False
+  Solver.Mode -> 0
+  Solver.CanSolve = False -> None
+  读回 CanSolve -> False
+  挂起时 feed.F.SetValue(119.75, 'kgmole/h') -> None
+  挂起时读回进料流量 -> 119.74961444252926
+  挂起时出料 写入前 {'T_C': 926.6666666666666, 'P_kPa': 3619.7485205570692, 'F_kgmole_h': 475.3607736954644}，写入后 {'T_C': 926.6666666666666, 'P_kPa': 3619.7485205570692, 'F_kgmole_h': 475.3607736954644}
+结论: 挂起求解器时改进料流量，出料没有更新
+  Solver.CanSolve = True -> None
+  释放用时 0.46 秒（求解是否同步完成看下一行）
+  释放之后 IsSolving -> False
+  释放后出料 {'T_C': 926.6666666666666, 'P_kPa': 3619.7485205570692, 'F_kgmole_h': 523.258837896591}
+结论: 释放求解器后出料更新了
+  释放之后 Reformer 热负荷 kW -> 8049.893225680631
+== Q5、Q6 已知性与空值：临时加一股没有规定的物流 ==
+  MaterialStreams.Count（加之前） -> 15
+  MaterialStreams.Add('probe') -> <win32com.gen_py.HYSYS 15.0 Type Library.ProcessStream instance at 0x2346069799616>
+  MaterialStreams.Count（加之后） -> 16
+  MaterialStreams.Names 末尾 -> ['Shift Reactor 1-Liquid', 'Shift Reactor 2-Liquid', 'probe']
+  取回 probe -> <win32com.gen_py.HYSYS 15.0 Type Library.ProcessStream instance at 0x2346069800048>
+  Add 的返回值: <win32com.gen_py.HYSYS 15.0 Type Library.ProcessStream instance at 0x2346069799616>
+  probe.Temperature.IsKnown -> False
+  probe.Temperature.State -> 1
+  probe.Temperature.CanModify -> True
+  probe.Temperature.IsInconsistent -> False
+  probe.Temperature.UnitConversionType -> 1
+  probe.Temperature.Value -> -32767.0
+  probe.Pressure.IsKnown -> False
+  probe.Pressure.State -> 1
+  probe.Pressure.CanModify -> True
+  probe.Pressure.IsInconsistent -> False
+  probe.Pressure.UnitConversionType -> 2
+  probe.Pressure.Value -> -32767.0
+  probe.MolarFlow.IsKnown -> False
+  probe.MolarFlow.State -> 1
+  probe.MolarFlow.CanModify -> True
+  probe.MolarFlow.IsInconsistent -> False
+  probe.MolarFlow.UnitConversionType -> 3
+  probe.MolarFlow.Value -> -32767.0
+  probe.MassFlow.IsKnown -> False
+  probe.MassFlow.State -> 1
+  probe.MassFlow.CanModify -> True
+  probe.MassFlow.IsInconsistent -> False
+  probe.MassFlow.UnitConversionType -> 4
+  probe.MassFlow.Value -> -32767.0
+  probe.Temperature.GetValue('C') -> -32767.0
+  probe.ComponentMolarFraction.Values -> (-32767.0, -32767.0, -32767.0, -32767.0, -32767.0, -32767.0, -32767.0)
+  probe.ComponentMolarFractionValue -> (-32767.0, -32767.0, -32767.0, -32767.0, -32767.0, -32767.0, -32767.0)
+  probe.ComponentMolarFraction.IsKnown -> (False, False, False, False, False, False, False)
+  probe.Temperature.SetValue(25, 'C') -> None
+  probe.Temperature（写入后）.IsKnown -> True
+  probe.Temperature（写入后）.State -> 1
+  probe.Temperature（写入后）.CanModify -> True
+  probe.Temperature（写入后）.IsInconsistent -> False
+  probe.Temperature（写入后）.UnitConversionType -> 1
+== H14 给新物流写组成、压力、流量 ==
+  写法 a：Values = tuple -> None
+  读回 a -> (0.9, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0)
+  写法 b：SetValues(tuple) -> None
+  读回 b -> (0.8, 0.2, 0.0, 0.0, 0.0, 0.0, 0.0)
+  写法 c：SetValues(tuple, '') -> None
+  读回 c -> (0.9, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0)
+  ComponentMolarFraction.IsKnown -> (True, True, True, True, True, True, True)
+  P SetValue(1000, 'kPa') -> None
+  F SetValue(100, 'kgmole/h') -> None
+  probe.VapourFractionValue -> 0.9029241189663632
+  probe.TemperatureValue -> 25.0
+  probe.PressureValue -> 1000.0
+  MassFlow kg/h -> 1624.0120124816892
+  ComponentMolarFlow kgmole/h -> (89.99999999999999, 10.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+  MaterialStreams.Remove('probe') -> None
+  MaterialStreams.Names 末尾 -> ['Shift Reactor 1-Liquid', 'Shift Reactor 2-Liquid']
+  case.IsDirty -> True
+== 收尾：不保存，按进程号结束本脚本启动的实例 ==
+  实例 1732 已结束
+结束时的 HYSYS 进程: 无

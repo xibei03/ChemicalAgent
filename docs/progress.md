@@ -4,9 +4,9 @@
 
 ## 当前状态
 
-- 阶段：0A 进行中。首次开始于 2026-10-03 09:50（UTC+8），当时命令在别的机器上执行，在任务 1 暂停；10:25 在装有 HYSYS 的工作站（主机名 myWin10VM）上恢复，因用量上限在任务 5（E1）中途停止。**第 3 个会话于 2026-10-08 09:50（UTC+8）接手。**任务 1 至 3、5（E1，共 9 次运行）、6（类型库导出）、7（找参考 Case）已完成；任务 4（等 D1）、8 至 11 未开始。当前没有残留的 HYSYS 进程。
+- 阶段：0A 进行中。首次开始于 2026-10-03 09:50（UTC+8），当时命令在别的机器上执行，在任务 1 暂停；10:25 在装有 HYSYS 的工作站（主机名 myWin10VM）上恢复，因用量上限在任务 5（E1）中途停止。**第 3 个会话于 2026-10-08 09:50（UTC+8）接手。**任务 1 至 3、5（E1，共 9 次运行）、6（类型库导出）、7（找参考 Case）、8（E2 读写）已完成；任务 4（等 D1）、9 至 11 未开始，其中任务 9（E3）可先用示例 Case 做。当前没有残留的 HYSYS 进程。
 - 最近通过的闸门：无（质量工具 2026-10-08 复核全绿：ruff format/check、mypy src、pytest 13 passed；本阶段不改 `src/`）
-- 最近一次更新：2026-10-08 11:55
+- 最近一次更新：2026-10-08 12:40
 - 时间记法：本机时钟是 UTC，进度文件里的时间一律换算成 UTC+8（加 8 小时）。
 - 推送状态：本地 main 已合并远端的初始提交，并已推送（`ea240ed..ff56cdb`）。推送方式见"环境事实"的"GitHub 凭据"。
 
@@ -45,6 +45,7 @@
 | 0A | 5 连接 HYSYS（E1），run1 至 run9，已完成 | 2427c43（run1）、4904693（run2）、58c29f4（run3 至 run9、`_common.py`） | run1：`Dispatch("HYSYS.Application")` 冷启动 35.2 秒，`Version` 为 `Aspen HYSYS Version 15 (41.0)`，进程 `AspenHysys.exe`，窗口所属进程与 `tasklist` 一致。run2：已有实例被复用（0.0 秒），`Quit()` 后 3.5 秒内消失。run3、run5：`NewInstance` 每次新开进程，`Quit()` 只结束自己（run5 里 7280 退出，14024 继续运行）。run6：丢掉 COM 引用并 `CoUninitialize()` 后 60 秒内实例仍在。run7：`taskkill /PID /T /F` 1.6 秒内结束。run8、run9：`EnsureDispatch` 返回 `gen_py` 的 `_Application`，属性名区分大小写（`app.Name` 报错，类型库里是 `name`），包装生成后 `Dispatch` 也返回同一个类。H1 升为已确认，新增 H27、H28。每次运行后 `tasklist` 无残留进程 |
 | 0A | 6 导出类型库（`typelib_dump.py`） | 本次提交 | `.venv\Scripts\python.exe spikes/typelib_dump.py` 成功运行：类型库 1140 个类型（726 个 dispatch 接口、377 个枚举、22 个组件类）；42 个接口有 `Add`，多数是 `Add(name: VARIANT[opt], Type: VARIANT[opt])`；`EnsureModule` 2 至 4 秒生成包装（758 个类），`ReactionSets`、`Reactions`、`Operations`、`FluidPackages`、`SimulationCases` 的包装类都有 `Add`。输出 5 个文件，最大 629 KB，都小于 1 MB。三种反应器是 dispatch 接口 `ConversionReactor`、`EquilibriumReactor`、`GibbsReactor`；XML、`PlayScript`、`BackDoor` 三条降级通道在类型库里都有。结论都只在类型库层面，没有运行验证 |
 | 0A | 7 找含反应器的参考 Case | 本次提交 | `spikes/find_ref_case.py` 打开 6 个候选示例：Synthesis Gas Production 含 2 台转化反应器（`conversionreactorop`）和 3 台平衡反应器（`equilibriumreactorop`）；Ammonia Synthesis 含 3 台 PFR；CSTR - Dynamic Model 含 1 台 CSTR；Toluene_Disproportionation_Example 是分子级炼油反应器；Ethanol Dehydration、Ethanol Plant 没有反应器；Green Ammonia Process 弹出 Aspen Properties 模态对话框，`Open` 卡住，看门狗读出文字，`BM_CLICK` 关闭。**没有一个示例含 Gibbs 反应器**，需要用户手工建参考 Case（D11）。`Open` 返回类型化的 `_SimulationCase`，`Item(i)` 返回具体的反应器类型，不需要 `CastTo` |
+| 0A | 8 读写已有 Case（E2、E2b） | 本次提交 | `spikes/e2_read_write.py` 两次运行（run1、run2）：流体包 `Basis-1`、物性包 `PengRobinson`、7 个组分可读；物流 T、P、流量用 `GetValue(unit)`、`SetValue(value, unit)`，写后读回一致，不认识的单位抛错；写入同步重算（热负荷 6558.8 → 6544.7 kW）；`Solver.CanSolve=False` 时改进料流量，出料不变（475.36），`CanSolve=True` 这一句 0.46 秒同步求出新值（523.26）；没有规定的变量 `IsKnown` 为 False、值为 -32767.0；新物流 `MaterialStreams.Add("probe")` 成功并能写组成、闪蒸完成；8.3 短路径打开 Case 失败，长路径成功。`spikes/e2b_quit_with_case.py`：Case 打开着或改过时，`Quit()`、`Close()` 都不弹窗。H2、H6、H13、H17、H22 升为已确认 |
 | 0A | 只读勘查（计划模式下完成，无脚本） | 2427c43 | 注册表 ProgID、`hysys.tlb` 的接口名与集合的 `Add` 签名、安装目录里的 `hysys.hh`、定义文件、帮助文件，写入台账 L0 和"创建反应的线索"初稿（均未运行验证） |
 
 ## 进行中
@@ -61,17 +62,17 @@
 | `spikes/typelib_dump.py` | 导出类型库：接口和成员、枚举、关键词命中、反应相关接口的完整签名、早绑定包装检查 | 约 270 | 已完成 |
 | `spikes/e0_llm_ping.py` | 最小 LLM 请求，密钥只读环境变量（等用户给出供应商） | 约 40 | 挂起（D1） |
 | `spikes/find_ref_case.py` | 任务 7：把示例 Case 复制到临时目录，用 COM 打开，列单元操作类型名 | 约 140 | 已完成 |
-| `spikes/e2_read_write.py` | 流体包、物流读写、求解器开关、已知性、空值哨兵 | 约 160 | 未开始 |
+| `spikes/e2_read_write.py` | 流体包、物流读写、求解器开关、已知性、空值哨兵 | 约 260 | 已完成 |
+| `spikes/e2b_quit_with_case.py` | 有打开的 Case 时 `Quit()`、`Close()` 会不会弹窗 | 约 110 | 已完成 |
 | `spikes/e3_reverse_probe.py` | 枚举单元操作，对三种反应器、反应、反应集做反向探测 | 约 200 | 未开始 |
 
 ## 下一步
 
 先重读 `CLAUDE.md`、本文件和 `docs/prompts/phase-0a.md`，然后按顺序做本阶段剩下的工作：
 
-1. **任务 8（E2）。** 读写已有 Case：流体包清单、物流读写、求解器开关、已知性、空值哨兵；顺带验证 8.3 短路径对 `Open` 的影响（见"问题与解决"）。
-2. **任务 9（E3）。** 先用 `Synthesis Gas Production.hsc`（转化和平衡）做反向探测；用户建好 `three_reactors.hsc` 之后补跑（D11）。要回答：`ActiveReactions` 里放什么、出口温度规定在哪里、反应和反应集的成员取值含义、`GetXMLForCase()` 的输出含不含反应、`Operations.Add` 的类型字符串（只读，不创建）。
-3. 任务 10（帮助文件，时间不够可推后）、任务 11（收尾）。
-4. **任务 4（E0）** 等用户给出 LLM 供应商、模型和密钥所在的环境变量（D1）；用户说"需要密钥的先跳过"，所以现在不做，需要时再向用户要。
+1. **任务 9（E3）。** 先用 `Synthesis Gas Production.hsc`（转化和平衡）做反向探测；用户建好 `three_reactors.hsc` 之后补跑（D11）。要回答：`ActiveReactions` 里放什么、出口温度规定在哪里、反应和反应集的成员取值含义、`GetXMLForCase()` 的输出含不含反应、`Operations.Add` 的类型字符串（只读，不创建）。
+2. 任务 10（帮助文件，时间不够可推后）、任务 11（收尾）。
+3. **任务 4（E0）** 等用户给出 LLM 供应商、模型和密钥所在的环境变量（D1）；用户说"需要密钥的先跳过"，所以现在不做，需要时再向用户要。
 
 本阶段沿用的约定：只结束本脚本启动的实例，对已有实例只在没有打开任何 Case 时才退出；示例 Case 先复制到临时目录再打开，不保存回原位置，也不提交 Aspen 的示例文件；用户在 HYSYS 界面里手工建参考 Case 时，探针用 `NewInstance` 另开实例，不碰用户的窗口；COM 调用卡住超过一分钟，先截屏看有没有弹窗（`_common.watch` 会自动打印窗口），再请用户看一眼。每个任务提交后用一次性凭据助手推送（见"环境事实"）。
 
@@ -119,6 +120,9 @@
 | 2026-10-08 | 看检索结果时漏看了降级通道（任务 6） | 为了缩短显示，按"不以下划线开头"过滤命中行，把 `_SimulationCase`、`_Application` 上的 XML、`PlayScript` 全过滤掉了，一度以为 XML 路线只有 `SetStreamAssayFromXML` | 用不过滤的结果核对后，发现 `GetXMLForCase`、`ApplyXML`、`PlayScript`、`BackDoor` 都在，写进了台账 H24、H26 和"创建反应的线索" |
 | 2026-10-08 | 第一次 `SimulationCases.Open` 失败：`com_error -2147352567 ... -2147024891`（E_ACCESSDENIED）（任务 7） | 副本在 `C:\Users\AZUREU~1\AppData\Local\Temp\...`（8.3 短路径），用 `shutil.copy2` 复制；改成 `shutil.copyfile`、`chmod` 可写、`Path.resolve()` 得到长路径后成功 | 同时改了三处，没有分开验证。E2 里单独验证短路径是不是原因；之后给 HYSYS 的路径一律先 `resolve()` |
 | 2026-10-08 | 打开 Green Ammonia Process 时 `Open` 卡住（任务 7） | `_common.watch` 45 秒后打印 HYSYS 窗口：模态对话框 "To use Aspen Properties in HYSYS, at least one databank should be installed..."；用 `BM_CLICK` 点 OK 关闭；脚本被外层超时杀掉，实例用 `taskkill` 结束 | 这台机器没有注册 Aspen Properties 数据库，用到它的 Case 都会弹这个窗口。我们的流体包只用 HYSYS 自带物性包。台账 H23 记为部分确认 |
+| 2026-10-08 | E2 第一次运行的求解器测试没有说明问题（任务 8） | 挂起求解器后只改了进料温度，而出料温度是规定值，出料本来就不变，分不清"没重算"和"挂起生效" | run2 改成改进料流量（出料流量随进料变）：挂起时出料不变，释放后同步更新。台账 H17 |
+| 2026-10-08 | 8.3 短路径是不是 `Open` 失败的原因（任务 7 遗留，任务 8 验证） | 同一个副本、同一种复制方式，分别用"目录短名""目录和文件名都短""长路径"打开 | 短路径两种都 `E_ACCESSDENIED`，长路径成功。给 HYSYS 的路径先 `Path.resolve()`。台账 H2 |
+| 2026-10-08 | `case.IsDirty` 在刚打开、没改过的 Case 上也是 True（任务 8） | E2b 三种情况都读到 True | 不能用 `IsDirty` 判断 Case 有没有改过；`Quit()` 和 `Close()` 本来就不弹保存确认，不需要它 |
 
 ## 与计划的偏差
 

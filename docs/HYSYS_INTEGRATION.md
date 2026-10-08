@@ -43,7 +43,7 @@ ProgID、早绑定还是晚绑定、怎么取得进程号、怎么退出。由�
 | 强制结束 | `taskkill /PID <pid> /T /F` 有效，1.6 秒内进程消失，无残留。HYSYS 进程是 svchost（DCOM 启动器）的子进程，按进程号结束不会误伤别的实例 | run7 |
 | 怎么让实例留着 | 脚本结束时不调用 `Quit()`，实例继续运行 | run1、run4 |
 | `Visible` | 初值 False，设 True 后读回 True | run1、run3、run8 |
-| 弹窗 | 以上 9 次运行（没有打开 Case）没有出现弹窗 | 各次输出 |
+| 弹窗 | E1 的 9 次运行（没有打开 Case）没有弹窗。有打开的 Case 时（E2b）：`app.Quit()` 和 `case.Close()` 都不弹"是否保存"，Case 改过也一样；打开用到 Aspen Properties 的 Case 会弹模态对话框（H23） | 各次输出，`e2b_quit_with_case.txt`，`find_ref_case_scan.txt` |
 
 **早绑定（run8、run9，类型库导出见探索日志）。**
 
@@ -70,33 +70,35 @@ ProgID、早绑定还是晚绑定、怎么取得进程号、怎么退出。由�
 | 编号 | 能力 | 状态 | 实际可用的调用形式 | 证据（脚本、日期） | 备注 |
 |---|---|---|---|---|---|
 | H1 | COM 连接 | 已确认 | `win32com.client.gencache.EnsureDispatch("HYSYS.Application")`（早绑定，推荐）或 `Dispatch("HYSYS.Application")` 得到 Application 对象；`Version`、`FullName`、`Path`、`ActiveDocument` 可读，`Visible` 可读写；早绑定下名称成员是小写的 `name` | `spikes/e1_connect.py` run1 至 run9，2026-10-03 和 2026-10-08，输出 `spikes/out/e1_connect_run*.txt` | 条件：HYSYS 未运行（冷启动 35 秒，之后 12 至 15 秒）或已在运行（复用，0.0 秒）都成立；没有弹窗。`Version` 读出 `Aspen HYSYS Version 15 (41.0)`。打开 Case 时 `Quit()` 的行为见 H4 和 E2。计划假设的 `Dispatch("HYSYS.Application")` 形式成立。详见"连接与绑定方式" |
-| H2 | 打开 Case、取活动 Case | 未测试 | | | 计划假设：`SimulationCases.Open(path)`、`ActiveDocument`。计划状态：官方文档确认（V7.3 版）。探针 E2 类型库（2026-10-08，未运行验证）：`SimulationCases.Open(name: BSTR) -> IDispatch`、`Count`、`Item(index)`、`Close()`；`Application.ActiveDocument`。 |
+| H2 | 打开 Case、取活动 Case | 已确认 | `case = app.SimulationCases.Open(path)` 返回类型化的 `_SimulationCase`；`case.FullName`、`case.Flowsheet`、`case.BasisManager`、`case.Solver` 可用；`case.Close()` 关闭。`app.ActiveDocument` 在 `Open` 之后仍是 `None`，所以**不要用它**，自己拿着 `Open` 返回的对象 | `spikes/find_ref_case.py`、`spikes/e2_read_write.py`，2026-10-08 | **路径必须是长路径。** 8.3 短路径（`C:\Users\AZUREU~1\...`，目录短名或者目录和文件名都短）一律 `E_ACCESSDENIED`（`-2147024891`），同一个副本用长路径就成功（e2 run1 Q0）。给 HYSYS 的路径先 `Path.resolve()`。示例 `.hsc` 复制到临时目录后用副本。打开 Aspen Properties 的 Case 会被弹窗卡住（H23）。 计划假设：`SimulationCases.Open(path)`、`ActiveDocument`。计划状态：官方文档确认（V7.3 版）。探针 E2 类型库（2026-10-08，未运行验证）：`SimulationCases.Open(name: BSTR) -> IDispatch`、`Count`、`Item(index)`、`Close()`；`Application.ActiveDocument`。 |
 | H3 | 新建空白 Case | 未测试 | | | 计划假设：`SimulationCases.Add()`。探针 E4 类型库（2026-10-08，未运行验证）：`SimulationCases.Add(name, Type)`，两个参数都是可选的 VARIANT。 |
-| H4 | 保存、另存、关闭 | 未测试 | | | 计划假设：`Save`、`SaveAs`、`Close`。探针 E4、E12 类型库（2026-10-08，未运行验证）：`SimulationCase.Save()`、`SaveAs(...)`、`SaveAs2`、`SaveCopyAs`、`Close()`、`IsDirty`。 |
+| H4 | 保存、另存、关闭 | 部分确认 | `case.Close()` 可用。`Save`、`SaveAs`、`SaveAs2`、`SaveCopyAs` 未测 | `spikes/e2b_quit_with_case.py`，2026-10-08，输出 `spikes/out/e2b_quit_with_case.txt` | 只测了关闭：`case.Close()` 0.2 秒返回，**没有保存确认弹窗**，Case 改过（`IsDirty` 为 True）也一样；`app.Quit()` 在 Case 打开着、改过或没改过时都不弹窗，实例 0.5 秒内退出。注意 `IsDirty` 在刚打开、没改过的 Case 上也是 True，不能用它判断"有没有改过"。保存另存留给 E4、E12。 计划假设：`Save`、`SaveAs`、`Close`。探针 E4、E12 类型库（2026-10-08，未运行验证）：`SimulationCase.Save()`、`SaveAs(...)`、`SaveAs2`、`SaveCopyAs`、`Close()`、`IsDirty`。 |
 | H5 | Basis 修改事务 | 未测试 | | | 计划假设：`BasisManager.StartBasisChange`、`EndBasisChange`。计划状态：官方文档确认（V7.3 版）。探针 E4 类型库（2026-10-08，未运行验证）：`BasisManager.StartBasisChange()`、`EndBasisChange()`、`IsChangingBasis`、`CanEndBasisChange`。 |
-| H6 | 读取流体包、物性包、组分 | 未测试 | | | 计划假设：`FluidPackages.Item(i)`、`PropertyPackageName`、`Components`。计划状态：官方文档确认（V7.3 版）。探针 E2 类型库（2026-10-08，未运行验证）：`BasisManager.FluidPackages`（集合）；`FluidPackage.PropertyPackageName`（可读写）、`Components`、`ReactionPackage`、`ComponentList`。 |
+| H6 | 读取流体包、物性包、组分 | 已确认 | `fps = case.BasisManager.FluidPackages`；`fps.Count`、`list(fps.Names)`、`fps.Item(i)`（下标从 0 开始）；`fp.name`、`fp.PropertyPackageName`、`fp.Components.Count`、`list(fp.Components.Names)`；`case.Flowsheet.FluidPackage.name` | `spikes/e2_read_write.py`，2026-10-08，输出 `spikes/out/e2_read_write_run1.txt`、`e2_read_write_run2.txt` | 示例 Synthesis Gas Production：流体包名 `Basis-1`，`PropertyPackageName` 读出 `PengRobinson`（没有空格和连字符），组分 `['Methane', 'H2O', 'CO', 'CO2', 'Hydrogen', 'Nitrogen', 'Oxygen']`，物流的组成向量按这个顺序排。 计划假设：`FluidPackages.Item(i)`、`PropertyPackageName`、`Components`。计划状态：官方文档确认（V7.3 版）。探针 E2 类型库（2026-10-08，未运行验证）：`BasisManager.FluidPackages`（集合）；`FluidPackage.PropertyPackageName`（可读写）、`Components`、`ReactionPackage`、`ComponentList`。 |
 | H7 | 新建流体包并指定物性包 | 未测试 | | | 计划假设：`FluidPackages.Add(...)`。探针 E4 类型库（2026-10-08，未运行验证）：`FluidPackages.Add(name, Type)`；`FluidPackage.PropertyPackageName` 可写；`PropertyPackageType_enum` 有 `ppkg_PR=5891`。 |
 | H8 | 添加库组分 | 未测试 | | | 计划假设：`Components.Add(name)`，以及库中的规范名。探针 E4 类型库（2026-10-08，未运行验证）：`FluidPackage.Components.Add(name, Type)`；`Component` 有 `IsSolid`、`Formula`、`CAS_Number`。 |
 | H9 | 创建转化反应（计量系数、基准组分、转化率） | 未测试 | | | 计划假设：无。计划状态：未知。探针 E6 类型库（2026-10-08，未运行验证）：`ReactionPackageManager.Reactions.Add(name, Type)` 返回 VARIANT；`ConversionReaction`：`Reactants`（集合，有 `Add`）、`Reactant.StoichiometricCoefficientValue`（可写）、`BaseComponent`（可写）、`Conversion`（double，可写）、`ReactionPhase`、`BalanceStoichiometry()`。 |
 | H10 | 创建平衡反应并指定 Keq 来源（Gibbs 自由能、固定值、随温度变化） | 未测试 | | | 计划假设：无。计划状态：未知。探针 E8 类型库（2026-10-08，未运行验证）：`EquilibriumReaction`：`LnKSource`（`eqrxn_Gibbs=0`、`eqrxn_LnKEquation=1`、`eqrxn_FixedK=2`、`eqrxn_Table=3`、`eqrxn_FixedExtent=4`）、`EquilibriumConstant`、`LnKEquationA/B/C/DParameter`、`MinTemperatureValue`、`MaxTemperatureValue`、`Basis`、`ReactionPhase`。 |
 | H11 | 创建反应集、加入成员、挂到流体包 | 未测试 | | | 计划假设：无。计划状态：未知。探针 E6 类型库（2026-10-08，未运行验证）：`ReactionPackageManager.ReactionSets.Add(name, Type)`；`ReactionSet.AssociateFluidPackage(fluidPkg)`；`ActiveReactions` 和 `InactiveReactions`（`Reactions` 集合，加成员的方式待查）；`Operations`、`SolverMethod`。 |
-| H12 | 新建物流和能流 | 未测试 | | | 计划假设：`MaterialStreams.Add(name)`、`EnergyStreams.Add(name)`。探针 E5 类型库（2026-10-08，未运行验证）：`Flowsheet.MaterialStreams`、`Flowsheet.EnergyStreams`（都是 `Streams`，有 `Add(name, Type)`）。 |
-| H13 | 写入 T、P、流量 | 未测试 | | | 计划假设：`Temperature.SetValue(value, unit)` 等。计划状态：官方文档确认（V7.3 版）。探针 E2、E5 类型库（2026-10-08，未运行验证）：`RealVariable.SetValue(val: double, unit: VARIANT[opt])`、`GetValue(unit)`、`Value`；`ProcessStream` 的 `Temperature`/`TemperatureValue`、`Pressure`/`PressureValue`、`MolarFlow`/`MolarFlowValue`、`MassFlow`、`StdLiqVolFlow`。 |
-| H14 | 写入组成 | 未测试 | | | 计划假设：`ComponentMolarFraction.Values = [...]`。计划状态：读取有公开示例，写入待验证。探针 E5 类型库（2026-10-08，未运行验证）：`ProcessStream.ComponentMolarFraction`（`RealFlexVariable`：`Values`、`SetValues(val, unit)`、`GetValues(unit)`）和 `ComponentMolarFractionValue`。 |
+| H12 | 新建物流和能流 | 部分确认 | `stream = flowsheet.MaterialStreams.Add("name")` 返回 `ProcessStream`（只给名字，不给 `Type`）；`flowsheet.MaterialStreams.Item("name")` 按名字取回；`flowsheet.MaterialStreams.Remove("name")` 删除；`Count`、`Names` 随之变化 | `spikes/e2_read_write.py`，2026-10-08，输出 `spikes/out/e2_read_write_run1.txt`、`e2_read_write_run2.txt` | 只在已有流体包的已求解 Case 里试过物流：新物流的组成向量长度是 7，与该 Case 唯一的流体包一致。能流 `EnergyStreams.Add` 没测，空白 Case 里建物流留给 E5。 计划假设：`MaterialStreams.Add(name)`、`EnergyStreams.Add(name)`。探针 E5 类型库（2026-10-08，未运行验证）：`Flowsheet.MaterialStreams`、`Flowsheet.EnergyStreams`（都是 `Streams`，有 `Add(name, Type)`）。 |
+| H13 | 写入 T、P、流量 | 已确认 | 写：`stream.Temperature.SetValue(value, "C")`、`stream.Pressure.SetValue(value, "kPa")`、`stream.MolarFlow.SetValue(value, "kgmole/h")`；读：`GetValue(unit)`。单位字符串见 H29。写入后立即读回一致 | `spikes/e2_read_write.py`，2026-10-08，输出 `spikes/out/e2_read_write_run1.txt`、`e2_read_write_run2.txt` | 写入用时 0.02 秒。写入不认识的单位抛 `com_error`（`E_FAIL`，`-2147467259`），原值不变，不会静默写错。`.Value` 属性是 HYSYS 的内部单位（C、kPa、kgmole/s、kg/s），**不要用**，一律 `GetValue(unit)`、`SetValue(value, unit)`。 计划假设：`Temperature.SetValue(value, unit)` 等。计划状态：官方文档确认（V7.3 版）。探针 E2、E5 类型库（2026-10-08，未运行验证）：`RealVariable.SetValue(val: double, unit: VARIANT[opt])`、`GetValue(unit)`、`Value`；`ProcessStream` 的 `Temperature`/`TemperatureValue`、`Pressure`/`PressureValue`、`MolarFlow`/`MolarFlowValue`、`MassFlow`、`StdLiqVolFlow`。 |
+| H14 | 写入组成 | 部分确认 | `stream.ComponentMolarFraction.Values = (0.9, 0.1, 0, 0, 0, 0, 0)`，或 `.SetValues(tuple)`、`.SetValues(tuple, "")`，三种写法都成功；读 `.Values`、`ComponentMolarFractionValue`（元组）；`ComponentMolarFlow.GetValues("kgmole/h")` | `spikes/e2_read_write.py`，2026-10-08，输出 `spikes/out/e2_read_write_run1.txt`、`e2_read_write_run2.txt` | 条件：在已求解的示例 Case 里新建的物流上，7 个组分，写的是摩尔分数且和为 1。向量顺序是流体包的组分顺序。写 T=25 °C、P=1000 kPa、F=100 kgmole/h 之后闪蒸立即完成：`VapourFractionValue` 0.9029，`MassFlow` 1624.0 kg/h，分组分摩尔流量 (90, 10, 0, ...)。空白 Case 里重新验证留给 E5。 计划假设：`ComponentMolarFraction.Values = [...]`。计划状态：读取有公开示例，写入待验证。探针 E5 类型库（2026-10-08，未运行验证）：`ProcessStream.ComponentMolarFraction`（`RealFlexVariable`：`Values`、`SetValues(val, unit)`、`GetValues(unit)`）和 `ComponentMolarFractionValue`。 |
 | H15 | 新建反应器 | 未测试 | | | 计划假设：`Operations.Add(name, typeName)`，三种反应器的 `typeName` 通过反向探测获得。探针 E3、E7 类型库（2026-10-08，未运行验证）：`Flowsheet.Operations(OperClassOrType[opt]).Add(name, Type)`。反应器接口：`ConversionReactor`、`EquilibriumReactor`、`GibbsReactor`，另有 `KineticReactor`、`PFReactor`、`YieldReactor`。`Type` 的取值（字符串还是枚举）待 E3。 |
 | H16 | 反应器连接与配置（进出料、能流、反应集、压降、Gibbs 模式） | 未测试 | | | 计划假设：无。计划状态：未知。探针 E7 至 E9 类型库（2026-10-08，未运行验证）：三种反应器共有：`Feeds`（`Attachments`，`Add(Item)`）、`VapourProduct`、`LiquidProduct`、`EnergyStream`（可写，`ProcessStream*`）、`PressureDropValue`（可写）、`ReactionSet`（可写）、`HeatFlowValue`（可写）。Gibbs 另有 `ReactorType`（`gr_NoReactions=0`、`gr_SpecdRxnsOnly=2`、`gr_GibbsRxnsOnly=3`）、`InertSpeciesValue`、`FractionSpecifiedValue`、`FixedSpecificationValue`。接口里没有出口温度成员。 |
-| H17 | 求解控制 | 未测试 | | | 计划假设：`Solver.CanSolve`。计划状态：官方文档确认（V7.3 版）。探针 E2 类型库（2026-10-08，未运行验证）：`Solver.CanSolve`（可读写）、`IsSolving`、`Mode`；`SimulationCase.Solver`。 |
-| H18 | 变量是否已知，是规定值还是计算值 | 未测试 | | | 计划假设：`IsKnown`、`State`。计划状态：官方文档确认（V7.3 版）。探针 E2 类型库（2026-10-08，未运行验证）：`RealVariable.IsKnown`、`State`（`vsCalculated=0`、`vsSpecified=1`、`vsDefaultedValue=2`、`vsSpecifiedOutside=4`、`vsDefaultOutside=5`）、`CanModify`。 |
+| H17 | 求解控制 | 已确认 | `solver = case.Solver`；`solver.CanSolve = False` 挂起，`solver.CanSolve = True` 释放；读 `solver.CanSolve`、`solver.IsSolving`、`solver.Mode`（0 为稳态） | `spikes/e2_read_write.py`，2026-10-08，输出 `spikes/out/e2_read_write_run1.txt`、`e2_read_write_run2.txt` | **挂起有效：** `CanSolve=False` 时改进料流量，出料流量保持 475.36 kgmole/h 不变。**释放时同步求解：** `CanSolve=True` 这一句用 0.46 秒返回，返回后 `IsSolving` 已是 False，出料已更新到 523.26 kgmole/h，不需要轮询。`CanSolve` 为 True 时每次写入都会立刻重算（写进料压力、流量后出料立即变，热负荷 6558.8 kW 随进料温度变到 6544.7 kW）。 计划假设：`Solver.CanSolve`。计划状态：官方文档确认（V7.3 版）。探针 E2 类型库（2026-10-08，未运行验证）：`Solver.CanSolve`（可读写）、`IsSolving`、`Mode`；`SimulationCase.Solver`。 |
+| H18 | 变量是否已知，是规定值还是计算值 | 部分确认 | `variable.IsKnown`（bool）、`variable.State`（`VariableStatus_enum`）、`variable.CanModify`。组成向量的 `IsKnown` 是每个组分一个 bool 的元组 | `spikes/e2_read_write.py`，2026-10-08，输出 `spikes/out/e2_read_write_run1.txt`、`e2_read_write_run2.txt` | 实测：没有规定的变量 `IsKnown` 为 False；写入之后为 True。进料温度 `State` 为 1（vsSpecified）、`CanModify` 为 True。**注意：没有规定的变量 `State` 也是 1，所以判断"有没有值"只能靠 `IsKnown`，不能靠 `State`。** 未测：计算出来的变量（`State` 应为 0，`CanModify` 应为 False），留给 E3 在反应器出料上测。 计划假设：`IsKnown`、`State`。计划状态：官方文档确认（V7.3 版）。探针 E2 类型库（2026-10-08，未运行验证）：`RealVariable.IsKnown`、`State`（`vsCalculated=0`、`vsSpecified=1`、`vsDefaultedValue=2`、`vsSpecifiedOutside=4`、`vsDefaultOutside=5`）、`CanModify`。 |
 | H19 | 对象状态文本（未求解、欠规定等提示） | 未测试 | | | 计划假设：无。计划状态：未知。探针 E7 |
-| H20 | 读取结果（T、P、流量、组成、分组分流量、热负荷） | 未测试 | | | 计划假设：`GetValue(unit)`、`ComponentMolarFraction.Values`。计划状态：基本读取有官方文档，分组分流量和热负荷待验证。探针 E7 类型库（2026-10-08，未运行验证）：反应器：`ComponentTotalInValue`、`ComponentTotalOutValue`、`ComponentTotalReactedValue`（转化、平衡）；`ComponentTotalFeedValue`、`ComponentTotalProductValue`（Gibbs）；`RxnPercentConversionValue`、`HeatFlowValue`。物流：`ComponentMolarFlow`、`ComponentMassFlow`。 |
+| H20 | 读取结果（T、P、流量、组成、分组分流量、热负荷） | 部分确认 | 物流：`GetValue(unit)` 读 T、P、`MolarFlow`、`MassFlow`；`VapourFractionValue`；`ComponentMolarFraction.Values`；`ComponentMolarFlow.GetValues("kgmole/h")`、`ComponentMassFlow.GetValues("kg/h")`。反应器热负荷：`reactor.HeatFlow.GetValue("kW")` | `spikes/e2_read_write.py`，2026-10-08，输出 `spikes/out/e2_read_write_run1.txt`、`e2_read_write_run2.txt` | 物流和热负荷已实测（转化反应器 Reformer 热负荷读出 6558.76 kW）。反应器自己的结果（分组分进出量、转化率、平衡常数）留给 E3。 计划假设：`GetValue(unit)`、`ComponentMolarFraction.Values`。计划状态：基本读取有官方文档，分组分流量和热负荷待验证。探针 E7 类型库（2026-10-08，未运行验证）：反应器：`ComponentTotalInValue`、`ComponentTotalOutValue`、`ComponentTotalReactedValue`（转化、平衡）；`ComponentTotalFeedValue`、`ComponentTotalProductValue`（Gibbs）；`RxnPercentConversionValue`、`HeatFlowValue`。物流：`ComponentMolarFlow`、`ComponentMassFlow`。 |
 | H21 | 固体碳组分及其在 Gibbs 反应器中的行为 | 未测试 | | | 计划假设：库组分 `Carbon`。计划状态：未知。探针 E10 类型库（2026-10-08，未运行验证）：`Component.IsSolid` 可以读，库里能不能加固体碳要实测。 |
-| H22 | 空值的表示方式 | 未测试 | | | 计划假设：约定的哨兵值。探针 E2 |
+| H22 | 空值的表示方式 | 已确认 | 空值是 **-32767.0**：`variable.Value`、`GetValue(unit)`、组成向量里的每个元素都是 -32767.0；同时 `IsKnown` 为 False（组成是全 False 的元组） | `spikes/e2_read_write.py`，2026-10-08，输出 `spikes/out/e2_read_write_run1.txt`、`e2_read_write_run2.txt` | 对空值调 `GetValue("C")` 也返回 -32767.0，不做单位换算，所以不能靠数值是否合理判断，要先看 `IsKnown`。后面"结果是否存在"一律用 `IsKnown`，-32767.0 只作为兜底校验。 计划假设：约定的哨兵值。探针 E2 |
 | H23 | 模态弹窗对 COM 调用的阻塞 | 部分确认 | 阻塞：`SimulationCases.Open` 在弹窗出现时不返回。检测：枚举 HYSYS 进程的顶层窗口，类名 `#32770` 的是对话框，读它的 `Static` 子控件得到文字（`spikes/_common.py` 的 `windows_of`、`child_texts`、`watch`）。关闭：对 OK 按钮发 `BM_CLICK`（`win32gui.PostMessage`） | `spikes/find_ref_case.py`，2026-10-08，输出 `spikes/out/find_ref_case_scan.txt` | 只见过一种弹窗：打开用到 Aspen Properties 的 Case（Green Ammonia Process）时的 "To use Aspen Properties in HYSYS, at least one databank should be installed..."。`BM_CLICK` 能关闭对话框；阻塞的调用在对话框关闭后能否返回没测到。计划假设：无。探针 E11 |
 | H24 | 降级通道：内部变量访问、脚本回放 | 未测试 | | | 计划假设：无。计划状态：未知。仅在 E6 至 E9 受阻时探测 类型库（2026-10-08，未运行验证）：`Application.BackDoor(obj[opt])` 返回 `BackDoor`：`BackDoorVariable(moniker)`、`BackDoorRealVariable`、`BackDoorTextVariable`、`BackDoorVariables(monikers)`、`SendBackDoorMessage(message)`；`Application.PlayScript(ScriptFileName)`。 |
 | H25 | 组分库的枚举或检索（按名称、分子式查到规范名） | 未测试 | | | 计划假设：无。计划状态：未知。探针 E4 |
 | H26 | Case 导出为可读文本并重新导入 | 未测试 | | | 计划假设：无。计划状态：未知。探针 E13 类型库（2026-10-08，未运行验证）：`SimulationCase.GetXMLForCase()`、`ProvideXMLForCase(flags)`、`ApplyXML(flags, sXML)`、`ApplyXMLFromFile(flags, filePath)`、`ProvideXMLForOperation(tagName, flags)`、`ApplyXMLForOperation(tagName, flags, sXML)`；`XMLOptionFlags_enum` 的取值见 `typelib_enums.txt`。这是文件路线最有希望的入口，E13 再测。 |
 | H27 | 同时运行多个实例；按进程号管理实例 | 已确认 | `Dispatch("HYSYS.Application.NewInstance")` 新开进程；连接前后的 `tasklist` 差集得到新进程号；`app.Quit()` 只结束该实例；`taskkill /PID <pid> /T /F` 强制结束 | `spikes/e1_connect.py` run3、run5、run7，2026-10-08 | 释放 COM 引用不会让实例退出（run6）。两个实例的窗口标题相同，只能靠进程号区分。非计划内的能力，Backend 的会话管理会用到 |
 | H28 | 早绑定（gen_py 包装）与类型库 | 已确认 | `gencache.EnsureModule("{DFC1C58B-AE9F-11CF-8EB2-0020AF119B90}", 0, 3, 2)` 生成包装；`pythoncom.LoadRegTypeLib(guid, 3, 2, 0)` 读类型信息 | `spikes/e1_connect.py` run8、run9，2026-10-08 | 包装缓存在 `%TEMP%\gen_py\3.12`。属性名区分大小写；生成之后 `Dispatch` 也返回包装类。集合 `Item()` 返回 `IDispatch`，是否需要 `CastTo` 待 E3 |
+| H29 | 单位字符串 | 已确认 | 温度 `C`、`K`、`F`、`R`；压力 `kPa`、`bar`、`psia`、`atm`、`MPa`；摩尔流量 `kgmole/h`、`lbmole/h`、`gmole/s`；质量流量 `kg/h`、`lb/hr`、`kg/s` | `spikes/e2_read_write.py` run1，2026-10-08 | 不认识的：`degC`、`kmol/h`、`t/h`、`foo`（`GetValue`、`SetValue` 都抛 `com_error` `E_FAIL`）。摩尔流量的单位是 `kgmole/h`，不是 `kmol/h`。体积流量、能量单位等没测 |
+| H30 | 同时写入后的求解语义 | 已确认 | 见 H17：`CanSolve=True` 时每次写入同步重算，`CanSolve=False` 时不算，释放时同步算完 | `spikes/e2_read_write.py` run2，2026-10-08 | 没有未收敛状态的样本；不收敛时 `IsSolving`、对象状态文本怎么表现，留给 E7 |
 
 ---
 
@@ -224,14 +226,29 @@ ProgID、早绑定还是晚绑定、怎么取得进程号、怎么退出。由�
 
 | 用途 | 规范名 | 来源（脚本、日期） |
 |---|---|---|
+| 甲烷 | `Methane` | `spikes/e2_read_write.py`，2026-10-08：示例 Case 流体包 `Basis-1` 的组分清单，尚未用 `Components.Add` 验证（E4） |
+| 水 | `H2O` | 同上 |
+| 一氧化碳 | `CO` | 同上 |
+| 二氧化碳 | `CO2` | 同上 |
+| 氢气 | `Hydrogen` | 同上 |
+| 氮气 | `Nitrogen` | 同上 |
+| 氧气 | `Oxygen` | 同上 |
 
 ---
 
 ## 鲁棒性观察
 
-同名对象、进程中断、弹窗、保存重开。阶段 0C 填写。
+同名对象、进程中断、弹窗、保存重开。阶段 0C 填写。下面先记 0A 里碰到的零散观察，0C 再系统化。
 
-（待填）
+**阶段 0A 的观察。**
+
+- **弹窗会让 COM 调用一直不返回。** 打开用到 Aspen Properties 的 Case 时弹出模态对话框，`SimulationCases.Open` 卡住。用 Win32 枚举 HYSYS 进程的 `#32770` 窗口能读到文字和按钮，`BM_CLICK` 能关掉它（H23）。`_common.watch` 是现成的看门狗。
+- **路径形式。** 8.3 短路径一律 `E_ACCESSDENIED`，必须用长路径（H2）。
+- **实例复用。** `HYSYS.Application` 会接管已经运行的实例，重复运行脚本可能碰到上一次遗留的 Case；需要干净环境时用 `NewInstance`，按进程号管理（H27）。
+- **退出。** 释放 COM 引用不会让实例退出；`Quit()` 有效且不弹窗；卡住时 `taskkill /PID /T /F` 有效（连接节）。
+- **求解。** 写入是同步重算；挂起后释放同步求解完（H17）。
+
+(待 0C 补：同名对象、求解中途结束进程后的异常形态、保存重开)
 
 ---
 
@@ -354,3 +371,27 @@ ProgID、早绑定还是晚绑定、怎么取得进程号、怎么退出。由�
   - **走过的弯路：第一次 `Open` 失败。** `com_error -2147352567 ... -2147024891`（`E_ACCESSDENIED`）。当时副本在 `C:\Users\AZUREU~1\AppData\Local\Temp\...`（8.3 短路径），用 `shutil.copy2` 复制；改成 `shutil.copyfile` 加长路径（`Path.resolve()`）之后成功。到底是短路径还是别的原因，同时改了两处，没有分开验证，E2 里单独验证。
 - **结论**：H23 升为部分确认；三种反应器里转化、平衡的 `TypeName` 已有实测；Gibbs 缺参考 Case。`Item()` 不需要 `CastTo`，写进"绑定方式的结论"。
 - **脚本与输出**：`spikes/find_ref_case.py`；`spikes/out/find_ref_case_synthesis_gas.txt`、`find_ref_case_scan.txt`。
+
+### L6 E2：读写已有 Case（2026-10-08）
+
+- **目的**：弄清变量怎么读、怎么写、单位怎么指定、求解器怎么控制、空值是什么；顺带验证 8.3 短路径是不是 `Open` 失败的原因。
+- **做法**：`spikes/e2_read_write.py`：复制示例 Synthesis Gas Production 到临时目录，用 `NewInstance` 打开；读流体包、读 Reformer 的进料 `Natural Gas`（T 371.1 °C、P 3447.4 kPa、90.72 kgmole/h，纯甲烷）和出料 `Combustor Feed`；写 T、P、流量并读回；挂起和释放求解器；临时加一股没有规定的物流 `probe` 读空值，再给它写组成、T、P、流量，最后删掉。不保存，按进程号结束实例。运行两次：run1 发现第一版的求解器测试设计得不好（只改了进料温度，而出料温度是规定值，看不出差别），run2 改成改进料流量，并加了热负荷和组成写入。
+- **结果**：
+  - **Q0 短路径**：同一个副本、同一种复制方式，目录是短名、或目录和文件名都是短名，`Open` 都抛 `E_ACCESSDENIED`（`-2147024891`）；长路径成功。**8.3 短路径就是原因。**
+  - Q1：见 H6。物性包名读出 `PengRobinson`，组分 `Methane`、`H2O`、`CO`、`CO2`、`Hydrogen`、`Nitrogen`、`Oxygen`。
+  - Q2：见 H13、H20、H29。`.Value` 是内部单位（T 为 °C、P 为 kPa、流量为 kgmole/s 和 kg/s），不能直接当 `kgmole/h` 用。
+  - Q3：写入用时 0.02 秒，读回一致，不认识的单位抛错、原值不变。**自动重算**：写进料压力和流量后，出料压力、流量立即更新；写进料温度后，出料温度不变（是规定值 926.67 °C），但反应器热负荷从 6558.76 kW 变到 6544.70 kW。
+  - Q4：见 H17。挂起时出料不变，释放这一句同步求解（0.46 秒），返回后即可读新值。
+  - Q5：见 H18。进料和出料的温度 `IsKnown` 都是 True、`State` 都是 1（出料温度是规定值：**转化反应器的出口温度是规定在出料物流上的**）；没有规定的物流 `IsKnown` 是 False。
+  - Q6：见 H22，空值是 -32767.0。
+  - 新物流：`MaterialStreams.Add("probe")` 只给名字就成功，返回 `ProcessStream`；组成、T、P、流量写完后闪蒸立即完成（见 H14）。
+- **结论**：H2、H6、H13、H17、H22 升为已确认；H4、H12、H14、H18、H20 升为部分确认；新增 H29、H30。其中 H2、H6、H13、H17、H18、H22 是阶段 0A 完成标准要求的项目。
+- **脚本与输出**：`spikes/e2_read_write.py`；`spikes/out/e2_read_write_run1.txt`、`e2_read_write_run2.txt`。
+
+### L7 E2b：有打开的 Case 时 Quit 和 Close 会不会弹窗（2026-10-08）
+
+- **目的**：E1 遗留的问题：HYSYS 里有 Case 时 `Quit()` 会不会弹出"是否保存"并卡住。
+- **做法**：`spikes/e2b_quit_with_case.py`：三种情况各开一个 `NewInstance`：没改过的 Case 直接 `Quit()`；改过（写了进料温度）的 Case 先 `Close()`；改过的 Case 直接 `Quit()`。后台线程 8 秒后查弹窗并准备点"否"的按钮。
+- **结果**：三种情况都**没有弹窗**。`Quit()` 0.0 秒返回，进程 0.5 秒内消失；`Close()` 0.2 秒返回。`IsDirty` 在刚打开、没改过的 Case 上也是 True。
+- **结论**：脚本里可以放心 `Close()` 和 `Quit()`，不会被保存确认卡住；H4 记为部分确认。要保存必须自己调用 `Save`/`SaveAs`（E4、E12）。
+- **脚本与输出**：`spikes/e2b_quit_with_case.py`；`spikes/out/e2b_quit_with_case.txt`。
