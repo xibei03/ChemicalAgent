@@ -1,0 +1,78 @@
+新实例的进程号: 8756
+== Q1 新建物流 ==
+  [新建后]
+      Temperature: IsKnown=False，GetValue=-32767.0000
+      Pressure: IsKnown=False，GetValue=-32767.0000
+      MassFlow: IsKnown=False，GetValue=-32767.0000
+      MolarFlow: IsKnown=False，GetValue=-32767.0000
+      VapourFractionValue=读取抛 com_error(-2147352567)
+      VapourFraction.IsKnown=False
+      组成已知个数=0/5
+== Q2、Q3 按 T、P、组成、质量流量的顺序写，每步读一次 ==
+  Temperature.SetValue(380, 'C') -> None
+  [写 T 后]
+      Temperature: IsKnown=True，GetValue=380.0000
+      Pressure: IsKnown=False，GetValue=-32767.0000
+      MassFlow: IsKnown=False，GetValue=-32767.0000
+      MolarFlow: IsKnown=False，GetValue=-32767.0000
+      VapourFractionValue=读取抛 com_error(-2147352567)
+      VapourFraction.IsKnown=False
+      组成已知个数=0/5
+  Pressure.SetValue(2500, 'kPa') -> None
+  [写 P 后]
+      Temperature: IsKnown=True，GetValue=380.0000
+      Pressure: IsKnown=True，GetValue=2500.0000
+      MassFlow: IsKnown=False，GetValue=-32767.0000
+      MolarFlow: IsKnown=False，GetValue=-32767.0000
+      VapourFractionValue=读取抛 com_error(-2147352567)
+      VapourFraction.IsKnown=False
+      组成已知个数=0/5
+  ComponentMolarFraction.Values = (1,0,0,0,0) -> None
+  [写组成后]
+      Temperature: IsKnown=True，GetValue=380.0000
+      Pressure: IsKnown=True，GetValue=2500.0000
+      MassFlow: IsKnown=False，GetValue=-32767.0000
+      MolarFlow: IsKnown=False，GetValue=-32767.0000
+      VapourFractionValue=1.0000
+      VapourFraction.IsKnown=True
+      组成已知个数=5/5
+  MassFlow.SetValue(10000, 'kg/h') -> None
+  [写质量流量后]
+      Temperature: IsKnown=True，GetValue=380.0000
+      Pressure: IsKnown=True，GetValue=2500.0000
+      MassFlow: IsKnown=True，GetValue=10000.0000
+      MolarFlow: IsKnown=True，GetValue=108.5296
+      VapourFractionValue=1.0000
+      VapourFraction.IsKnown=True
+      组成已知个数=5/5
+== Q4 读回，与手算对照 ==
+  MolarFlow(kgmole/h)，手算 108.5324 -> 108.52955420760267
+  ComponentMassFlow(kg/h) -> (10000.0, 0.0, 0.0, 0.0, 0.0)
+  ComponentMassFraction -> (1.0, 0.0, 0.0, 0.0, 0.0)
+  VapourFractionValue -> 1.0
+  StdLiqVolFlow（已知吗） -> True
+  HeatFlow（已知吗） -> True
+  Temperature.State / CanModify -> (1, True)
+  VapourFraction 变量的状态 -> (True, 0)
+== 改写其中一个量：质量流量 20000，再改回 ==
+  MassFlow = 20000 -> None
+  MolarFlow 读回 -> 217.05910841520534
+  MassFlow = 10000 -> None
+  MolarFlow 读回 -> 108.52955420760267
+== Q5 写错了会怎样（在另一股物流上试） ==
+  组成之和为 0.9 -> None
+  组成读回（和为 0.9 之后） -> (1.0, 0.0, 0.0, 0.0, 0.0)
+  组成之和为 1.2 -> None
+  组成读回（和为 1.2 之后） -> (1.0, 0.0, 0.0, 0.0, 0.0)
+  组成只给 3 个数 -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147024809), None)
+  负的质量流量 -> None
+  负流量读回 -> -100.0
+  温度写不认识的单位 -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  温度 -300 C（低于绝对零度） -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147024809), None)
+  温度读回 -> -32767.0
+== Q6 同名物流 ==
+  MaterialStreams.Add('Feed')（已存在） -> <win32com.gen_py.HYSYS 15.0 Type Library.ProcessStream instance at 0x2630708189360>
+    返回的是已有的那股吗：T(C) -> 380.0
+  MaterialStreams.Names -> ['Feed', 'Bad']
+  case.Close() -> None
+  实例 8756 已结束

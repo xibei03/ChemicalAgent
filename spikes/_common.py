@@ -15,6 +15,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import win32com.client
+import win32con
 import win32gui
 import win32process
 
@@ -174,6 +175,56 @@ def new_instance(log: Log, visible: bool = True) -> Iterator[tuple[object, int |
             subprocess.run(["taskkill", "/PID", str(pid), "/T", "/F"], capture_output=True)
             gone = wait_gone(pid)
             log.say(f"  实例 {pid} {'已结束' if gone is not None else '仍在运行'}")
+
+
+AFFIRMATIVE_BUTTONS = ("ok", "确定", "yes", "是")
+
+
+def click_affirmative(hwnd: int) -> str | None:
+    """点对话框里的\"确定\"一类按钮，返回点的按钮文字；找不到返回 None。"""
+    found: list[tuple[int, str]] = []
+
+    def visit(child: int, _extra: object) -> None:
+        if win32gui.GetClassName(child) == "Button":
+            found.append((child, win32gui.GetWindowText(child)))
+
+    win32gui.EnumChildWindows(hwnd, visit, None)
+    for child, text in found:
+        if text.replace("&", "").strip().lower() in AFFIRMATIVE_BUTTONS:
+            win32gui.PostMessage(child, win32con.BM_CLICK, 0, 0)
+            return text
+    return None
+
+
+@contextmanager
+def dialog_guard(log: Log, pid: int | None, poll_s: float = 0.5) -> Iterator[list[str]]:
+    """后台线程盯着 HYSYS 进程的模态对话框：记下文字、点\"确定\"关掉，让被卡住的 COM 调用返回。
+
+    产出一个列表，里面是已经处理过的对话框文字，调用方可以据此判断刚才的调用是不是触发了弹窗。
+    """
+    handled: list[str] = []
+    stop = threading.Event()
+
+    def work() -> None:
+        while not stop.wait(poll_s):
+            if pid is None:
+                continue
+            for window in windows_of([pid]):
+                if not (window.visible and window.class_name == "#32770"):
+                    continue
+                texts = [t for t in child_texts(window.hwnd) if t.startswith("Static")]
+                clicked = click_affirmative(window.hwnd)
+                message = " | ".join(texts) or window.title
+                handled.append(message)
+                log.say(f"  [弹窗] 标题={window.title!r} 文字={message!r} 已点 {clicked!r}")
+
+    thread = threading.Thread(target=work, daemon=True)
+    thread.start()
+    try:
+        yield handled
+    finally:
+        stop.set()
+        thread.join(timeout=2)
 
 
 @contextmanager

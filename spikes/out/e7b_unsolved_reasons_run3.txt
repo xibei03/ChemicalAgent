@@ -1,0 +1,77 @@
+新实例的进程号: 11400
+  流体包的反应集: ['Conv-Set', 'Eq-Set']（Loose-Set 没加入）
+== Q1、Q3 逐步连接（反应器 R-Stage） ==
+  [只有三股物流] 状态计数 {'OK': 1, 'NotSolved': 2, 'Warning': 0, 'UnderSpecified': 0, 'Error': 0}
+      NotSolved: [('MaterialStreamObject', 'V-Stage'), ('MaterialStreamObject', 'L-Stage')]
+      [新建后] Feeds=[]，VapourProduct=抛 com_error(-2147352567)，LiquidProduct=抛 com_error(-2147352567)，ReactionSet=抛 com_error(-2147352567)，PressureDrop.IsKnown=True，PressureDrop.State=1
+  PressureDrop 新建后的值 kPa -> 0.0
+  [S0 新建反应器，什么都没连] 状态计数 {'OK': 1, 'NotSolved': 2, 'Warning': 0, 'UnderSpecified': 1, 'Error': 0}
+      NotSolved: [('MaterialStreamObject', 'V-Stage'), ('MaterialStreamObject', 'L-Stage')]
+      UnderSpecified: [('ConversionReactorOpObject', 'R-Stage')]
+  [S1 接进料] 状态计数 {'OK': 1, 'NotSolved': 2, 'Warning': 0, 'UnderSpecified': 1, 'Error': 0}
+      NotSolved: [('MaterialStreamObject', 'V-Stage'), ('MaterialStreamObject', 'L-Stage')]
+      UnderSpecified: [('ConversionReactorOpObject', 'R-Stage')]
+  [S2 接气相出料] 状态计数 {'OK': 1, 'NotSolved': 2, 'Warning': 0, 'UnderSpecified': 1, 'Error': 0}
+      NotSolved: [('MaterialStreamObject', 'V-Stage'), ('MaterialStreamObject', 'L-Stage')]
+      UnderSpecified: [('ConversionReactorOpObject', 'R-Stage')]
+  [S3 接液相出料] 状态计数 {'OK': 1, 'NotSolved': 2, 'Warning': 0, 'UnderSpecified': 1, 'Error': 0}
+      NotSolved: [('MaterialStreamObject', 'V-Stage'), ('MaterialStreamObject', 'L-Stage')]
+      UnderSpecified: [('ConversionReactorOpObject', 'R-Stage')]
+      [S4 之后] Feeds=['F-Stage']，VapourProduct=V-Stage，LiquidProduct=L-Stage，ReactionSet=Conv-Set，PressureDrop.IsKnown=True，PressureDrop.State=1
+  [S4 挂反应集（压降没动）] 状态计数 {'OK': 4, 'NotSolved': 0, 'Warning': 0, 'UnderSpecified': 0, 'Error': 0}
+  气相出料流量是否已知 -> True
+  气相出料摩尔流量 kgmole/h -> 108.52955420760266
+      [S5 之后] Feeds=['F-Stage']，VapourProduct=V-Stage，LiquidProduct=L-Stage，ReactionSet=Conv-Set，PressureDrop.IsKnown=True，PressureDrop.State=1
+  [S5 显式写压降 0] 状态计数 {'OK': 4, 'NotSolved': 0, 'Warning': 0, 'UnderSpecified': 0, 'Error': 0}
+== Q2 每次只缺一样东西 ==
+-- 缺陷：对照：什么都不缺 --
+  挂反应集 good -> None
+      [对照：什么都不缺] Feeds=['F-OK']，VapourProduct=V-OK，LiquidProduct=L-OK，ReactionSet=Conv-Set，PressureDrop.IsKnown=True，PressureDrop.State=1
+  [对照：什么都不缺] 状态计数 {'OK': 8, 'NotSolved': 0, 'Warning': 0, 'UnderSpecified': 0, 'Error': 0}
+-- 缺陷：没接进料 --
+  挂反应集 good -> None
+      [没接进料] Feeds=[]，VapourProduct=V-D1，LiquidProduct=L-D1，ReactionSet=Conv-Set，PressureDrop.IsKnown=True，PressureDrop.State=1
+  [没接进料] 状态计数 {'OK': 9, 'NotSolved': 2, 'Warning': 0, 'UnderSpecified': 1, 'Error': 0}
+      NotSolved: [('MaterialStreamObject', 'V-D1'), ('MaterialStreamObject', 'L-D1')]
+      UnderSpecified: [('ConversionReactorOpObject', 'R-D1')]
+-- 缺陷：没接气相出料 --
+  挂反应集 good -> None
+      [没接气相出料] Feeds=['F-D2']，VapourProduct=抛 com_error(-2147352567)，LiquidProduct=L-D2，ReactionSet=Conv-Set，PressureDrop.IsKnown=True，PressureDrop.State=1
+  [没接气相出料] 状态计数 {'OK': 10, 'NotSolved': 4, 'Warning': 0, 'UnderSpecified': 2, 'Error': 0}
+      NotSolved: [('MaterialStreamObject', 'V-D2'), ('MaterialStreamObject', 'L-D2')]
+      UnderSpecified: [('ConversionReactorOpObject', 'R-D2')]
+-- 缺陷：没接液相出料 --
+  挂反应集 good -> None
+      [没接液相出料] Feeds=['F-D3']，VapourProduct=V-D3，LiquidProduct=抛 com_error(-2147352567)，ReactionSet=Conv-Set，PressureDrop.IsKnown=True，PressureDrop.State=1
+  [没接液相出料] 状态计数 {'OK': 11, 'NotSolved': 6, 'Warning': 0, 'UnderSpecified': 3, 'Error': 0}
+      NotSolved: [('MaterialStreamObject', 'V-D3'), ('MaterialStreamObject', 'L-D3')]
+      UnderSpecified: [('ConversionReactorOpObject', 'R-D3')]
+-- 缺陷：没挂反应集 --
+      [没挂反应集] Feeds=['F-D4']，VapourProduct=V-D4，LiquidProduct=L-D4，ReactionSet=抛 com_error(-2147352567)，PressureDrop.IsKnown=True，PressureDrop.State=1
+  [没挂反应集] 状态计数 {'OK': 12, 'NotSolved': 8, 'Warning': 0, 'UnderSpecified': 4, 'Error': 0}
+      NotSolved: [('MaterialStreamObject', 'V-D4'), ('MaterialStreamObject', 'L-D4')]
+      UnderSpecified: [('ConversionReactorOpObject', 'R-D4')]
+-- 缺陷：反应集没加入流体包 --
+  挂反应集 loose -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147024809), None)
+      [反应集没加入流体包] Feeds=['F-D5']，VapourProduct=V-D5，LiquidProduct=L-D5，ReactionSet=抛 com_error(-2147352567)，PressureDrop.IsKnown=True，PressureDrop.State=1
+  [反应集没加入流体包] 状态计数 {'OK': 13, 'NotSolved': 10, 'Warning': 0, 'UnderSpecified': 5, 'Error': 0}
+      NotSolved: [('MaterialStreamObject', 'V-D5'), ('MaterialStreamObject', 'L-D5')]
+      UnderSpecified: [('ConversionReactorOpObject', 'R-D5')]
+-- 缺陷：反应集里是平衡反应（类型不匹配） --
+  [弹窗] 标题='Aspen HYSYS' 文字='Static: The reaction set Eq-Set is not the correct type to \nattach to reactor R-D6.  The reaction set will be unattached.' 已点 'OK'
+  挂反应集 equilibrium -> None
+      [反应集里是平衡反应（类型不匹配）] Feeds=['F-D6']，VapourProduct=V-D6，LiquidProduct=L-D6，ReactionSet=抛 com_error(-2147352567)，PressureDrop.IsKnown=True，PressureDrop.State=1
+  [反应集里是平衡反应（类型不匹配）] 状态计数 {'OK': 14, 'NotSolved': 12, 'Warning': 0, 'UnderSpecified': 6, 'Error': 0}
+      NotSolved: [('MaterialStreamObject', 'V-D6'), ('MaterialStreamObject', 'L-D6')]
+      UnderSpecified: [('ConversionReactorOpObject', 'R-D6')]
+-- 缺陷：进料流量没规定 --
+  挂反应集 good -> None
+      [进料流量没规定] Feeds=['F-D7']，VapourProduct=V-D7，LiquidProduct=L-D7，ReactionSet=Conv-Set，PressureDrop.IsKnown=True，PressureDrop.State=1
+  [进料流量没规定] 状态计数 {'OK': 14, 'NotSolved': 16, 'Warning': 0, 'UnderSpecified': 6, 'Error': 0}
+      NotSolved: [('MaterialStreamObject', 'F-D7'), ('MaterialStreamObject', 'V-D7'), ('MaterialStreamObject', 'L-D7'), ('ConversionReactorOpObject', 'R-D7')]
+      UnderSpecified: []
+== 全程看门狗处理过的弹窗 1 个 ==
+  Static: The reaction set Eq-Set is not the correct type to 
+attach to reactor R-D6.  The reaction set will be unattached.
+  case.Close() -> None
+  实例 11400 已结束
