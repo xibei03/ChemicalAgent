@@ -7,6 +7,7 @@ ensure_* 工具靠它们决定返回“未改变”还是 E_CONFLICT，创建之
 import math
 from collections.abc import Mapping
 
+from reactor_agent.errors import ErrorCode, ReactorAgentError
 from reactor_agent.spec.snapshot import (
     ReactionSetSnapshot,
     ReactorSnapshot,
@@ -168,3 +169,10 @@ def reactor_differences(existing: ReactorSnapshot, wanted: EnsureReactorArgs) ->
     if not _value_close(existing.pressure_drop_bar, wanted.pressure_drop_bar):
         found.append(_difference("压降 bar", existing.pressure_drop_bar, wanted.pressure_drop_bar))
     return tuple(found)
+
+
+def require_match(code: ErrorCode, subject: str, differences: tuple[str, ...]) -> None:
+    """有差异就抛 ReactorAgentError：消息说明是哪个对象、第一处差异，细节列出全部差异。"""
+    if differences:
+        message = f"{subject}与期望不一致：{differences[0]}"
+        raise ReactorAgentError(code, message, {"differences": "；".join(differences)})

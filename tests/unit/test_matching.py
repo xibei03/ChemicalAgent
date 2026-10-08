@@ -1,5 +1,8 @@
 """“已有的对象和期望的配置是否一致”的纯函数。它们出错会导致幂等失效或误报冲突。"""
 
+import pytest
+
+from reactor_agent.errors import ErrorCode, ReactorAgentError
 from reactor_agent.spec.enums import (
     HeatMode,
     KeqSource,
@@ -11,6 +14,7 @@ from reactor_agent.spec.matching import (
     reaction_differences,
     reaction_set_differences,
     reactor_differences,
+    require_match,
     stream_differences,
     thermo_differences,
 )
@@ -276,3 +280,17 @@ class TestReactors:
         )
         assert reactor_differences(reactor_snapshot(energy_stream="Q-100"), wanted) == ()
         assert reactor_differences(reactor_snapshot(), wanted)
+
+
+class TestRequireMatch:
+    def test_no_difference_raises_nothing(self):
+        require_match(ErrorCode.CONFLICT, "物流 Feed", ())
+
+    def test_differences_become_a_domain_error_with_every_difference_in_the_details(self):
+        with pytest.raises(ReactorAgentError) as caught:
+            require_match(ErrorCode.CONFLICT, "物流 Feed", ("温度不同", "压力不同"))
+        error = caught.value
+        assert error.code is ErrorCode.CONFLICT
+        assert "物流 Feed" in error.message
+        assert "温度不同" in error.message
+        assert error.details == {"differences": "温度不同；压力不同"}
