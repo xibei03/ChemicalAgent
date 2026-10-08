@@ -1,0 +1,91 @@
+新实例的进程号: 13740
+  组分 ['Methane', 'H2O', 'CO', 'CO2', 'Hydrogen']；物性包 Peng-Robinson
+  Rxn-1：LnKSource=2（2 即 Gibbs 自由能），Basis=1，AutoDetect=True，ReactionPhase=0，系数 (-1.0, -1.0, 1.0, 3.0)
+  Rxn-2：LnKSource=2（2 即 Gibbs 自由能），Basis=1，AutoDetect=True，ReactionPhase=0，系数 (-1.0, -1.0, 1.0, 1.0)
+== Q1、Q2 规定出口温度（ERV-100，带能流） ==
+  连接完、没规定出口温度时的状态 {'OK': 1, 'NotSolved': 4, 'Warning': 0, 'UnderSpecified': 0, 'Error': 0}
+  气相出料物流 Temperature.SetValue(710.0, 'C')，同步重算后：
+  -- 出口 710 C --
+    气相 T=710.00 C，P=1350.0 kPa，F=4780.73 kgmole/h，液相 F=0.0000 kgmole/h
+    摩尔分率 {'Methane': 0.0962, 'H2O': 0.3844, 'CO': 0.0457, 'CO2': 0.0673, 'Hydrogen': 0.4064}；CH4 转化率 54.0%
+    质量守恒相对误差 6.05e-06
+    能流热负荷 39989.2 kW（State=0，CanModify=False）
+      反应器.RxnPercentConversionValue -> (54.0303307640209, -32767.0)
+      反应器.EqConstantValue -> (14.918630654256546, 1.5609009457560687)
+      反应器.RxnExtentValue -> (0.15010076139001371, 0.08936961200936674)
+    Methane: HYSYS 0.0962，参照 0.094，差 0.0022
+    H2O: HYSYS 0.3844，参照 0.381，差 0.0034
+    Hydrogen: HYSYS 0.4064，参照 0.411，差 0.0046
+    CO: HYSYS 0.0457，参照 0.047，差 0.0013
+    CO2: HYSYS 0.0673，参照 0.067，差 0.0003
+    [通过] 710 C 最大偏差 0.0046 ≤ 0.02；总流量 4780.7（参照约 4800）
+  气相出料物流 Temperature.SetValue(600.0, 'C')，同步重算后：
+  -- 出口 600 C --
+    气相 T=600.00 C，P=1350.0 kPa，F=4307.06 kgmole/h，液相 F=0.0000 kgmole/h
+    摩尔分率 {'Methane': 0.1617, 'H2O': 0.4976, 'CO': 0.0117, 'CO2': 0.0588, 'Hydrogen': 0.2702}；CH4 转化率 30.3%
+    质量守恒相对误差 3.20e-06
+    能流热负荷 20159.8 kW（State=0，CanModify=False）
+      反应器.RxnPercentConversionValue -> (30.34946678674976, -32767.0)
+      反应器.EqConstantValue -> (0.519892083895388, 2.7437453734933865)
+      反应器.RxnExtentValue -> (0.08431334785582303, 0.070305021054084)
+    Methane: HYSYS 0.1617，参照 0.162，差 0.0003
+    H2O: HYSYS 0.4976，参照 0.499，差 0.0014
+    Hydrogen: HYSYS 0.2702，参照 0.269，差 0.0012
+    CO: HYSYS 0.0117，参照 0.012，差 0.0003
+    CO2: HYSYS 0.0588，参照 0.058，差 0.0008
+    [通过] 600 C 最大偏差 0.0014 ≤ 0.02；总流量 4307.1（参照约 4305）
+  气相出料物流 Temperature.SetValue(710.0, 'C')，同步重算后：
+  -- 出口 710 C --
+    气相 T=710.00 C，P=1350.0 kPa，F=4780.73 kgmole/h，液相 F=0.0000 kgmole/h
+    摩尔分率 {'Methane': 0.0962, 'H2O': 0.3844, 'CO': 0.0457, 'CO2': 0.0673, 'Hydrogen': 0.4064}；CH4 转化率 54.0%
+    质量守恒相对误差 6.05e-06
+    能流热负荷 39989.2 kW（State=0，CanModify=False）
+      反应器.RxnPercentConversionValue -> (54.03038639477978, -32767.0)
+      反应器.EqConstantValue -> (14.918630654256546, 1.5609009457560687)
+      反应器.RxnExtentValue -> (0.15010091593689776, 0.08936964831813278)
+    Methane: HYSYS 0.0962，参照 0.094，差 0.0022
+    H2O: HYSYS 0.3844，参照 0.381，差 0.0034
+    Hydrogen: HYSYS 0.4064，参照 0.411，差 0.0046
+    CO: HYSYS 0.0457，参照 0.047，差 0.0013
+    CO2: HYSYS 0.0673，参照 0.067，差 0.0003
+    [通过] 710 C 最大偏差 0.0046 ≤ 0.02；总流量 4780.7（参照约 4800）
+    第二次回到 710 C，与第一次摩尔分率最大差 3.87e-08（要求 ≤ 1e-06）
+  全部求解后的流程图状态 {'OK': 5, 'NotSolved': 0, 'Warning': 0, 'UnderSpecified': 0, 'Error': 0}
+== Q3 绝热（ERV-ADI，不接能流） ==
+  -- 绝热 --
+    气相 T=422.63 C，P=1350.0 kPa，F=3876.20 kgmole/h，液相 F=0.0000 kgmole/h
+    摩尔分率 {'Methane': 0.2353, 'H2O': 0.6514, 'CO': 0.0003, 'CO2': 0.0224, 'Hydrogen': 0.0906}；CH4 转化率 8.8%
+    质量守恒相对误差 8.08e-07
+      反应器.RxnPercentConversionValue -> (8.809037413798585, -32767.0)
+      反应器.EqConstantValue -> (0.0002770865043907738, 10.357567473833708)
+      反应器.RxnExtentValue -> (0.024472240021983612, 0.02414186149227275)
+    出口温度是否为计算值: State=0，CanModify=False；出口 422.63 C
+    流程图状态 {'OK': 9, 'NotSolved': 0, 'Warning': 0, 'UnderSpecified': 0, 'Error': 0}
+== Q3 规定热负荷（ERV-DUTY，能流 39989.2 kW，出口温度不规定） ==
+  写热负荷前的状态 {'OK': 10, 'NotSolved': 4, 'Warning': 0, 'UnderSpecified': 0, 'Error': 0}
+  -- 规定热负荷 --
+    气相 T=710.00 C，P=1350.0 kPa，F=4780.75 kgmole/h，液相 F=0.0000 kgmole/h
+    摩尔分率 {'Methane': 0.0962, 'H2O': 0.3844, 'CO': 0.0457, 'CO2': 0.0673, 'Hydrogen': 0.4064}；CH4 转化率 54.0%
+    质量守恒相对误差 6.02e-06
+    能流热负荷 39989.2 kW（State=1，CanModify=True）
+      反应器.RxnPercentConversionValue -> (54.031614605917355, -32767.0)
+      反应器.EqConstantValue -> (14.920632062595002, 1.5608664866507693)
+      反应器.RxnExtentValue -> (0.15010432800978887, 0.08936992061693617)
+    出口温度 710.00 C（期望接近 710）；能流 State=1，CanModify=True
+    流程图状态 {'OK': 14, 'NotSolved': 0, 'Warning': 0, 'UnderSpecified': 0, 'Error': 0}
+== Q4 固定 K（摩尔分率基准）：Rxn-1K=0.0830251，Rxn-2K=1.55565 ==
+  Rxn-1K：LnKSource=3，Basis=5，EquilibriumConstant 读回 0.08302506370879638
+  Rxn-2K：LnKSource=3，Basis=5，EquilibriumConstant 读回 1.5556544049721512
+  -- 固定 K，出口 710 C --
+    气相 T=710.00 C，P=1350.0 kPa，F=4780.73 kgmole/h，液相 F=0.0000 kgmole/h
+    摩尔分率 {'Methane': 0.0962, 'H2O': 0.3844, 'CO': 0.0457, 'CO2': 0.0673, 'Hydrogen': 0.4064}；CH4 转化率 54.0%
+    质量守恒相对误差 6.05e-06
+    能流热负荷 39989.2 kW（State=0，CanModify=False）
+      反应器.RxnPercentConversionValue -> (54.03033047202989, -32767.0)
+      反应器.EqConstantValue -> (0.08302506370879638, 1.5556544049721512)
+      反应器.RxnExtentValue -> (0.15010076057883834, 0.08936961183228286)
+    与 Gibbs 来源 710 C 结果的摩尔分率最大差 0.00000（不要求通过）
+    流程图状态 {'OK': 19, 'NotSolved': 0, 'Warning': 0, 'UnderSpecified': 0, 'Error': 0}
+  Case 已另存为 C:\Users\azureuser\Desktop\ChemicalAgent\spikes\out\e8_equilibrium_chain_run1.hsc
+  实例 13740 已结束
+== E8 通过：两个工况都在容差内且 710 C 可复现=True ==
