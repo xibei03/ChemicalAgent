@@ -874,3 +874,14 @@ Keq 来源：Gibbs 自由能（默认）已验证；固定 K（摩尔分率基�
 - **四项**：文本路线：可行（部分）、导出 2.6 秒加导入 0.5 秒、2/2（flags 0、128）、能（COM 读回）；脚本路线：可行（要求 Case 可见）、0.05 至 0.9 秒、排序 4/4 个实验成功（可见和窗口隐藏各 2 个）、建反应器 1 次成功（模板写法一次无效）、能（COM 和 XML 读回）。
 - **结论**：**`PlayScript` 是一个真正能用的第二级通道**：能写 COM 和 XML 都写不了的内部变量，还能建对象。用法的坑：必须先 `case.Visible = True`；脚本失败不抛异常，只弹窗并返回 `None`，所以每次回放之后必须读回，看门狗要记下弹窗；脚本是纯 ASCII、CRLF 的文本文件。这解决了 H32 留下的问题：排序含义在我们自己的模型上验证了（和示例 Case 反推的一致），也有了设置的办法。按 D13 的答复 Recipe 仍然不设排序（保持默认并行），需要时再启用。
 - **脚本与输出**：`spikes/e13b_file_script.py`；`spikes/out/e13b_file_script_run1.txt`、`run2`、`run3`、`run4`。
+
+### L30 E0（部分）：LLM 连通性，网络已通，真实密钥的测试待用户运行（2026-10-08，0A 任务 4 补做）
+
+- **目的**：用户答复 D1（阿里云百炼 Qwen，密钥环境变量 `DASHSCOPE_API_KEY`，三个模型）之后，补做 E0：从这台机器发出一次最小的 LLM 调用并得到回复；顺便看这台机器能不能访问百炼。
+- **做法**：`spikes/e0_llm_connectivity.py`：只用标准库 `urllib`，从环境变量读密钥（只打印“已设置”和长度，错误文字里的密钥片段会被抹掉），依次试国内站 `dashscope.aliyuncs.com` 和国际站 `dashscope-intl.aliyuncs.com` 的 `/compatible-mode/v1/chat/completions`，再用三个模型各发一次“请只回复 OK”；`--capabilities` 另测主模型的 JSON 输出（`response_format`）和函数调用（`tools`）。
+- **结果**：
+  - **助手的进程读不到密钥**：进程、用户、机器三级环境变量里都没有 `DASHSCOPE_API_KEY`（用户设在自己终端的会话里）；通过终端工具新开的标签也不行（标签的 shell 集成加载失败，命令没有被输入）。所以没有发出过带真实密钥的请求。
+  - **网络是通的**：用一个假密钥，国内站和国际站都在 0.34 秒、0.05 秒内返回 HTTP 401（`invalid_api_key`，带 `request_id`），说明这台机器能直连百炼的两个站点；国际站对“Incorrect API key”的回应也说明接口是 OpenAI 兼容的。
+  - **探针的逻辑用本机的假接口检查过**（临时脚本，不入库）：200 的解析、404 的错误分支、JSON 输出、函数调用的 `tool_calls` 分支、401 的两站依次尝试，都符合预期；错误文字里没有出现密钥。
+- **结论**：E0 的网络部分通过；真实密钥的调用没有做，**D1 不标完成**。需要用户在设了变量的终端里运行 `.\.venv\Scripts\python.exe spikes\e0_llm_connectivity.py --tag run1 --capabilities`，日志 `spikes/out/e0_llm_connectivity_run1.txt` 不含密钥。如果用户想让助手自己运行，需要用户自己把变量永久写进用户环境（在自己的终端里 `setx DASHSCOPE_API_KEY …`），助手不收密钥。
+- **脚本与输出**：`spikes/e0_llm_connectivity.py`。
