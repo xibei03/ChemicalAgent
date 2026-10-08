@@ -6,6 +6,7 @@
 
 - **阶段 0B：已完成**（2026-10-08 12:30 开始，19:25 结束，UTC+8；与 0A 的会话 3 是同一个会话，中间因用量额度中断约 6 小时，实际工作约 1 小时）。**闸门 G0 通过**：`spikes/e7_conversion_chain.py` 从空白 Case 用代码建出四产物分数系数的甲苯歧化转化反应器，连续两次运行出料摩尔分率与解析解偏差 0.00000、质量守恒误差 1.52e-05、出口温度 378.59 °C、两次运行摩尔流量相对偏差 0。**每一步都是第 1 级集成方式（COM 编程）**，没有降级。**分数计量系数可用**，一个转化反应即可。任务 5：同一基准组分的多个转化反应**默认并行**（12/26/12% 三个反应，出口甲苯 0.5000）；反应集排序（Conversion Rankings）COM 成员、XML 写回、BackDoor 都写不了，**0C 发现 `PlayScript` 可以写**（排序 (0,1,2) 出口甲苯 0.5731、(1,1,0) 为 0.5456，与预测一致，H24、H32）；含义：排序值最小的先算、相同的并行、后面的对剩下的基准组分算；按 D13 Recipe 不设排序。台账 H1 至 H26 里 0B 要求的 14 项都有实测证据，"调用序列 → 转化反应器"小节已写成 Backend 的蓝本。
 - **阶段 0C：已完成，除了 E0 的最后一步**（2026-10-08 19:26 开始，20:42 结束，UTC+8；与 0A、0B 是同一个会话）。完成标准六条：①`e8` 两个工况在容差内（710 °C 偏差 0.0046、600 °C 偏差 0.0014），`e9` 通过（Gibbs 与平衡反应器偏差 1e-5，多股进料、绝热两个小试验通过），**`e10` 不满足通过条件**：Gibbs 反应器 + 库里的固体碳算出的结果是错的（碳的 Gibbs 函数是气态碳原子的，E10b、E10c），证据已交给用户决定（D14）；两段式（计划 §17.3）的可行性我试了，四条通过条件全满足（E10d），没有采用；②固体碳五个问题的答案在台账 Gibbs 反应器小节；③H1 至 H26 没有“未测试”；④路线对照表有四条路线的对照，每条有证据，LLM 视觉操作如实写未试验（没有桌面屏幕工具）；⑤台账有三种反应器的调用序列、十一个组分规范名、鲁棒性观察和“对工具契约的影响”（R1 至 R12，登记为 D15）；⑥本文件已更新并提交。**另外：`PlayScript` 是个能用的第二级通道**，能写 COM 写不了的内部变量（反应集排序已验证）和建对象；用户答复 D12 批准后台线程、D13 保持默认排序。
+- **阶段 1A：进行中**（2026-10-08 21:10 开始，UTC+8；新会话）。开始时用户答复了 0C 留下的两个决定：**D14 采用方案 A（两段式：转化反应器按限量反应物算 C + H2O → CO + H2，再用 Gibbs 反应器算气相平衡，未反应的碳从第一台的液相出料旁路）；D15 全部按建议确认（R1 至 R12）**。所以 1A 提示词里"还有待确认的条目先问用户"的条件已满足，可以直接做。
 - **D1 的 LLM 配置已记下，但连通性测试没做完**：用户说密钥已经配置在环境变量 `DASHSCOPE_API_KEY` 里，但助手的进程（以及通过终端工具新开的标签）读不到它，用户级和机器级环境变量也没有，应该只设在用户自己终端的会话里。`spikes/e0_llm_connectivity.py` 已写好、没有密钥时安全退出，**需要用户在设了变量的那个终端里运行**：`.\.venv\Scripts\python.exe spikes\e0_llm_connectivity.py --tag run1 --capabilities`，再告诉助手去读 `spikes/out/e0_llm_connectivity_run1.txt`（脚本不打印密钥）。网络已验证：用假密钥访问百炼的国内站和国际站都返回 HTTP 401（台账 L30），说明这台机器能直连。通过以前 D1 不标完成。
 - **下一步：阶段 1A**（`docs/prompts/phase-1a.md`）。开始前需要用户：①D14（固体碳：两段式 A、改假想组分 B 还是别的）；②D15（工具契约建议 R1 至 R12，1A 提示词要求“待确认”的条目先问用户）；③D1 的连通性测试（2A 之前必须通过，不挡 1A）。
 - 阶段 0A：**已完成**（主体 2026-10-08 10:55 结束，UTC+8；用户答复后补做 D11，12:00 结束）。首次开始于 2026-10-03 09:50，共 3 个会话（见"已完成"的时间表）。任务 1 至 3、5 至 11 都完成，完成标准的 6 条都有实际运行的验证。**任务 4（E0，LLM 连通性）挂起**，等用户给出供应商、模型和密钥所在的环境变量（D1）（2026-10-08 用户已给出，探针 `spikes/e0_llm_connectivity.py` 待用户运行，见 0C 的说明）。**D11（参考 Case）已由助手用代码建成并补跑了 E3，不再等用户。**当前没有残留的 HYSYS 进程。
@@ -44,6 +45,7 @@
 | 0A | 2026-10-03 09:50 开始，2026-10-08 12:00 结束（UTC+8）。会话 1：10-03 09:50 至 09:58，在别的机器上停在任务 1；会话 2：10-03 10:25 至 10:50，E1 前两次运行，因用量上限中断；会话 3：10-08 09:50 至 10:55，之后用户答复 D9、D11，11:25 至 12:00 补做参考 Case。实际工作时间约 2 小时 20 分钟 | 3 |
 | 0B | 2026-10-08 12:30 开始，19:25 结束（UTC+8）。12:30 至 12:58 做 G0 和任务 5 的前半，因用量额度用尽中断约 6 小时；18:55 起做任务 5 的排序、台账定稿和收尾。实际工作约 1 小时 | 0（接着 0A 的会话 3 做） |
 | 0C | 2026-10-08 19:26 开始，20:42 结束（UTC+8）；与 0A、0B 同一个会话。实际工作约 76 分钟（含等待探针运行） | 0（接着 0A 的会话 3 做） |
+| 1A | 2026-10-08 21:10 开始（UTC+8）；新会话 | 1 |
 
 | 阶段 | 任务 | 提交 | 验证方式 |
 |---|---|---|---|
@@ -80,7 +82,51 @@
 
 ## 进行中
 
-没有进行中的任务。D11（参考 Case）已完成，见"已完成"。
+**阶段 1A：Backend 和 Tool 层**（提示词 `docs/prompts/phase-1a.md`，时间盒约 3 小时，21:10 开始）。分两段：第一段定契约（不需要 HYSYS），第二段在真实 HYSYS 上实现并做集成测试。
+
+### 第一段（契约）设计草图
+
+| 文件 | 内容与公开接口 | 估计行数 |
+|---|---|---|
+| `errors.py` | `ErrorCode`（计划 §13.2 的 27 个码）；`RETRYABLE_ERROR_CODES`（唯一来源：策略链以 R0 开头的码，即 `E_TIMEOUT`、`E_NOT_FOUND`、`E_READBACK_MISMATCH`、`E_ATTACH_FAILED`、`E_CONNECT_FAILED`、`E_IO`、`E_CASE_OPEN`、`E_NOT_CONVERGED`、`E_VALIDATION_FATAL`）；`ReactorAgentError(code, message, details)` | 90 |
+| `spec/enums.py` | 全部 `StrEnum`：`ToolName`（12 个）、`ReactorType`（五种）、`PropertyPackage`、`ReactionKind`、`ReactionPhase`（气相、合并相）、`KeqSource`（Gibbs 自由能、固定 K）、`HeatMode`（规定出口温度、绝热、规定热负荷）、`SpecVariable`（出口温度、热负荷）、`StreamKind`、`ConnectMode`、`CaseMode`、`ObjectState` | 100 |
+| `spec/tool_args.py` | 值模型 `StoichiometricTerm`、`ConversionReaction`、`EquilibriumReaction`（可区分联合 `ReactionDefinition`）、`CompositionEntry`、`FeedConditions`；12 个入参模型：`ConnectArgs`、`EnsureCaseArgs`、`SaveCaseArgs`、`CloseCaseArgs`、`EnsureThermoArgs`、`EnsureReactionArgs`、`EnsureReactionSetArgs`、`EnsureStreamArgs`、`EnsureReactorArgs`、`SetSpecArgs`、`SolveArgs`、`ReadSnapshotArgs`。全部冻结、`extra="forbid"`、序列用 `tuple`，物理量带单位后缀 | 280 |
+| `spec/tool_results.py` | `ResultStatus`、`Outcome[DataT]`（Backend 的返回：状态 + 数据）、12 个结果数据模型、`ToolError`（`retryable` 由码算出）、`ToolResult`（信封，`ok` / `status` / `data` / `error`）、`ToolCallEvent` | 200 |
+| `spec/snapshot.py` | `ModelSnapshot` 及其组成：`ThermoSnapshot`、`ReactionSnapshot`、`ReactionSetSnapshot`、`StreamSnapshot`（含 `StreamComponent`）、`EnergyStreamSnapshot`、`ReactorSnapshot`、`SolveStatus`；读不到的值是 `None` | 130 |
+| `spec/matching.py` | 纯函数：`reaction_differences`、`stream_differences`、`reactor_differences`、`reaction_set_differences`、`thermo_differences`，返回人能读的差异描述元组（空表示一致）；容差写成具名常量 | 130 |
+| `backends/base.py` | `SimBackend` Protocol，12 个方法，各对应一个工具 | 50 |
+| `tools/definitions.py` | `bind(model, handler)`；`register_tools(backend)` 把 12 个工具登记成 `ToolName → ToolRunner` | 80 |
+| `tools/registry.py` | `ToolExecutor.call(name, args) -> ToolResult`：未知工具 `E_TOOL_NOT_ALLOWED`、入参类型不对 `E_SCHEMA`、Backend 抛 `ReactorAgentError` 转失败信封、计时并交给可选回调 | 70 |
+| `tests/unit/` | `test_errors.py`、`test_tool_args.py`、`test_matching.py`、`test_tool_executor.py`（几十行的桩 Backend 在测试文件里） | 约 400 |
+
+### 第二段（HYSYS 实现）设计草图（`backends/hysys_com/`）
+
+| 文件 | 职责 | 估计行数 |
+|---|---|---|
+| `com_errors.py` | **`com_error` 这个名字只出现在这里。**`com_call(code, action)` 上下文管理器（也可当装饰器）把 COM 异常转成领域错误，RPC 断开的两个错误号（-2147023174、-2147023170）一律映射 `E_COM_DISCONNECTED`；`read_optional` 读可能没连接的引用（HYSYS 对没连的引用抛错）返回 `None` | 50 |
+| `variables.py` | **单位字符串和空值哨兵只出现在这里。**`Quantity` 枚举（单位 + 到规范单位的系数）、`read_quantity`、`read_quantities`、`write_quantity`、`read_plain`（`…Value` 双精度成员的哨兵处理）、`read_fractions` | 80 |
+| `dialogs.py` | 弹窗看门狗（D12 批准的守护线程，只调 Win32，不碰 COM）：每 0.5 秒枚举 HYSYS 进程的 `#32770`（含不可见的），读文字，点“确定”，记录；同一个对话框 5 秒内只点一次 | 90 |
+| `session.py` | `Session`（应用对象、进程号、是否复用）；`connect`（NewInstance 或接管；`tasklist` 差集取进程号；版本检查）；`shutdown`（`Quit`，超时后 `taskkill`，复用的实例不动） | 110 |
+| `cases.py` | 路径入口校验（目录存在、文件名合法、`resolve` 成长路径）；`ensure_case`（新建后立刻 `SaveAs`，按 `FullName` 找已打开的 Case）、`save_case`（读回文件存在且非空）、`close_case` | 120 |
+| `thermo.py` | `ensure_thermo`（组分列表、流体包、内部名 `pengrob`、末尾 `EndBasisChange`）、`read_thermo` | 90 |
+| `reactions.py` | `ensure_reaction`、`ensure_reaction_set`、`read_reaction`、`read_reaction_set`；类型字符串映射表 | 200 |
+| `streams.py` | `ensure_stream`（物流和能流）、`read_stream`、`read_energy_stream` | 130 |
+| `reactor_kinds.py` | **三种反应器的差别全在这张表里**：操作类型字符串、读回的 `TypeName`、可挂的反应类型（Gibbs 不挂反应集）、已验证的热模式 | 50 |
+| `reactors.py` | `ensure_reactor`（先查名字、连接顺序固定、读回比对）、`read_reactor`、`set_spec` | 190 |
+| `solving.py` | `solve`（确保求解器放开、轮询 `IsSolving` 到超时、读流程图状态并映射 `E_NOT_SOLVED` / `E_NOT_CONVERGED`） | 80 |
+| `snapshot.py` | `read_snapshot`：把各读取函数的结果拼成 `ModelSnapshot` | 50 |
+| `backend.py` | `HysysComBackend`：持有会话、当前 Case、弹窗看门狗；构造时不连接；十二个方法各调一个模块函数 | 150 |
+
+### 已做出的设计决定（假设，用户未另行指示时按此执行）
+
+1. **`ReactorType` 等枚举放在 `spec/enums.py`**，而不是 `tool_args.py`：入参模型加枚举超过 300 行的上限，拆开后各自单一职责。`ReactorType` 仍只定义一次。
+2. **转化率用 `conversion_percent`（0 < x ≤ 100）**，与 HYSYS 和计划 §9.4 规则 5 一致，Backend 不做换算。
+3. **`session.connect` 有 `mode`（`launch` / `attach`）**：R1 说 attach 只用于调试，但提示词要求结果里放“是否复用”，所以两种都实现；默认 `launch`（NewInstance）。
+4. **`ensure_reactor` 的 `heat_mode` 是自洽性声明**：绝热 ⇔ 没有能流；其余两种必须有能流。具体的出口温度或热负荷只通过 `set_spec` 设置；Backend 对未验证的组合（Gibbs 和转化反应器的规定热负荷）抛 `E_UNSUPPORTED`。
+5. **`set_spec` 的变量白名单：** `outlet_temperature_c`（写在反应器气相出料物流上）和 `duty_kw`（写在反应器的能流上）；对象一律是反应器名。变量当前是计算值（`CanModify` 为假）时拒绝，避免过规定。
+6. **错误细节的类型是 `Mapping[str, str]`**（键是对象名或字段名，值是状态文本，例如 `{"CRV-100": "UnderSpecified"}`）。它是有语义的映射，不是靠位置区分含义的元组，也不是任意值的裸 `dict`。
+7. **结果信封里不放耗时**：耗时在 `ToolCallEvent` 里（提示词：事件带耗时；`readback` 字段按提示词不要）。
+8. **台账里没有验证的一个顺序要先探：** 结束 Basis 之后建反应集并 `AssociateFluidPackage`（0A 至 0C 的探针都是在 `EndBasisChange` 之前建反应集）。R3 要求 `ensure_thermo` 末尾结束 Basis，所以先写探针 `spikes/e14_basis_order.py` 验证，记入台账，才在 `src/` 里用。
 
 ## 下一步
 
@@ -109,8 +155,8 @@
 | D11 | 三种反应器的参考 Case `spikes/ref_cases/three_reactors.hsc` | 用户 2026-10-08 指示由助手自行创建 | **已解决**：助手用代码建成并求解（`build_reference_case.py`），E3 已补跑；Gibbs 类型选项和出口温度规定的位置已查清（台账 H31、E8 小节），不需要用户手工建。用户若想在界面里看一眼，打开这个文件即可 |
 | D12 | 弹窗会让 COM 调用卡死（H23）。已见两种：打开用到 Aspen Properties 的 Case，反应集类型与反应器不匹配。0A、0B 的探针用一个后台线程盯着 HYSYS 进程的对话框并点 OK（`spikes/_common.py` 的 `dialog_guard`）。正式系统同样需要，但 `CLAUDE.md` 架构不变量 7 说系统不用多线程 | 建议：允许在 `backends/hysys_com/` 内部用一个守护线程专门处理弹窗（只调用 Win32，不碰 COM 对象），其余仍然同步；备选是只靠事先校验避免已知的弹窗，遇到未知弹窗只能靠超时后按进程号结束 | **已定（用户 2026-10-08：“D12 批准使用后台线程”）**：按建议，在 `backends/hysys_com/` 内部用一个守护线程处理弹窗，只调用 Win32，不碰 COM 对象；其余仍然同步。`CLAUDE.md` 架构不变量 7 写的是“不用多线程”，这是用户批准的例外；1A 实现时引用本条，需要的话再改 `CLAUDE.md` |
 | D13 | 反应集排序没有办法用代码写入（H32），所以“依次进行”的 0.573 没有验证 | Recipe 不设排序，保持默认并行；需要依次时建议用两台转化反应器串联或合并反应 | **已定（用户 2026-10-08：“D13 保持排序”）**。我的理解：保持默认的排序（不设排序、并行），不再验证 0.573，也不继续找写排序的办法；如果用户的意思不同，请指出 |
-| D14 | **固体碳在 Gibbs 反应器里算不对**（场景 3，E10，台账 L24、L25）。进料含固体碳时 Gibbs 反应器的结果与温度无关：全部氧变成 CO、全部氢变成 CH4、氢气为 0（CO 1035、CH4 517.5、碳 981.5 kgmole/h；参照 CO 1017、H2 981、CH4 22、碳 1491）；四条通过条件里第 2、4 条不满足，碳元素守恒和 CO 收率恰好通过，是看起来合理但错的结果。原因：库里 `Carbon` 的 Gibbs 生成能函数是气态碳原子的（+671.3 kJ/mol），生成焓却是石墨的 0，没有升华蒸气压和临界性质，Gibbs 反应器把碳当成特别不稳定的物质。含碳进料本身能正常闪蒸（当作重液相），未反应的碳从液相出料离开。 | **建议 A**（计划 §17.3 的两段式）：先用转化反应器按限量反应物算 C + H2O → CO + H2（水为基准组分，转化率 100%），再用 Gibbs 反应器算气相平衡，未反应的碳从第一台反应器的液相出料旁路；主模型仍是 Gibbs 反应器，报告里如实说明。B：改库里碳的热力学数据——E10c 试了，库组分的 `GibbsCoeffs` 写入被拒绝（`E_ACCESSDENIED`），只能新建假想组分，没有试，没有把握。C：用假想固体组分（没有试）。**我试了 A 的可行性（E10d，没有采用）：四条通过条件全部满足**——气相 CO 1012.6、H2 984.8、CH4 18.2、H2O 13.9、CO2 4.3 kgmole/h（参照 CO 1017、H2 981、CH4 22、H2O 11、CO2 3.5），CO 收率 39.96%，未反应的碳 1499.0（参照 1491，相差 0.5%）从第一段的液相出料离开，总外供热 84.6 MW（参照约 85）。等你决定是否采用 | 未定，**阶段 1A 之前要定**（影响场景 3 的建模结构和 `gibbs` Recipe）；你只需要回答用 A、B 还是 C（我的建议是 A） |
-| D15 | **对计划 §9.3 工具契约的修改建议 R1 至 R12**（台账“对工具契约的影响”一节，逐条有原因和状态）。要点：`session.connect` 一律 `NewInstance`（R1）；`case.ensure` 新建后立刻 `SaveAs`，可重入靠按 `FullName` 找（R2）；`basis.ensure_thermo` 末尾结束 Basis、物性包存内部名（R3）；`ensure_reaction` 读回容差 1e-3、Keq 来源只开 Gibbs 自由能和固定 K、加 `phase` 参数（R4）；`ensure_reactor` 先查名字、同名不同类型报冲突且不调 Add、连接顺序固定、热模式只开已验证的组合（R5）；`solver.solve` 改成检查、默认不挂起、两个 RPC 错误号映射成断开（R6）；所有“确保存在”先查再改（R7）；弹窗看门狗放进 Backend（R8，D12 已批准）；路径入口校验（R9）；反应集排序不进契约（R10，D13）；含固体碳的体系等 D14（R11）；`PlayScript` 只作 Backend 内部备用通道（R12） | 全部按建议 | **待用户确认**（R8、R10 已有答复）。1A 提示词要求：还有“待确认”条目时先问用户 |
+| D14 | **固体碳在 Gibbs 反应器里算不对**（场景 3，E10，台账 L24、L25）。进料含固体碳时 Gibbs 反应器的结果与温度无关：全部氧变成 CO、全部氢变成 CH4、氢气为 0（CO 1035、CH4 517.5、碳 981.5 kgmole/h；参照 CO 1017、H2 981、CH4 22、碳 1491）；四条通过条件里第 2、4 条不满足，碳元素守恒和 CO 收率恰好通过，是看起来合理但错的结果。原因：库里 `Carbon` 的 Gibbs 生成能函数是气态碳原子的（+671.3 kJ/mol），生成焓却是石墨的 0，没有升华蒸气压和临界性质，Gibbs 反应器把碳当成特别不稳定的物质。含碳进料本身能正常闪蒸（当作重液相），未反应的碳从液相出料离开。 | **建议 A**（计划 §17.3 的两段式）：先用转化反应器按限量反应物算 C + H2O → CO + H2（水为基准组分，转化率 100%），再用 Gibbs 反应器算气相平衡，未反应的碳从第一台反应器的液相出料旁路；主模型仍是 Gibbs 反应器，报告里如实说明。B：改库里碳的热力学数据——E10c 试了，库组分的 `GibbsCoeffs` 写入被拒绝（`E_ACCESSDENIED`），只能新建假想组分，没有试，没有把握。C：用假想固体组分（没有试）。**我试了 A 的可行性（E10d，没有采用）：四条通过条件全部满足**——气相 CO 1012.6、H2 984.8、CH4 18.2、H2O 13.9、CO2 4.3 kgmole/h（参照 CO 1017、H2 981、CH4 22、H2O 11、CO2 3.5），CO 收率 39.96%，未反应的碳 1499.0（参照 1491，相差 0.5%）从第一段的液相出料离开，总外供热 84.6 MW（参照约 85）。等你决定是否采用 | **已定（用户 2026-10-08：采用方案 A）**。场景 3 的模型是“转化反应器（C + H2O → CO + H2，基准组分水，转化率 100%，反应相用合并相）+ Gibbs 反应器（进料是第一台的气相）”，两台都带能流、气相出料写 1400 °C；未反应的碳从第一台的液相出料离开。`gibbs` Recipe（1B）按这个结构编译，报告里如实说明主模型仍是 Gibbs 反应器；参考 `spikes/e10d_two_stage.py`（四条通过条件全满足）。1A 的集成测试按这个结构建第三个模型 |
+| D15 | **对计划 §9.3 工具契约的修改建议 R1 至 R12**（台账“对工具契约的影响”一节，逐条有原因和状态）。要点：`session.connect` 一律 `NewInstance`（R1）；`case.ensure` 新建后立刻 `SaveAs`，可重入靠按 `FullName` 找（R2）；`basis.ensure_thermo` 末尾结束 Basis、物性包存内部名（R3）；`ensure_reaction` 读回容差 1e-3、Keq 来源只开 Gibbs 自由能和固定 K、加 `phase` 参数（R4）；`ensure_reactor` 先查名字、同名不同类型报冲突且不调 Add、连接顺序固定、热模式只开已验证的组合（R5）；`solver.solve` 改成检查、默认不挂起、两个 RPC 错误号映射成断开（R6）；所有“确保存在”先查再改（R7）；弹窗看门狗放进 Backend（R8，D12 已批准）；路径入口校验（R9）；反应集排序不进契约（R10，D13）；含固体碳的体系等 D14（R11）；`PlayScript` 只作 Backend 内部备用通道（R12） | 全部按建议 | **已确认（用户 2026-10-08：“D15 全部按建议确认”）**。R1 至 R12 在台账里的状态都改为“已确认”；R11 随 D14 落实为两段式。一处补充：R4 的 `phase` 参数不能只开放气相——两段式第一台转化反应器的进料是碳水浆料（重液相），反应相要用合并相（E10d 用的就是转化反应的默认值 5），所以 1A 的 `ReactionPhase` 开放两个都验证过的取值：气相（G0）、合并相（E10d） |
 | D10 | GitHub 登录：这台机器原本没有存储的凭据 | 用户登录后，助手补推全部提交 | 已解决（用户 `gh auth login` 登录为 `xibei03`，首次推送 2026-10-08 成功）。可选：用户若想让以后的 `git push` 不再需要一次性助手，自行运行 `gh auth setup-git` |
 
 ## 决策日志
