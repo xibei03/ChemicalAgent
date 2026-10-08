@@ -464,19 +464,20 @@ Keq 来源：Gibbs 自由能（默认）已验证；固定 K（摩尔分率基�
 ### 四、1A 的实现（2026-10-08）
 
 R1 至 R12 在阶段 1A 已经按"已确认"的内容实现，`src/reactor_agent/backends/hysys_com/` 里一个关注点一个文件，
-集成测试 `tests/integration/`（38 个）通过 `ToolExecutor` 验证，见 L32。与计划 §9.3 工具契约不同的地方：
+集成测试 `tests/integration/`（39 个）通过 `ToolExecutor` 验证，见 L32。与计划 §9.3 工具契约不同的地方：
 
 | 工具 | 实现与计划的差别 |
 |---|---|
-| `session.connect` | 入参 `mode`（`launch` 默认、`attach` 只用于调试）和 `visible`；结果有版本、进程号、`reused_instance`（R1）。`session.restart` 属于阶段 4 |
+| `session.connect` | 入参 `mode`（`launch` 默认、`attach` 只用于调试）和 `visible`；结果有版本、进程号、`reused_instance`（R1）；已连接并且进程还在则原样返回，进程没了（崩溃）再调用会丢掉旧会话重新连接。`session.restart` 属于阶段 4 |
 | `case.ensure` | 路径必须是绝对路径、扩展名 `.hsc`（"在 run 目录内"由 harness 保证）；`new` 之后立刻 `SaveAs`，已有文件是 `E_CONFLICT`；已经打开了另一个 Case 也是 `E_CONFLICT`（R2）；`open` 模式打开已有文件 |
-| `basis.ensure_thermo` | 末尾 `EndBasisChange()`（R3）；组分必须是库里的规范名，大小写也要一致，否则 `E_COMPONENT_NOT_FOUND` 且细节里给出规范名；物性包枚举只有 `peng_robinson`（内部名 `pengrob`） |
+| `basis.ensure_thermo` | 末尾 `EndBasisChange()`（R3）；组分必须是库里的规范名，大小写也要一致，否则 `E_COMPONENT_NOT_FOUND` 且细节里给出规范名；物性包枚举只有 `peng_robinson`（内部名 `pengrob`）；已有流体包但 Basis 还没结束是 `E_CONFLICT`，结束之后读回 `IsChangingBasis` |
 | `basis.ensure_reaction` | 反应的定义是按 `kind` 区分的联合类型；转化率是百分数；`phase` 开放气相和合并相（R4 的补充：两段式第一台转化反应器的进料是碳水浆料）；Keq 来源开放 Gibbs 自由能和固定 K；质量不守恒量（`BalanceErrorValue`，kg/kmol）超过 0.1 是 `E_REACTION_INVALID` |
 | `basis.ensure_reaction_set` | 没有流体包参数（只有一个）；与反应器类型是否兼容放在 `ensure_reactor` 里连接之前检查，不兼容是 `E_SET_INCOMPATIBLE`，不会触发 HYSYS 的模态对话框（H23） |
-| `flowsheet.ensure_stream` | `kind`（物料流、能流）；规定（`conditions`）可以不给；流量在摩尔流量和质量流量里二选一；能流没有规定，热负荷用 `set_spec` |
+| `flowsheet.ensure_stream` | `kind`（物料流、能流）；规定（`conditions`）可以不给；流量在摩尔流量和质量流量里二选一；能流没有规定，热负荷用 `set_spec`；组成里的组分不在组分表里时先报错再创建，不留空物流 |
 | `flowsheet.ensure_reactor` | 入参是类型、连接（按名字）、反应集、压降和热模式，没有 Gibbs 模式；转化和平衡反应器必须挂反应集，Gibbs 反应器不挂；PFR、CSTR 和未验证的热模式组合是 `E_UNSUPPORTED`（R5）；名字已存在时绝不调用 `Add`（L26）。"每个出料物流只属于一台反应器"没有预检，靠 HYSYS 在连接时拒绝（`E_CONNECT_FAILED`），没有测试 |
 | `flowsheet.set_spec` | 变量白名单是 `outlet_temperature_c`（写在气相出料上）和 `duty_kw`（写在能流上），单位由变量名决定，没有 `unit` 参数；对象一律是反应器；变量当前是计算值（`CanModify` 为假）时是 `E_RULE` |
 | `solver.solve` | 是"检查"不是"触发"（R6）：放开求解器、轮询 `IsSolving` 到空闲、读流程图状态；`E_TIMEOUT`、`E_NOT_SOLVED`（细节是各对象的状态）、`E_NOT_CONVERGED`（把 Error 状态当作不收敛，没有样本验证，H30）。**R6 说的"超时由看门狗线程结束进程"没有做**：`timeout_s` 只覆盖"求解器还在求解"的轮询等待；COM 调用本身卡死而又不是弹窗时没有保护，留给阶段 4 |
+| `case.save`、`case.close` | 保存后读回文件存在且非空；关闭后读回打开的 Case 数少一个；`case.close` 没有打开的 Case 时是“未改变” |
 | `model.read_snapshot` | 只做不带参数的全量读取 |
 | 信封 | 没有 `readback` 和 `duration_ms`：读回比对在工具内部，耗时在 `ToolCallEvent` 里 |
 
@@ -929,6 +930,7 @@ R1 至 R12 在阶段 1A 已经按"已确认"的内容实现，`src/reactor_agent
   - **读回与哨兵数**：快照里没有 -32767；未规定的物流所有量是 `None`；气相反应的液相出料流量为 0 或 `None`。
   - **不触发弹窗**：反应集与反应器类型不兼容在连接之前就被拒绝（`E_SET_INCOMPATIBLE`），看门狗没有处理过任何对话框；看门狗本身用一个真实的 Win32 模态对话框（`MessageBoxW`）测试，不到 1 秒读出文字并点掉。
   - **走过的弯路**：（1）看门狗的单元测试第一次失败，因为虚拟环境里的 `python.exe` 是个启动器，真正的解释器是它的子进程，对话框属于后者，`Popen.pid` 不是对话框的所有者——让子进程自己打印进程号；（2）pytest 的 faulthandler 会把 `Quit()` 时的 RPC 异常 0x800706ba 当作致命错误打印，它在配置阶段才启用，所以在夹具里关掉，不能在 conftest 导入时关。
+- **审查之后**：收尾的独立审查提出的问题修完（读回、防护、先校验再创建、去重），又完整运行 1 次，新增纯气相 Gibbs（与平衡反应器的参照值一致）和固定 K（出口组成对照质量作用定律的手算解，L34）两个测试，共 39 个全部通过，整个测试会话没有触发过任何弹窗（夹具在会话结束时断言）。
 - **结论**：1A 的完成标准里与 HYSYS 有关的几条通过；台账 R1 至 R12 全部落实。Backend 共 14 个模块文件（加 `__init__.py`），`com_error` 只在 `com_errors.py`，单位字符串和哨兵数只在 `variables.py`。
 - **脚本与输出**：`src/reactor_agent/backends/hysys_com/`、`tests/integration/`、`tests/unit/test_com_errors.py`、`test_variables.py`、`test_cases.py`、`test_reactor_kinds.py`、`test_dialog_guard.py`。
 
@@ -936,8 +938,8 @@ R1 至 R12 在阶段 1A 已经按"已确认"的内容实现，`src/reactor_agent
 
 - **目的**：1A 集成测试有一次运行在第 16 个测试之后 HYSYS 进程消失，后面的测试全部报 `E_COM_DISCONNECTED`，要弄清是不是代码的问题。
 - **做法**：查 Windows 应用程序事件日志（`Application Error`、`.NET Runtime`），再连续重跑 4 次完整集成测试。
-- **结果**：事件日志（UTC，当天 11:44 至 13:47）里 `aspenhysys.exe` 有 **11 次** .NET 未处理异常终止，**全部是 `HysysEng.dll` 里的访问冲突**（异常码 `0xc0000005`）：故障偏移 `0x13d8272` 8 次（11:51 至 12:11 的探针会话，以及这次集成测试的 13:47:14），故障偏移 `0x90540` 3 次（11:44 至 11:48）；另有 1 次堆损坏（`0xc0000374`，ntdll，12:23:21）。除了 13:47 这一次，其余都发生在阶段 0C 的探针会话期间（UTC+8 的 19:44 至 20:23），没有逐次对应到具体的探针。崩溃之后又连续完整运行了 6 次集成测试（含加入自愈夹具之后的 1 次），全部通过，没有再崩溃。崩溃时 Python 一侧的表现和 L26 一致：之后每次调用立刻 `E_COM_DISCONNECTED`（`-2147023174`），不会卡住。
-- **结论**：这是 HYSYS 自己的偶发缺陷，集成测试里 8 次完整运行出现 1 次（样本很小），不是 Backend 的问题（错误被正确转成了 `E_COM_DISCONNECTED`，它不在可重试集合里，恢复走 R1 重启）。对策：（1）集成测试的自动夹具在每个测试前检查进程（`HysysComBackend.is_running()`，只看进程号），崩溃了就重新连接，让一次崩溃只影响一个测试；（2）阶段 4 的 `session.restart` 和执行器的 R1 策略要覆盖它；（3）报告里如实说明，不把偶发崩溃说成已经解决。
+- **结果**：事件日志（UTC，当天 11:44 至 13:47）里 `aspenhysys.exe` 有 **11 次** .NET 未处理异常终止，**全部是 `HysysEng.dll` 里的访问冲突**（异常码 `0xc0000005`）：故障偏移 `0x13d8272` 8 次（11:51 至 12:11 的探针会话，以及这次集成测试的 13:47:14），故障偏移 `0x90540` 3 次（11:44 至 11:48）；另有 1 次堆损坏（`0xc0000374`，ntdll，12:23:21）。除了 13:47 这一次，其余都发生在阶段 0C 的探针会话期间（UTC+8 的 19:44 至 20:23），没有逐次对应到具体的探针。崩溃之后又连续完整运行了 7 次集成测试（含加入自愈夹具之后、审查修复之后各 1 次），全部通过，没有再崩溃。崩溃时 Python 一侧的表现和 L26 一致：之后每次调用立刻 `E_COM_DISCONNECTED`（`-2147023174`），不会卡住。
+- **结论**：这是 HYSYS 自己的偶发缺陷，集成测试里 9 次完整运行出现 1 次（样本很小），不是 Backend 的问题（错误被正确转成了 `E_COM_DISCONNECTED`，它不在可重试集合里，恢复走 R1 重启）。对策：（1）集成测试的自动夹具在每个测试前检查进程（`HysysComBackend.is_running()`，只看进程号），崩溃了就重新连接，让一次崩溃只影响一个测试；（2）阶段 4 的 `session.restart` 和执行器的 R1 策略要覆盖它；（3）报告里如实说明，不把偶发崩溃说成已经解决。
 - **脚本与输出**：事件日志 `Application` 的 `Application Error` 事件；`tests/integration/conftest.py` 的 `reconnect_if_hysys_crashed`。
 
 
