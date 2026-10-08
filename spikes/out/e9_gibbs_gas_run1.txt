@@ -1,0 +1,50 @@
+新实例的进程号: 12024
+  Rxn-1：LnKSource=2（2 即 Gibbs 自由能），Basis=1，AutoDetect=True，ReactionPhase=0，系数 (-1.0, -1.0, 1.0, 3.0)
+  Rxn-2：LnKSource=2（2 即 Gibbs 自由能），Basis=1，AutoDetect=True，ReactionPhase=0，系数 (-1.0, -1.0, 1.0, 1.0)
+== Q1 Gibbs 反应器，不挂反应集，出口 710 C ==
+  ReactorType 默认值 3（3 = Gibbs Reactions Only）
+    ReactionSet（没挂） -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  连接完、没规定出口温度时的状态 {'OK': 1, 'NotSolved': 4, 'Warning': 0, 'UnderSpecified': 0, 'Error': 0}
+  -- Gibbs 710 C --
+    气相 T=710.00 C，F=4780.75 kgmole/h，液相 F=0.0000；质量守恒误差 6.03e-06
+    摩尔分率 {'Methane': 0.0962, 'H2O': 0.3844, 'CO': 0.0457, 'CO2': 0.0673, 'Hydrogen': 0.4064}；CH4 转化率 54.0%
+    能流热负荷 39989.8 kW
+  -- 平衡反应器 710 C（对照） --
+    气相 T=710.00 C，F=4780.73 kgmole/h，液相 F=0.0000；质量守恒误差 6.05e-06
+    摩尔分率 {'Methane': 0.0962, 'H2O': 0.3844, 'CO': 0.0457, 'CO2': 0.0673, 'Hydrogen': 0.4064}；CH4 转化率 54.0%
+    能流热负荷 39989.2 kW
+    [通过] 与参照值最大偏差 0.0046 ≤ 0.02；总流量 4780.7（参照约 4800）
+    [通过] 与平衡反应器最大偏差 0.00001 ≤ 0.005
+  流程图状态 {'OK': 10, 'NotSolved': 0, 'Warning': 0, 'UnderSpecified': 0, 'Error': 0}
+== Q2 多股进料：甲烷一股、水蒸气一股（GBR-MULTI） ==
+    Feeds.Names -> ['FeedCH4-M', 'FeedH2O-M']
+  -- 两股进料 710 C --
+    气相 T=710.00 C，F=4780.75 kgmole/h，液相 F=0.0000；质量守恒误差 6.03e-06
+    摩尔分率 {'Methane': 0.0962, 'H2O': 0.3844, 'CO': 0.0457, 'CO2': 0.0673, 'Hydrogen': 0.4064}；CH4 转化率 54.0%
+    能流热负荷 40038.3 kW
+    [通过] 与单股进料最大偏差 0.00000 ≤ 0.005
+== Q3 绝热（不接能流）：GBR-ADI 与 ERV-ADI ==
+  -- Gibbs 绝热 --
+    气相 T=422.63 C，F=3876.18 kgmole/h，液相 F=0.0000；质量守恒误差 8.22e-07
+    摩尔分率 {'Methane': 0.2353, 'H2O': 0.6514, 'CO': 0.0003, 'CO2': 0.0224, 'Hydrogen': 0.0906}；CH4 转化率 8.8%
+  实例 12024 已结束
+Traceback (most recent call last):
+  File "C:\Users\azureuser\Desktop\ChemicalAgent\spikes\e9_gibbs_gas.py", line 213, in main
+    passed = run_once(log, OUT_DIR / f"e9_gibbs_gas_{args.tag}.hsc")
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\azureuser\Desktop\ChemicalAgent\spikes\e9_gibbs_gas.py", line 200, in run_once
+    ok_adiabatic = run_adiabatic(log, flowsheet, basis, reaction_set)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\azureuser\Desktop\ChemicalAgent\spikes\e9_gibbs_gas.py", line 172, in run_adiabatic
+    equilibrium = build_train(flowsheet, basis, "-ADI", reaction_set, with_energy=False)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\azureuser\Desktop\ChemicalAgent\spikes\e8_equilibrium_chain.py", line 96, in build_train
+    reactor = add_reactor(
+              ^^^^^^^^^^^^
+  File "C:\Users\azureuser\Desktop\ChemicalAgent\spikes\chain_kit.py", line 81, in add_reactor
+    reactor.VapourProduct = vapour
+    ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\azureuser\Desktop\ChemicalAgent\.venv\Lib\site-packages\win32com\client\__init__.py", line 600, in __setattr__
+    self._oleobj_.Invoke(*(args + (value,) + defArgs))
+pywintypes.com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147024809), None)
+
