@@ -77,6 +77,7 @@
 | 0C | 4 鲁棒性（E11）和保存重开（E12） | bb742b6、928c4e7 | `spikes/e11_robustness.py`：同名创建、进程中断（错误号 -2147023174 / -2147023170）、弹窗、窗口隐藏的实测，台账 L26；`spikes/e12_save_reopen.py`：保存重开结果和求解状态完全保留，台账 L27 |
 | 0C | 5 备选路线对照（E13） | ec67534 | `spikes/e13a_ui_automation.py`（pywinauto，双击 Model Palette 的 ConversionReactor 建出 CRV-100，2/2）、`spikes/e13b_file_script.py`（Case 级 `ApplyXML` 建对象但不带连接；`PlayScript` 建反应器、写反应集排序，排序 0.5731/0.5456 与预测一致）；视觉操作未试验；台账“路线对照”一节 |
 | 0C | 6 台账定稿 | 59f7275 | 路线对照表、对工具契约的影响（R1 至 R12）、鲁棒性观察、L26 至 L29、H4/H16/H21/H23/H24/H26/H32 更新、调用序列三个小节补实测 |
+| 1A | 第一段：契约（任务 1 至 5） | 36e9068、22c7d7b、a1ac4f6、d35d07f、25d5c43 | `ruff format --check`、`ruff check`、`mypy src`（14 个源文件无问题）、`pytest` 146 passed（全是不需要 HYSYS 的单元测试）；`python tests/test_code_health.py`：`src/` 721 行（spec 541、tools 77、errors 60、backends 43），最长函数 17 行，最深嵌套 2 层，没有忽略检查的注释。错误码 27 个与计划 §13.2 逐码对照；可重试集合 9 个；12 个入参模型拒绝非法值；`ToolExecutor` 三种错误和回调事件有测试；“配置是否一致”的 5 个纯函数有测试 |
 | 0A | 4（补）LLM 连通性（E0） | 未完成 | `spikes/e0_llm_connectivity.py` 已写好并提交，没有密钥时安全退出；**等用户在设了 `DASHSCOPE_API_KEY` 的终端里运行**（见“当前状态”） |
 | 0A | 只读勘查（计划模式下完成，无脚本） | 2427c43 | 注册表 ProgID、`hysys.tlb` 的接口名与集合的 `Add` 签名、安装目录里的 `hysys.hh`、定义文件、帮助文件，写入台账 L0 和"创建反应的线索"初稿（均未运行验证） |
 
@@ -84,7 +85,7 @@
 
 **阶段 1A：Backend 和 Tool 层**（提示词 `docs/prompts/phase-1a.md`，时间盒约 3 小时，21:10 开始）。分两段：第一段定契约（不需要 HYSYS），第二段在真实 HYSYS 上实现并做集成测试。
 
-### 第一段（契约）设计草图
+### 第一段（契约）设计草图（**已完成**，21:10 至 约 22:00；实际与草图的差别：多了 `spec/base.py`（冻结模型的基类，8 行），`SimBackend` 的方法名是 `connect`、`ensure_case` 等）
 
 | 文件 | 内容与公开接口 | 估计行数 |
 |---|---|---|
