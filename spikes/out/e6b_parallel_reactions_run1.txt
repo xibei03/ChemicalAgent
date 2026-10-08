@@ -1,0 +1,65 @@
+新实例的进程号: 13340
+== Q1 默认排序（反应按 R-pX、R-mX、R-oX 的顺序加入反应集） ==
+  [默认排序] 出口摩尔分率 {'Toluene': 0.5, 'Benzene': 0.25, 'p-Xylene': 0.06, 'm-Xylene': 0.13, 'o-Xylene': 0.06}
+      出口甲苯摩尔分率 0.5000：并行（0.500）
+        reactor.ConversionValue -> (12.0, 26.0, 12.0)
+        reactor.RxnPercentConversionValue -> (12.0, 26.0, 12.0)
+== Q2 探测排序成员的名字（GetIDsOfNames） ==
+  反应集: 存在的名字 没有
+  反应器: 存在的名字 没有
+  反应 R-pX: 存在的名字 没有
+== Q2 XML 里的排序 ==
+  XML 长度 352928，声明 '<?xml version="1.0" encoding="windows-1252" standalone="yes" ?>'
+  ReactionRanks 的祖先路径（由内到外）: ['ReactionSet', 'ReactionSetList', 'ReactionPackage', 'Basis', 'CaseDefinition']
+    ReactionRankSet: {'ReactionRank': ('0', 'Specified')}
+    ReactionRankSet: {'ReactionRank': ('0', 'Specified')}
+    ReactionRankSet: {'ReactionRank': ('0', 'Specified')}
+  反应集.TaggedName -> 'Conv-Set'
+  反应集.UniqueID -> 'C:\\Windows\\system32\\e7_toluene.hsc!FluidPkgMgr.300/RxnPackageManager.300/RxnSet.300(Conv-Set)'
+== Q2 通过 XML 改排序值（每次一个新 Case） ==
+-- 实验 1：full (0, 1, 2)：整份 XML 写回（对照） --
+      写回前：进料组成 (1.0, 0.0, 0.0, 0.0, 0.0)，排序 ['0', '0', '0']
+  ApplyXMLForOperation('CRV-100', 0, full XML) 排序 (0, 1, 2) -> False
+      写回后：返回 False，进料组成 (1.0, 0.0, 0.0, 0.0, 0.0)
+      写回后排序 ['0', '0', '0']
+  [排序 (0, 1, 2)] 出口摩尔分率 {'Toluene': 0.2, 'Benzene': 0.2, 'p-Xylene': 0.2, 'm-Xylene': 0.2, 'o-Xylene': 0.2}
+      出口甲苯摩尔分率 0.2000：不是已知的三种
+        reactor.ConversionValue -> (12.0, 26.0, 12.0)
+        reactor.RxnPercentConversionValue -> (12.0, 26.0, 12.0)
+-- 实验 2：minimal (0, 1, 2)：依次：预测甲苯 0.5731 --
+      写回前：进料组成 (1.0, 0.0, 0.0, 0.0, 0.0)，排序 ['0', '0', '0']
+  ApplyXMLForOperation('CRV-100', 0, minimal XML) 排序 (0, 1, 2) -> False
+      写回后：返回 False，进料组成 (1.0, 0.0, 0.0, 0.0, 0.0)
+      写回后排序 ['0', '0', '0']
+  [排序 (0, 1, 2)] 出口摩尔分率 {'Toluene': 0.2, 'Benzene': 0.2, 'p-Xylene': 0.2, 'm-Xylene': 0.2, 'o-Xylene': 0.2}
+      出口甲苯摩尔分率 0.2000：不是已知的三种
+        reactor.ConversionValue -> (12.0, 26.0, 12.0)
+        reactor.RxnPercentConversionValue -> (12.0, 26.0, 12.0)
+-- 实验 3：minimal (1, 1, 0)：第三个先算，前两个并行：预测甲苯 0.5456 --
+      写回前：进料组成 (1.0, 0.0, 0.0, 0.0, 0.0)，排序 ['0', '0', '0']
+  ApplyXMLForOperation('CRV-100', 0, minimal XML) 排序 (1, 1, 0) -> False
+      写回后：返回 False，进料组成 (1.0, 0.0, 0.0, 0.0, 0.0)
+      写回后排序 ['0', '0', '0']
+  [排序 (1, 1, 0)] 出口摩尔分率 {'Toluene': 0.2, 'Benzene': 0.2, 'p-Xylene': 0.2, 'm-Xylene': 0.2, 'o-Xylene': 0.2}
+      出口甲苯摩尔分率 0.2000：不是已知的三种
+        reactor.ConversionValue -> (12.0, 26.0, 12.0)
+        reactor.RxnPercentConversionValue -> (12.0, 26.0, 12.0)
+-- 实验 4：minimal (2, 1, 0)：倒序依次：预测甲苯 0.5731 --
+      写回前：进料组成 (1.0, 0.0, 0.0, 0.0, 0.0)，排序 ['0', '0', '0']
+  ApplyXMLForOperation('CRV-100', 0, minimal XML) 排序 (2, 1, 0) -> False
+      写回后：返回 False，进料组成 (1.0, 0.0, 0.0, 0.0, 0.0)
+      写回后排序 ['0', '0', '0']
+  [排序 (2, 1, 0)] 出口摩尔分率 {'Toluene': 0.2, 'Benzene': 0.2, 'p-Xylene': 0.2, 'm-Xylene': 0.2, 'o-Xylene': 0.2}
+      出口甲苯摩尔分率 0.2000：不是已知的三种
+        reactor.ConversionValue -> (12.0, 26.0, 12.0)
+        reactor.RxnPercentConversionValue -> (12.0, 26.0, 12.0)
+-- 实验 5：minimal (5, 5, 5)：三个相同的非零值：预测并行 0.5000 --
+      写回前：进料组成 (1.0, 0.0, 0.0, 0.0, 0.0)，排序 ['0', '0', '0']
+  ApplyXMLForOperation('CRV-100', 0, minimal XML) 排序 (5, 5, 5) -> False
+      写回后：返回 False，进料组成 (1.0, 0.0, 0.0, 0.0, 0.0)
+      写回后排序 ['0', '0', '0']
+  [排序 (5, 5, 5)] 出口摩尔分率 {'Toluene': 0.2, 'Benzene': 0.2, 'p-Xylene': 0.2, 'm-Xylene': 0.2, 'o-Xylene': 0.2}
+      出口甲苯摩尔分率 0.2000：不是已知的三种
+        reactor.ConversionValue -> (12.0, 26.0, 12.0)
+        reactor.RxnPercentConversionValue -> (12.0, 26.0, 12.0)
+  实例 13340 已结束
