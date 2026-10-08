@@ -14,6 +14,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 
+import win32com.client
 import win32gui
 import win32process
 
@@ -54,6 +55,15 @@ class Log:
             return False, None
         self.say(f"  {label} -> {value!r}")
         return True, value
+
+
+def first_ok(log: Log, label: str, *calls: Callable[[], object]) -> tuple[bool, object, int]:
+    """依次试几种写法，返回 (是否成功, 值, 成功的是第几种)。每一种的结果都记在日志里。"""
+    for index, call in enumerate(calls):
+        ok, value = log.attempt(f"{label} [写法 {index + 1}]", call)
+        if ok:
+            return True, value, index
+    return False, None, -1
 
 
 def hysys_processes() -> dict[int, str]:
@@ -147,6 +157,23 @@ def describe_windows(log: Log) -> None:
         log.say(f"    窗口 pid={w.pid} 类名={w.class_name!r} 标题={w.title!r}")
         for text in child_texts(w.hwnd)[:8]:
             log.say(f"        控件 {text}")
+
+
+@contextmanager
+def new_instance(log: Log, visible: bool = True) -> Iterator[tuple[object, int | None]]:
+    """新开一个 HYSYS 实例（NewInstance），用完按进程号结束，不碰别的实例。"""
+    before = hysys_processes()
+    app = win32com.client.gencache.EnsureDispatch("HYSYS.Application.NewInstance")
+    pid = next((p for p in hysys_processes() if p not in before), None)
+    log.say(f"新实例的进程号: {pid}")
+    app.Visible = visible
+    try:
+        yield app, pid
+    finally:
+        if pid is not None:
+            subprocess.run(["taskkill", "/PID", str(pid), "/T", "/F"], capture_output=True)
+            gone = wait_gone(pid)
+            log.say(f"  实例 {pid} {'已结束' if gone is not None else '仍在运行'}")
 
 
 @contextmanager

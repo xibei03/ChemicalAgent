@@ -1,0 +1,76 @@
+新实例的进程号: 1504
+  IsChangingBasis -> True
+  ComponentLists.Add('CL-1') -> <win32com.gen_py.HYSYS 15.0 Type Library.ComponentList instance at 0x2695430211728>
+  CL-1 加 Methane -> <win32com.gen_py.HYSYS 15.0 Type Library.Component instance at 0x2695473591312>
+  CL-1 加 H2O -> <win32com.gen_py.HYSYS 15.0 Type Library.Component instance at 0x2695473591168>
+  CL-1 加 CO -> <win32com.gen_py.HYSYS 15.0 Type Library.Component instance at 0x2695473590976>
+  CL-1 加 CO2 -> <win32com.gen_py.HYSYS 15.0 Type Library.Component instance at 0x2695473591648>
+  CL-1 加 Hydrogen -> <win32com.gen_py.HYSYS 15.0 Type Library.Component instance at 0x2695473590928>
+== A FluidPackages.Add(name, Type)，Type 试各种写法 ==
+  FluidPackages.Add('FP-A0', 5891) -> <win32com.gen_py.HYSYS 15.0 Type Library.FluidPackage instance at 0x2695426010736>
+    [FP-A0]: PropertyPackageName -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    [FP-A0]: PropertyPackage.TypeName -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    [FP-A0]: CanEndBasisChange -> False
+  FluidPackages.Remove('FP-A0') -> None
+  FluidPackages.Add('FP-A1', '5891') -> <win32com.gen_py.HYSYS 15.0 Type Library.FluidPackage instance at 0x2695473590928>
+    [FP-A1]: PropertyPackageName -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    [FP-A1]: PropertyPackage.TypeName -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    [FP-A1]: CanEndBasisChange -> False
+  FluidPackages.Remove('FP-A1') -> None
+  FluidPackages.Add('FP-A2', 'ppkg_PR') -> <win32com.gen_py.HYSYS 15.0 Type Library.FluidPackage instance at 0x2695473591168>
+    [FP-A2]: PropertyPackageName -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    [FP-A2]: PropertyPackage.TypeName -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    [FP-A2]: CanEndBasisChange -> False
+  FluidPackages.Remove('FP-A2') -> None
+  FluidPackages.Add('FP-A3', 'Peng-Robinson') -> <win32com.gen_py.HYSYS 15.0 Type Library.FluidPackage instance at 0x2695426010736>
+    [FP-A3]: PropertyPackageName -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    [FP-A3]: PropertyPackage.TypeName -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    [FP-A3]: CanEndBasisChange -> False
+  FluidPackages.Remove('FP-A3') -> None
+  FluidPackages.Add('FP-A4', 'PengRobinson') -> <win32com.gen_py.HYSYS 15.0 Type Library.FluidPackage instance at 0x2695473590928>
+    [FP-A4]: PropertyPackageName -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    [FP-A4]: PropertyPackage.TypeName -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    [FP-A4]: CanEndBasisChange -> False
+  FluidPackages.Remove('FP-A4') -> None
+  FluidPackages.Add('FP-A5', 'PR') -> <win32com.gen_py.HYSYS 15.0 Type Library.FluidPackage instance at 0x2695473591168>
+    [FP-A5]: PropertyPackageName -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    [FP-A5]: PropertyPackage.TypeName -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+    [FP-A5]: CanEndBasisChange -> False
+  FluidPackages.Remove('FP-A5') -> None
+== B、C PropertyPackageName 的各种写法（有组分列表 / 无组分列表） ==
+  FluidPackages.Add('FP-B0') -> <win32com.gen_py.HYSYS 15.0 Type Library.FluidPackage instance at 0x2695473591168>
+    [FP-B0] PropertyPackageName = 'Peng-Robinson' -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147024809), None)
+    [FP-B0] PropertyPackageName = 'PengRobinson' -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147024809), None)
+    [FP-B0] PropertyPackageName = 'Peng Robinson' -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147024809), None)
+    [FP-B0] PropertyPackageName = 'PR' -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147024809), None)
+    [FP-B0] PropertyPackageName = 'Peng-Robinson (Aspen)' -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147024809), None)
+    [FP-B0] PropertyPackageName = 'EOS: Peng-Robinson' -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147024809), None)
+    [FP-B0] PropertyPackageName = 'ppkg_PR' -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147024809), None)
+    [FP-B0] PropertyPackageName = '5891' -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147024809), None)
+    [FP-B0] PropertyPackageName = 'HYSYS: Peng-Robinson' -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147024809), None)
+    [FP-B0] PropertyPackageName = 'COMThermo: Peng-Robinson' -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147024809), None)
+    [FP-B0] PropertyPackageName = 'pengrob' -> None
+    [FP-B0] 成功后: PropertyPackageName -> 'Peng-Robinson'
+    [FP-B0] 成功后: PropertyPackage.TypeName -> 'pengrob'
+    [FP-B0] 成功后: CanEndBasisChange -> False
+  FluidPackages.Remove('FP-B0') -> None
+  FluidPackages.Add('FP-B1') -> <win32com.gen_py.HYSYS 15.0 Type Library.FluidPackage instance at 0x2695473591504>
+  fp.ComponentList = CL-1 -> None
+    [FP-B1] PropertyPackageName = 'Peng-Robinson' -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147024809), None)
+    [FP-B1] PropertyPackageName = 'PengRobinson' -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147024809), None)
+    [FP-B1] PropertyPackageName = 'Peng Robinson' -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147024809), None)
+    [FP-B1] PropertyPackageName = 'PR' -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147024809), None)
+    [FP-B1] PropertyPackageName = 'Peng-Robinson (Aspen)' -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147024809), None)
+    [FP-B1] PropertyPackageName = 'EOS: Peng-Robinson' -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147024809), None)
+    [FP-B1] PropertyPackageName = 'ppkg_PR' -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147024809), None)
+    [FP-B1] PropertyPackageName = '5891' -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147024809), None)
+    [FP-B1] PropertyPackageName = 'HYSYS: Peng-Robinson' -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147024809), None)
+    [FP-B1] PropertyPackageName = 'COMThermo: Peng-Robinson' -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147024809), None)
+    [FP-B1] PropertyPackageName = 'pengrob' -> None
+    [FP-B1] 成功后: PropertyPackageName -> 'Peng-Robinson'
+    [FP-B1] 成功后: PropertyPackage.TypeName -> 'pengrob'
+    [FP-B1] 成功后: CanEndBasisChange -> True
+  FluidPackages.Remove('FP-B1') -> None
+  FluidPackages.Names（试完后） -> []
+  case.Close() -> None
+  实例 1504 已结束

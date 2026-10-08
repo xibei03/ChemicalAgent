@@ -1,0 +1,114 @@
+新实例的进程号: 10324
+== Q1 新建空白 Case ==
+  SimulationCases.Count（新建前） -> 0
+  SimulationCases.Add [写法 1] -> <win32com.gen_py.HYSYS 15.0 Type Library._SimulationCase instance at 0x2003967111344>
+  Add 的返回类型: _SimulationCase
+  SimulationCases.Count（新建后） -> 1
+  case.FullName -> 'C:\\Windows\\system32\\e4_new.hsc'
+  case.Visible -> False
+  case.IsDirty -> True
+  case.Title -> <win32com.gen_py.HYSYS 15.0 Type Library.TextVariable instance at 0x2003901870496>
+  app.ActiveDocument -> 失败 AttributeError: 'NoneType' object has no attribute 'FullName'
+  BasisManager.IsChangingBasis -> True
+  BasisManager.CanEndBasisChange -> False
+  FluidPackages.Count -> 0
+  ComponentLists.Count -> 0
+  ComponentLists.Names -> []
+== Q4、Q5 组分名的写法（临时组分列表） ==
+  ComponentLists.Add('probe-names') [写法 1] -> <win32com.gen_py.HYSYS 15.0 Type Library.ComponentList instance at 0x2003937447568>
+  [甲烷] Components.Add('Methane') -> <win32com.gen_py.HYSYS 15.0 Type Library.Component instance at 0x2003967112496>
+      加入后 Count=1，最后一个是 'Methane'，加之前 0 个
+  [甲烷] Components.Add('methane') -> <win32com.gen_py.HYSYS 15.0 Type Library.Component instance at 0x2003967111488>
+      加入后 Count=1，最后一个是 'Methane'，加之前 1 个
+  [甲烷] Components.Add('CH4') -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  [甲烷] Components.Add('C1') -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  [水] Components.Add('H2O') -> <win32com.gen_py.HYSYS 15.0 Type Library.Component instance at 0x2003967112112>
+      加入后 Count=2，最后一个是 'H2O'，加之前 1 个
+  [水] Components.Add('Water') -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  [水] Components.Add('water') -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  [一氧化碳] Components.Add('CO') -> <win32com.gen_py.HYSYS 15.0 Type Library.Component instance at 0x2003967111488>
+      加入后 Count=3，最后一个是 'CO'，加之前 2 个
+  [一氧化碳] Components.Add('CarbonMonoxide') -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  [一氧化碳] Components.Add('Carbon Monoxide') -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  [二氧化碳] Components.Add('CO2') -> <win32com.gen_py.HYSYS 15.0 Type Library.Component instance at 0x2003967112112>
+      加入后 Count=4，最后一个是 'CO2'，加之前 3 个
+  [二氧化碳] Components.Add('CarbonDioxide') -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  [二氧化碳] Components.Add('Carbon Dioxide') -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  [氢气] Components.Add('Hydrogen') -> <win32com.gen_py.HYSYS 15.0 Type Library.Component instance at 0x2003967112448>
+      加入后 Count=5，最后一个是 'Hydrogen'，加之前 4 个
+  [氢气] Components.Add('H2') -> <win32com.gen_py.HYSYS 15.0 Type Library.Component instance at 0x2003967111488>
+      加入后 Count=5，最后一个是 'Hydrogen'，加之前 5 个
+  [甲苯] Components.Add('Toluene') -> <win32com.gen_py.HYSYS 15.0 Type Library.Component instance at 0x2003967112400>
+      加入后 Count=6，最后一个是 'Toluene'，加之前 5 个
+  [甲苯] Components.Add('toluene') -> <win32com.gen_py.HYSYS 15.0 Type Library.Component instance at 0x2003967111584>
+      加入后 Count=6，最后一个是 'Toluene'，加之前 6 个
+  [甲苯] Components.Add('C7H8') -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  [苯] Components.Add('Benzene') -> <win32com.gen_py.HYSYS 15.0 Type Library.Component instance at 0x2003967111584>
+      加入后 Count=7，最后一个是 'Benzene'，加之前 6 个
+  [苯] Components.Add('benzene') -> <win32com.gen_py.HYSYS 15.0 Type Library.Component instance at 0x2003967112448>
+      加入后 Count=7，最后一个是 'Benzene'，加之前 7 个
+  [苯] Components.Add('C6H6') -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  [对二甲苯] Components.Add('p-Xylene') -> <win32com.gen_py.HYSYS 15.0 Type Library.Component instance at 0x2003967112448>
+      加入后 Count=8，最后一个是 'p-Xylene'，加之前 7 个
+  [对二甲苯] Components.Add('P-Xylene') -> <win32com.gen_py.HYSYS 15.0 Type Library.Component instance at 0x2003967111536>
+      加入后 Count=8，最后一个是 'p-Xylene'，加之前 8 个
+  [对二甲苯] Components.Add('pXylene') -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  [对二甲苯] Components.Add('p-xylene') -> <win32com.gen_py.HYSYS 15.0 Type Library.Component instance at 0x2003967111536>
+      加入后 Count=8，最后一个是 'p-Xylene'，加之前 8 个
+  [对二甲苯] Components.Add('PXYLENE') -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  [间二甲苯] Components.Add('m-Xylene') -> <win32com.gen_py.HYSYS 15.0 Type Library.Component instance at 0x2003967111536>
+      加入后 Count=9，最后一个是 'm-Xylene'，加之前 8 个
+  [间二甲苯] Components.Add('M-Xylene') -> <win32com.gen_py.HYSYS 15.0 Type Library.Component instance at 0x2003967111488>
+      加入后 Count=9，最后一个是 'm-Xylene'，加之前 9 个
+  [邻二甲苯] Components.Add('o-Xylene') -> <win32com.gen_py.HYSYS 15.0 Type Library.Component instance at 0x2003967112448>
+      加入后 Count=10，最后一个是 'o-Xylene'，加之前 9 个
+  [邻二甲苯] Components.Add('O-Xylene') -> <win32com.gen_py.HYSYS 15.0 Type Library.Component instance at 0x2003967112304>
+      加入后 Count=10，最后一个是 'o-Xylene'，加之前 10 个
+  [碳] Components.Add('Carbon') -> <win32com.gen_py.HYSYS 15.0 Type Library.Component instance at 0x2003967112592>
+      加入后 Count=11，最后一个是 'Carbon'，加之前 10 个
+  [碳] Components.Add('C') -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  [碳] Components.Add('carbon') -> <win32com.gen_py.HYSYS 15.0 Type Library.Component instance at 0x2003967112592>
+      加入后 Count=11，最后一个是 'Carbon'，加之前 11 个
+  [碳] Components.Add('Graphite') -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  [不存在的名字] Components.Add('NoSuchComponentXYZ') -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  临时组分列表的全部名字 -> ['Methane', 'H2O', 'CO', 'CO2', 'Hydrogen', 'Toluene', 'Benzene', 'p-Xylene', 'm-Xylene', 'o-Xylene', 'Carbon']
+  ComponentLists.Remove('probe-names') -> None
+  ComponentLists.Names（删除后） -> []
+== Q2、Q3 组分列表和流体包 ==
+  IsChangingBasis -> True
+  ComponentLists.Add('CL-1') [写法 1] -> <win32com.gen_py.HYSYS 15.0 Type Library.ComponentList instance at 0x2003904550272>
+  CL-1.Components.Add('Methane') -> <win32com.gen_py.HYSYS 15.0 Type Library.Component instance at 0x2003967112496>
+  CL-1.Components.Add('H2O') -> <win32com.gen_py.HYSYS 15.0 Type Library.Component instance at 0x2003967112496>
+  CL-1.Components.Add('CO') -> <win32com.gen_py.HYSYS 15.0 Type Library.Component instance at 0x2003967112496>
+  CL-1.Components.Add('CO2') -> <win32com.gen_py.HYSYS 15.0 Type Library.Component instance at 0x2003967112496>
+  CL-1.Components.Add('Hydrogen') -> <win32com.gen_py.HYSYS 15.0 Type Library.Component instance at 0x2003967112496>
+  CL-1.Components.Add('Toluene') -> <win32com.gen_py.HYSYS 15.0 Type Library.Component instance at 0x2003967112496>
+  CL-1.Components.Add('Benzene') -> <win32com.gen_py.HYSYS 15.0 Type Library.Component instance at 0x2003967112496>
+  CL-1.Components.Add('p-Xylene') -> <win32com.gen_py.HYSYS 15.0 Type Library.Component instance at 0x2003937447568>
+  CL-1 的组分 -> ['Methane', 'H2O', 'CO', 'CO2', 'Hydrogen', 'Toluene', 'Benzene', 'p-Xylene']
+  FluidPackages.Add('Basis-1') [写法 1] -> <win32com.gen_py.HYSYS 15.0 Type Library.FluidPackage instance at 0x2003937447376>
+  fp.name -> 'Basis-1'
+  fp.ComponentList（初值） -> 'Component List - 1'
+  fp.ComponentList = CL-1 -> None
+  fp.ComponentList（设置后） -> 'CL-1'
+  fp.PropertyPackageName（初值） -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  fp.PropertyPackageName = 'Peng-Robinson' -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147024809), None)
+    读回 PropertyPackageName -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  fp.PropertyPackageName = 'PengRobinson' -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147024809), None)
+    读回 PropertyPackageName -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  fp.PropertyPackageName = 'Peng Robinson' -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147024809), None)
+    读回 PropertyPackageName -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  fp.PropertyPackageName = 'PR' -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147024809), None)
+    读回 PropertyPackageName -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  fp.PropertyPackage 的类型 -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  fp.Components.Names -> []
+== Q2、Q6 结束 Basis 修改、另存、关闭、重开 ==
+  CanEndBasisChange -> False
+  EndBasisChange() -> 失败 com_error: (-2147352567, 'Exception occurred.', (0, None, None, None, 0, -2147467259), None)
+  IsChangingBasis（结束后） -> True
+  Flowsheet.MaterialStreams.Count -> 0
+  Solver.CanSolve -> True
+  case.SaveAs(path) -> None
+  case.FullName（另存后） -> 'C:\\Users\\azureuser\\AppData\\Local\\Temp\\hysys_e4_574y0evv\\e4_saved.hsc'
+  文件 e4_saved.hsc 存在: True，138 KB
+  case.Close() -> None
