@@ -1,0 +1,7 @@
+# 运行配置。密钥不写在这里，只从下面 api_key_env 指的环境变量里读。
+llm:
+  provider: dashscope                # 阿里云百炼，OpenAI 兼容接口
+  model: qwen3.8-max                 # 主模型（D1）
+  base_url: https://dashscope.aliyuncs.com/compatible-mode/v1
+  api_key_env: DASHSCOPE_API_KEY
+  timeout_s: 60

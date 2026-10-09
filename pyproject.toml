@@ -10,6 +10,7 @@ requires-python = ">=3.11"
 dependencies = [
     "pydantic>=2.6",
     "pyyaml>=6.0",
+    "openai>=1.50",                  # 阿里云百炼的 OpenAI 兼容接口（阶段 2A，D1）
     "pywin32>=306; sys_platform == 'win32'",
 ]
 
@@ -29,6 +30,9 @@ reactor-agent = "reactor_agent.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+reactor_agent = ["llm/prompts/*.md"]
 
 # ---------------------------------------------------------------- ruff
 [tool.ruff]
