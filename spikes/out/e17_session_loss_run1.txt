@@ -1,0 +1,34 @@
+规格 smr_equilibrium，第 9 次工具调用之后结束 HYSYS；运行目录 C:\Users\AZUREU~1\AppData\Local\Temp\e17_runs_da2dz9qt
+  第 9 次调用（flowsheet.ensure_stream）之后结束进程 10596
+终态 failed，从结束进程到离开 HYSYS 收尾共 0.0 秒
+收尾之后多出来的 HYSYS 进程：没有
+--- 诊断 ---
+任务 20261009-105602-5f 没有完成：failed
+停在状态：BUILD_FLOWSHEET
+出错的步骤：flowsheet.ensure_stream {"name":"Q-100","kind":"energy","conditions":null}
+错误：E_COM_DISCONNECTED：HYSYS 进程已经不可用（读取 Basis 状态时）
+详情：
+  hresult：-2147023170
+  message：The remote procedure call failed.
+已重试 0 次，已干净重建 0 次
+Trace：C:\Users\AZUREU~1\AppData\Local\Temp\e17_runs_da2dz9qt\20261009-105602-5f\trace.jsonl
+Case 文件（供检查）：C:\Users\azureuser\AppData\Local\Temp\e17_runs_da2dz9qt\20261009-105602-5f\working-1.hsc
+HYSYS 会话已经失效。重启 HYSYS 之后，用同一份冻结的规格重跑：
+  reactor-agent run --spec "C:\Users\AZUREU~1\AppData\Local\Temp\e17_runs_da2dz9qt\20261009-105602-5f\artifacts\model_spec.json"
+--- 时间线 ---
+Task 20261009-105602-5f   规格哈希 f3a51e23fe6d
+  INIT              [spec_frozen]
+  PLAN              [plan_saved]
+  PREFLIGHT         session.connect, case.ensure
+  BUILD_BASIS       basis.ensure_thermo, basis.ensure_reaction x2, basis.ensure_reaction_set
+  BUILD_FLOWSHEET   flowsheet.ensure_stream x3, flowsheet.ensure_stream ✗E_COM_DISCONNECTED, → abort (E_COM_DISCONNECTED), case.save ✗E_COM_DISCONNECTED
+  failed
+--- 照诊断里的命令重跑 ---
+退出码 0
+任务 20261009-105620-6f：complete
+工况 T710（C:\Users\azureuser\AppData\Local\Temp\e17_runs_da2dz9qt\20261009-105620-6f\T710.hsc）
+  Vap：710 °C，13.5 bar，4780.7 kmol/h
+    摩尔分率：Methane 0.0961，H2O 0.3844，CO 0.0457，CO2 0.0673，Hydrogen 0.4064
+  Liq：710 °C，13.5 bar，0 kmol/h
+  热负荷：39988 kW（吸热为正）
+结论: Q1 是（0.0 秒，要求 60 秒内，终态 failed）；Q2 是（错误码 E_COM_DISCONNECTED）；Q3 是（退出码 0）；Q4 没有残留进程

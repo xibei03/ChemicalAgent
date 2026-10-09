@@ -998,3 +998,15 @@ R1 至 R12 在阶段 1A 已经按"已确认"的内容实现，`src/reactor_agent
   （比如模型没有求解）读回空相的形式，仍由 V5“读不到就失败”保护。
 - **脚本与输出**：`spikes/e16_validation_real_snapshots.py`；`spikes/out/e16_validation_real_snapshots_run1.txt`、`e16_toluene_conversion_run1.hsc`、
   `e16_smr_equilibrium_run1.hsc`、`e16_slurry_gibbs_run1.hsc`。
+
+### L37 E17：建模中途结束 HYSYS 进程，执行器的表现（2026-10-09，1C 任务 9）
+
+- **目的**：1C 的执行器对会话失效（`E_COM_DISCONNECTED`）直接中止（计划 §13.4：P0 不自动重启）。要确认：进程被结束之后多久以 `FAILED` 结束（要求 60 秒内）；诊断是否说明会话失效并给出用同一份冻结规格重跑的命令；照命令重跑能否完成；命令行的收尾有没有卡住或留下进程。
+- **做法**：`spikes/e17_session_loss.py`（一次性，不是自动化测试，它会破坏测试会话共用的连接）：生产代码的 `HysysComBackend`、`ToolExecutor`、执行器；包装 `ToolExecutor`，在第 9 次工具调用（平衡反应器规格的第 3 股物流）成功之后 `taskkill /F /PID <进程号>`（取自 `session.connect` 的结果）；用命令行的 `_hysys()` 上下文收尾；再用诊断里打印的命令（`reactor-agent run --spec "…\artifacts\model_spec.json"`）起一个子进程重跑。运行 1 次（run1）。
+- **结果**（`spikes/out/e17_session_loss_run1.txt`）：
+  - 进程被结束后的第一次调用（下一股物流 `flowsheet.ensure_stream`）就得到 `E_COM_DISCONNECTED`，细节里是 `hresult -2147023170`（“The remote procedure call failed”，L26 的“调用期间”那一种）；错误立刻返回，不会卡住。执行器不重试、不重建，直接中止（终态 `failed`），0.0 秒（计时精度内）。中止时试着存 Case（`case.save`）也立刻得到同样的错误，被忽略，没有盖住原来的错误。
+  - 诊断里有：停在状态 BUILD_FLOWSHEET，出错的步骤 `flowsheet.ensure_stream {"name":"Q-100",…}`，错误码和消息，已重试 0 次、已重建 0 次，Trace 和 Case 文件的位置，“HYSYS 会话已经失效。重启 HYSYS 之后，用同一份冻结的规格重跑”和那条命令。
+  - 命令行收尾（`backend.shutdown()`）对已经不存在的进程没有出错，之后没有多出来的 HYSYS 进程。
+  - 照诊断里的命令重跑：退出码 0，终态 complete，T710 的出料与平时一致（甲烷 0.0961、氢气 0.4064、热负荷 39988 kW）。
+- **结论**：会话失效在 60 秒内（实际不到 1 秒）以 `FAILED` 结束，诊断带重跑命令，重跑能完成。**没有验证的**：进程在 `Open`/`SaveAs`/`solve` 调用*期间*被结束的情形（L26 的 B2、B3 在 Backend 层面记过，错误号相同）；HYSYS 调用卡死而不是报错的情形（D16，阶段 4）。
+- **脚本与输出**：`spikes/e17_session_loss.py`；`spikes/out/e17_session_loss_run1.txt`。
