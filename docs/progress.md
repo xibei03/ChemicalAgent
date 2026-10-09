@@ -7,12 +7,12 @@
 - **阶段 0B：已完成**（2026-10-08 12:30 开始，19:25 结束，UTC+8；与 0A 的会话 3 是同一个会话，中间因用量额度中断约 6 小时，实际工作约 1 小时）。**闸门 G0 通过**：`spikes/e7_conversion_chain.py` 从空白 Case 用代码建出四产物分数系数的甲苯歧化转化反应器，连续两次运行出料摩尔分率与解析解偏差 0.00000、质量守恒误差 1.52e-05、出口温度 378.59 °C、两次运行摩尔流量相对偏差 0。**每一步都是第 1 级集成方式（COM 编程）**，没有降级。**分数计量系数可用**，一个转化反应即可。任务 5：同一基准组分的多个转化反应**默认并行**（12/26/12% 三个反应，出口甲苯 0.5000）；反应集排序（Conversion Rankings）COM 成员、XML 写回、BackDoor 都写不了，**0C 发现 `PlayScript` 可以写**（排序 (0,1,2) 出口甲苯 0.5731、(1,1,0) 为 0.5456，与预测一致，H24、H32）；含义：排序值最小的先算、相同的并行、后面的对剩下的基准组分算；按 D13 Recipe 不设排序。台账 H1 至 H26 里 0B 要求的 14 项都有实测证据，"调用序列 → 转化反应器"小节已写成 Backend 的蓝本。
 - **阶段 0C：已完成，除了 E0 的最后一步**（2026-10-08 19:26 开始，20:42 结束，UTC+8；与 0A、0B 是同一个会话）。完成标准六条：①`e8` 两个工况在容差内（710 °C 偏差 0.0046、600 °C 偏差 0.0014），`e9` 通过（Gibbs 与平衡反应器偏差 1e-5，多股进料、绝热两个小试验通过），**`e10` 不满足通过条件**：Gibbs 反应器 + 库里的固体碳算出的结果是错的（碳的 Gibbs 函数是气态碳原子的，E10b、E10c），证据已交给用户决定（D14）；两段式（计划 §17.3）的可行性我试了，四条通过条件全满足（E10d），没有采用；②固体碳五个问题的答案在台账 Gibbs 反应器小节；③H1 至 H26 没有“未测试”；④路线对照表有四条路线的对照，每条有证据，LLM 视觉操作如实写未试验（没有桌面屏幕工具）；⑤台账有三种反应器的调用序列、十一个组分规范名、鲁棒性观察和“对工具契约的影响”（R1 至 R12，登记为 D15）；⑥本文件已更新并提交。**另外：`PlayScript` 是个能用的第二级通道**，能写 COM 写不了的内部变量（反应集排序已验证）和建对象；用户答复 D12 批准后台线程、D13 保持默认排序。
 - **阶段 1A：已完成**（2026-10-08 21:10 开始，2026-10-09 00:30 结束，UTC+8；新会话，中间因用量额度中断约 1 小时 55 分，实际工作约 1 小时 25 分）。开始时用户答复了 D14（采用方案 A 两段式）和 D15（R1 至 R12 全部按建议）。**完成标准五条：**①`ruff format --check`、`ruff check`、`mypy src`（29 个源文件）、`pytest`（230 passed，含 `tests/test_code_health.py` 的 13 个）全部通过；②`pytest -m hysys tests/integration`：39 passed（约 73 秒），三个模型都只通过 `ToolExecutor` 建成：转化反应器与解析解偏差 0.00000，平衡反应器 710 °C、600 °C 与参照值最大偏差 0.0046、0.0014，两段式气化 CO 收率 39.96%；另有纯气相 Gibbs 反应器、固定 K 两个测试；幂等、冲突、哨兵数的断言通过；③`src/` 里除 `backends/hysys_com/` 之外没有 COM 相关代码和 `Any`，`test_hysys_backend_isolation.py` 检查 `com_error` 的名字、单位字符串、哨兵数各只出现在一个文件里；④交接报告里有体检输出和独立审查的处理结果；⑤本文件已更新，改动分多次提交并推送。**两个意外：**HYSYS 自己偶发崩溃（访问冲突，集成测试 9 次完整运行里 1 次，台账 L33）；写 `Basis` 会静默重置平衡反应的反应相（读回比对发现，台账 L34）。`src/` 共 1971 行代码，见 D17。
-- **D1 的 LLM 配置已记下，但连通性测试没做完**：用户说密钥已经配置在环境变量 `DASHSCOPE_API_KEY` 里，但助手的进程（以及通过终端工具新开的标签）读不到它，用户级和机器级环境变量也没有，应该只设在用户自己终端的会话里。`spikes/e0_llm_connectivity.py` 已写好、没有密钥时安全退出，**需要用户在设了变量的那个终端里运行**：`.\.venv\Scripts\python.exe spikes\e0_llm_connectivity.py --tag run1 --capabilities`，再告诉助手去读 `spikes/out/e0_llm_connectivity_run1.txt`（脚本不打印密钥）。网络已验证：用假密钥访问百炼的国内站和国际站都返回 HTTP 401（台账 L30），说明这台机器能直连。通过以前 D1 不标完成。
-- **阶段 1B：进行中**（2026-10-09 09:20 开始，UTC+8；与 1A 同一个会话）。用户 2026-10-09 的指示：“D17继续做；完成后继续测试 D1；如果 A1 的任务已经完成则开始做 A2；需要 APIKEY 就从环境变量读，读不到就给我一条命令我在终端里输入”。我的理解：D17 按默认继续；D1 的测试等用户运行 `--ask-key` 命令；“A2”是按项目顺序的下一阶段 1B——2A 的“开始前先读”要读 `harness/engine.py`、`state/models.py`、`cli.py`，它们是 1C 才产生的，所以 2A 不能越过 1B、1C。阶段边界的约定（一个会话一个阶段）由用户的这条指示暂时放宽。 **进度（2026-10-09）：**规格与组分表（550616c）、计划与三种 Recipe（a0463d7）、结果验证（ffbbd53）都已提交并推送，`ruff`、`mypy src`、`pytest`（573 passed，含 `test_code_health.py`）全绿；`src/` 共 3504 行代码（见 D17）。剩下：子代理审查和收尾体检、交接报告。D1 的连通性测试仍在等用户运行 `--ask-key` 命令。
-- 阶段 0A：**已完成**（主体 2026-10-08 10:55 结束，UTC+8；用户答复后补做 D11，12:00 结束）。首次开始于 2026-10-03 09:50，共 3 个会话（见"已完成"的时间表）。任务 1 至 3、5 至 11 都完成，完成标准的 6 条都有实际运行的验证。**任务 4（E0，LLM 连通性）挂起**，等用户给出供应商、模型和密钥所在的环境变量（D1）（2026-10-08 用户已给出，探针 `spikes/e0_llm_connectivity.py` 待用户运行，见 0C 的说明）。**D11（参考 Case）已由助手用代码建成并补跑了 E3，不再等用户。**当前没有残留的 HYSYS 进程。
+- **D1：已完成**（2026-10-09 10:08，UTC+8）。用户在自己的终端里运行 `./.venv/Scripts/python.exe spikes/e0_llm_connectivity.py --ask-key --tag run1 --capabilities` 并输入密钥（助手的进程读不到环境变量里的密钥，探针的 `--ask-key` 用 `getpass` 不回显，密钥只留在探针进程的内存里）。结果见 `spikes/out/e0_llm_connectivity_run1.txt` 和台账 L35：国内站 `https://dashscope.aliyuncs.com/compatible-mode/v1` 通；主模型 `qwen3.8-max`、快速模型 `qwen3.8-flash`、备用模型 `qwen3.7-plus` 都返回 200；主模型的 `response_format=json_object` 和 `tools` 函数调用通过。没有测的（`json_schema`、流式、关闭思考、限流、超时）留给 2A。
+- **阶段 1B：进行中**（2026-10-09 09:20 开始，UTC+8；与 1A 同一个会话）。用户 2026-10-09 的指示：“D17继续做；完成后继续测试 D1；如果 A1 的任务已经完成则开始做 A2；需要 APIKEY 就从环境变量读，读不到就给我一条命令我在终端里输入”。我的理解：D17 按默认继续；D1 的测试等用户运行 `--ask-key` 命令；“A2”是按项目顺序的下一阶段 1B——2A 的“开始前先读”要读 `harness/engine.py`、`state/models.py`、`cli.py`，它们是 1C 才产生的，所以 2A 不能越过 1B、1C。阶段边界的约定（一个会话一个阶段）由用户的这条指示暂时放宽。 **进度（2026-10-09）：**规格与组分表（550616c）、计划与三种 Recipe（a0463d7）、结果验证（ffbbd53）都已提交并推送，`ruff`、`mypy src`、`pytest`（573 passed，含 `test_code_health.py`）全绿；`src/` 共 3504 行代码（见 D17）。剩下：子代理审查和收尾体检、交接报告。D1 的连通性测试已通过（台账 L35）。
+- 阶段 0A：**已完成**（主体 2026-10-08 10:55 结束，UTC+8；用户答复后补做 D11，12:00 结束）。首次开始于 2026-10-03 09:50，共 3 个会话（见"已完成"的时间表）。任务 1 至 3、5 至 11 都完成，完成标准的 6 条都有实际运行的验证。**任务 4（E0，LLM 连通性）挂起**，等用户给出供应商、模型和密钥所在的环境变量（D1）（2026-10-08 用户已给出；2026-10-09 用户运行探针，通过，见台账 L35）。**D11（参考 Case）已由助手用代码建成并补跑了 E3，不再等用户。**当前没有残留的 HYSYS 进程。
 - **用户 2026-10-08 的答复（0A 交接之后）：D11 由助手自行创建参考 Case，建好后补跑 E3；D9 之后的提交署名改为 `xibei03 <jsl_03@163.com>`；"完成后续跑"。** 我的理解和假设：自行创建用 COM 代码做（没有别的手段），所以这部分工作等于提前做了 0B/0C 的一部分探针（E4 至 E9），台账里按探针记录；"完成后续跑"理解为做完这些之后补跑 E3，**不进入阶段 0B**（阶段边界不变，0B 仍在新会话里做，可以直接用这里的结论）。如果用户的意思是连续做 0B，请在回复里明说。（用户随后回复“继续 0B”，0B 在同一个会话里做了。）
 - 最近通过的闸门：**G0（2026-10-08，阶段 0B）**；0C、1A 没有闸门。1A 结束时质量工具全绿：`ruff format --check`、`ruff check`、`mypy src`、`pytest`（230 passed）、`pytest -m hysys tests/integration`（39 passed）；`python tests/test_code_health.py` 输出 `src/` 1971 行代码（`backends` 1280、`spec` 548、`tools` 83、`errors` 60），最长函数 27 行，最深嵌套 3 层，没有忽略检查的注释。
-- 最近一次更新：2026-10-09 00:30
+- 最近一次更新：2026-10-09 10:15
 - 时间记法：本机时钟是 UTC，进度文件里的时间一律换算成 UTC+8（加 8 小时）。
 - 推送状态：本阶段每个任务的提交都已推送到 `origin/main`，没有强制推送；推送方式见"环境事实"的"GitHub 凭据"。
 
@@ -31,7 +31,7 @@
 | HYSYS 版本与 ProgID | `Aspen HYSYS Version 15 (41.0)`（`app.Version` 实测）。通用 ProgID `HYSYS.Application`（= `.Latest`，CurVer 为 `HYSYS.Application.V15.0`），已有实例就复用；每次新开进程的是 `HYSYS.Application.NewInstance`（run3、run5 已验证）。进程名 `AspenHysys.exe`。早绑定用 `gencache.EnsureDispatch`，包装缓存在 `%TEMP%\gen_py\3.12`。详见台账"连接与绑定方式" |
 | HYSYS 安装目录 | `C:\Program Files\AspenTech\Aspen HYSYS V15.0` |
 | 反向探测用的参考 Case 的路径 | **`spikes/ref_cases/three_reactors.hsc`**（D11，助手用代码建的，178 KB，已提交）：PR 流体包 8 个组分，转化反应器 R-Conv、平衡反应器 R-Eq、Gibbs 反应器 R-Gibbs，全部求解；重建命令 `.venv\Scripts\python.exe spikes\build_reference_case.py`。另有自带示例 `C:\Program Files\AspenTech\Aspen HYSYS V15.0\Samples\Synthesis Gas Production.hsc`（2 台转化、3 台平衡反应器；先复制到临时目录再打开） |
-| LLM 供应商、模型、密钥所在的环境变量名 | 用户 2026-10-08 答复（D1）：阿里云百炼 Qwen（OpenAI 兼容接口），主模型 `qwen3.8-max`、快速模型 `qwen3.8-flash`、备用模型 `qwen3.7-plus`，密钥环境变量 `DASHSCOPE_API_KEY`（用户在自己的终端会话里配置，助手的进程读不到）；连通性测试 `spikes/e0_llm_connectivity.py` 待用户运行 |
+| LLM 供应商、模型、密钥所在的环境变量名 | 用户 2026-10-08 答复（D1）：阿里云百炼 Qwen（OpenAI 兼容接口），主模型 `qwen3.8-max`、快速模型 `qwen3.8-flash`、备用模型 `qwen3.7-plus`，密钥环境变量 `DASHSCOPE_API_KEY`（用户在自己的终端会话里配置，助手的进程读不到）；连通性测试 2026-10-09 通过（`spikes/e0_llm_connectivity.py --ask-key`，台账 L35），国内站 `https://dashscope.aliyuncs.com/compatible-mode/v1` |
 | 远程仓库地址 | `https://github.com/xibei03/ChemicalAgent.git`（2026-10-08 由用户给出，已配置为 `origin`，默认分支 `main`）。远端仓库是公开的，不登录也能 `fetch`，推送需要登录 |
 | GitHub 凭据 | 2026-10-08 接手时这台机器上没有任何凭据；用户随后在应用的终端里运行 `gh auth login`，登录为 `xibei03`（令牌在 Windows 凭据库，协议 https）。`git` 的凭据助手仍然是系统级的 `manager`（GCM），没有运行 `gh auth setup-git`，所以推送时用一次性助手，不改任何持久配置：`git -c credential.helper= -c "credential.helper=!gh auth git-credential" push`。助手不代填、不收口令或令牌 |
 | Git 署名 | 机器上没有配置全局 `user.name` 和 `user.email`。**2026-10-08 起仓库级配置是 `xibei03 <jsl_03@163.com>`（D9，用户指定）**；此前的提交（到 `07940e6`）署名是 `xibeibei63 <xibeibei63@gmail.com>`，已推送，不改写历史 |
@@ -60,7 +60,7 @@
 | 0A | 9 反向探测（E3），示例 Case | b4df369 | `spikes/e3_reverse_probe.py` 对 Synthesis Gas Production 的 5 台反应器（2 转化、3 平衡）、4 个反应、3 个反应集做只读探测：`Item(i)` 直接返回具体类型；反应 `TypeName` 为 `conversionrxn`、`equilibriumrxn`，反应集为 `rxnset`；出口温度规定在气相出料物流上（`State` 1、`CanModify` True），带能流的反应器热负荷是计算值；反应集成员是 `ActiveReactions`/`InactiveReactions`，与流体包的关联是出现在 `fp.ReactionPackage.ReactionSets` 里；转化率是百分数、同一基准组分的多个转化反应并行按进料算（Reformer 40%+30%，进料甲烷 90.72，反应掉 63.50 kgmole/h）；没连能流时 `op.EnergyStream` 抛 `com_error`。XML 导出 6.5 MB 但不含反应定义。**未解决：**`LnKSource` 读出 4 与类型库枚举对不上；Gibbs 反应器没有样本。H16、H26 部分确认，H18、H20 已确认 |
 | 0A | 10 检索官方帮助 | 3a6e467 | `hh.exe -decompile` 解开 4 个 `.chm`（共 2882 个文件），只有 `xhysys.chm` 是 Automation 对象参考：`operation_types.htm` 列出 `Operations.Add` 的类型字符串（`ConversionReactorOp`、`EquilibriumReactorOp`、`GibbsReactorOp`），示例 `Flowsheet.Operations.Add "Pump1", "PumpOp"`；没有 `Reactions.Add`、`ReactionSets.Add` 的说明，枚举页没有界面选项名。台账 L9 |
 | 0A | 11 台账收尾和完成标准核对 | 3a6e467 | 台账 10 个节名俱全；H1、H2、H6、H13、H17、H18、H22 都是已确认；三种反应器的类型名、反应、反应集、反应器的成员已记录；"创建反应的线索"按可能性排序；探索日志 L0 至 L9，每个探针都有一条。`python spikes/e1_connect.py` 原样运行，打印版本 `Aspen HYSYS Version 15 (41.0)` 和进程号。`python tests/test_code_health.py` 与四个质量工具见交接报告 |
-| 0A | 4 LLM 连通性（E0） | 未做 | 挂起：用户说需要密钥的先跳过，等 D1 |
+| 0A | 4 LLM 连通性（E0） | 见下面“4（补）” | 当时挂起：用户说需要密钥的先跳过，等 D1；2026-10-09 补做完成 |
 | 0A（D11） | E4 新建 Case 和 Basis（含 E4b 物性包） | 8a7ec7e | `spikes/e4_basis.py`、`e4b_property_package.py`：`SimulationCases.Add("name")` 新建空白 Case，新 Case 一开始就在 Basis 修改状态；`ComponentLists.Add` 加组分列表，`Components.Add(name)`（库名大小写不敏感，分子式不行）；`FluidPackages.Add` 加流体包，`fp.ComponentList = cl`，**`fp.PropertyPackageName = "pengrob"`（物性包内部名；界面名等 10 种写法都 E_INVALIDARG）**；`EndBasisChange()`、`SaveAs`、`Close`、`Open` 重开后 Basis 完好。固体碳 `Carbon` 在库里，`IsSolid` 为 True。H3、H4、H7、H8 已确认，H5、H21、H25 部分确认 |
 | 0A（D11） | E6 创建反应和反应集（含 E6b Keq 来源） | f20af38 | `spikes/e6_reaction.py`、`e6b_keq_source.py`：**`Reactions.Add(name, "conversionrxn")` 第一次就成功**，返回类型化的 `ConversionReaction`（`equilibriumrxn`、`kineticrxn` 同理，界面名、整数、省略 `Type` 都 E_FAIL）；`Reactants.Add(组分名)` 加反应物，`StoichiometricCoefficientValue` 写系数（负为反应物），`BaseComponent`、`Conversion = 50.0`；分数系数 0.24 能写；`ReactionSets.Add(name)`、`ActiveReactions.Add(反应名)`、`AssociateFluidPackage(fp)`（挂上之后流体包才列出这个集合）；`EndBasisChange()` 之后也能直接建反应；另存重开后全部保留，系数被质量守恒微调 5e-5。**`LnKSource` 实际取值：1 Ln(K) 公式、2 Gibbs 自由能（默认）、3 固定 K、4 K–T 表，写 0 被忽略**（依据 `equirxn.rdf` 和实测）；固定 K 写 `EquilibriumConstant` 可用。H5、H9 已确认，H10、H11 部分确认 |
 | 0A（D11） | 参考 Case 构建（E5 物流、E7 转化、E8 平衡、E9 Gibbs） | 本次提交 | `spikes/build_reference_case.py` 从空白 Case 一次建出并求解三种反应器，连续两次运行结果逐项相同：转化反应器出口摩尔分率甲苯 0.5000、苯 0.2500、对二甲苯 0.2500（偏差 < 1e-5）；平衡反应器 710 °C、600 °C 与独立参照值的摩尔分率最大偏差 0.0046、0.0014（容差 0.02），CH4 转化率 54.0%、30.3%，热负荷 +39989 kW、+20160 kW；Gibbs 反应器与平衡反应器最大偏差 1e-5；质量守恒误差 < 2e-5；流程图 14 个对象全是 OK。`Operations.Add(name, "ConversionReactorOp")` 等帮助文件的写法有效；出口温度规定在气相出料物流上。台账 H12、H14、H15、H16、H20 已确认，H19 部分确认，写出"调用序列"三个小节 |
@@ -86,7 +86,7 @@
 | 1B | 任务 1 至 3：ModelSpec、组分表、规格加载、三份规格 | 550616c | `pytest` 316 passed。三份规格 `evals/golden_specs/*.yaml` 都能加载，导出 JSON 再加载哈希不变；每条一致性规则（组分未声明、进料名重复、组成之和不为 1、两种流量二选一、转化率范围、压降必填、工况与热模式不匹配、假设的字段路径不存在）有违反它的用例；文件不存在是 `E_IO`，内容不合法是 `E_SCHEMA`且消息里有字段路径；分子式解析覆盖括号（`Ca(OH)2`、`Al2(SO4)3`）和纯元素；组分表只有台账里有实测名字的 11 个组分 |
 | 1B | 任务 4：BuildPlan 和三种 Recipe | a0463d7 | `pytest` 429 passed。三份规格各自编译出的计划与计划 §17 的构建表一致（去掉头两步；场景 3 按 D14 是转化反应器加 Gibbs 反应器的两段式，台账优先）：平衡反应器 11 步（含 2 个工况步）、转化反应器 7 步（绝热，工况没有步骤）、两段式 14 步；每条专有规则有违反它的用例；`recipe_for(PFR/CSTR)` 是 `None`；各 Recipe 的热模式范围与 Backend 的 `REACTOR_KINDS` 表由测试交叉核对；计划导出 JSON 再加载相等 |
 | 1B | 任务 5、6：结果检查 V1 至 V8、指标、归一化结果、结局判定 | ffbbd53 | `pytest` 573 passed（含 `test_code_health.py`）。三个场景的正确快照（`tests/builders.py` 和 `tests/conftest.py` 的 fixture）全部检查通过；“破坏 → 应当失败的检查集合”表 28 项，每项与预期的集合完全一致；V1 至 V8各有通过和失败的用例；三种指标用手算值（转化率 55%、H2/CO = 1850/350、收率 185% 说明不乘计量系数）；干基组成手算（水 1950 kmol/h 扣除后 H2 = 1850/2850）；结局判定覆盖完成、带警告完成、致命失败、缺工况结果、文件没保存 |
-| 0A | 4（补）LLM 连通性（E0） | 未完成 | `spikes/e0_llm_connectivity.py` 已写好并提交，没有密钥时安全退出；**等用户在设了 `DASHSCOPE_API_KEY` 的终端里运行**（见“当前状态”） |
+| 0A | 4（补）LLM 连通性（E0） | d4bb9c0（`--ask-key`）、本次提交（输出） | `spikes/e0_llm_connectivity.py --ask-key --tag run1 --capabilities` 由用户在自己的终端里运行，密钥 `getpass` 输入；三个模型都是 HTTP 200（`qwen3.8-max` 2.46 秒、`qwen3.8-flash` 1.36 秒、`qwen3.7-plus` 1.14 秒），`response_format=json_object` 返回可解析的 JSON，`tools` 返回 `tool_calls`；输出文件里只有密钥的长度。台账 L35，**D1 完成** |
 | 0A | 只读勘查（计划模式下完成，无脚本） | 2427c43 | 注册表 ProgID、`hysys.tlb` 的接口名与集合的 `Add` 签名、安装目录里的 `hysys.hh`、定义文件、帮助文件，写入台账 L0 和"创建反应的线索"初稿（均未运行验证） |
 
 ## 代码地图（阶段 1A 结束时）
@@ -187,9 +187,7 @@ a0463d7、ffbbd53）；剩下子代理审查和收尾体检、交接报告。
 阶段 1B 的代码已完成，收尾中。下一个会话做**阶段 1C**（`docs/prompts/phase-1c.md`：执行器、状态、Trace、命令行）。
 开始前：
 
-1. **用户要看的**：D16、D17 已按默认；**D1 的连通性测试要用户运行**
-   `./.venv/Scripts/python.exe spikes/e0_llm_connectivity.py --ask-key --tag run1 --capabilities`（输入密钥时不回显），
-   通过才标完成，2A 之前必须通过，不挡 1C。
+1. **用户要看的**：D16、D17 已按默认；D1 已完成（E0 通过，台账 L35），2A 可以直接基于那里的结论封装 LLM 客户端。
 2. **1C 要调用的 1B 函数**（签名见交接报告）：`load_model_spec(path)`、`load_component_table(path)`、
    `recipe_for(reactor_type)`（`None` 时按 `E_UNSUPPORTED` 处理）、`recipe.rules(spec, table)`、
    `recipe.compile(spec, table)`、`CheckContext(...)`、`run_common_checks(context)`、`recipe.checks(context)`、
@@ -208,7 +206,7 @@ a0463d7、ffbbd53）；剩下子代理审查和收尾体检、交接报告。
 
 | 编号 | 事项 | 默认 | 状态 |
 |---|---|---|---|
-| D1 | LLM 供应商和模型；VM 能否直连。任务 4（E0）因此挂起 | **用户 2026-10-08 已答复**：阿里云百炼 Qwen，主 `qwen3.8-max`、快速 `qwen3.8-flash`、备用 `qwen3.7-plus`，密钥 `DASHSCOPE_API_KEY`；要求不硬编码、统一封装 Provider/Client（模型名可配置）、为 Agent/工具调用/结构化输出预留接口（阶段 2A）、不增加别的模型和复杂路由 | **等连通性测试**：助手的进程读不到变量（进程、用户、机器三级都没有）。2026-10-09 用户要求“读不到就给一条命令，我在终端里输入密钥”，探针加了 `--ask-key`（`getpass` 不回显，密钥只在探针进程的内存里）：`./.venv/Scripts/python.exe spikes/e0_llm_connectivity.py --ask-key --tag run1 --capabilities`；用户运行后读 `spikes/out/e0_llm_connectivity_run1.txt`，通过才把 D1 标为完成，2A 之前必须通过 |
+| D1 | LLM 供应商和模型；VM 能否直连。任务 4（E0）因此挂起 | **用户 2026-10-08 已答复**：阿里云百炼 Qwen，主 `qwen3.8-max`、快速 `qwen3.8-flash`、备用 `qwen3.7-plus`，密钥 `DASHSCOPE_API_KEY`；要求不硬编码、统一封装 Provider/Client（模型名可配置）、为 Agent/工具调用/结构化输出预留接口（阶段 2A）、不增加别的模型和复杂路由 | **已完成**（用户 2026-10-09 运行 E0，通过）：三个模型都返回 200，主模型的 `json_object` 和 `tools` 通过，国内站 `https://dashscope.aliyuncs.com/compatible-mode/v1`；没有测的能力（`json_schema`、流式、关闭思考、限流、超时）由 2A 测。密钥读不到环境变量时，给用户一条 `--ask-key` 命令在自己的终端里输入，不贴进对话 |
 | D2 | 场景 3 是否加入氧气 | 不加，按题面建模，在报告中说明 | 按默认 |
 | D3 | "80000 Nm³/h"的含义 | 进料的总摩尔流量 | 按默认 |
 | D4 | 二甲苯异构体分配 | 对 : 间 : 邻 = 24 : 52 : 24 | 按默认 |
@@ -260,6 +258,7 @@ a0463d7、ffbbd53）；剩下子代理审查和收尾体检、交接报告。
 | 2026-10-09 | 用户说“如果 A1 已完成则做 A2”：我理解为按项目顺序的下一阶段 1B，不是 2A | 2A 的“开始前先读”要读 1C 才产生的 `harness/engine.py`、`state/models.py`、`cli.py`，2A 不能越过 1B、1C；阶段边界“一个会话一个阶段”由这条指示暂时放宽 |
 | 2026-10-09 | `ModelSpec` 的假设必须指向规格里真实存在的字段路径（模型校验） | 报告靠字段路径判断哪些量是假设，指错了路径等于丢了假设；测试里改规格时这条校验也帮忙发现了改动破坏的假设 |
 | 2026-10-09 | 测试夹具用反应进度手算三个场景的出料，不经过任何求解器，也不用 HYSYS 的输出 | 元素和质量自然守恒、数值可手工核对；检查函数的测试不依赖被检查的东西 |
+| 2026-10-09 | D1 标为完成：E0 的三个模型都返回 200，主模型的 `json_object` 和 `tools` 通过 | 用户 2026-10-08 的要求：先做最小连通性测试，通过后才把 D1 标为完成；通过条件是三个模型都能调通 |
 | 2026-10-09 | 子代理审查和收尾体检放在三块都提交之后 | `CLAUDE.md`：每个阶段结束前做；审查对象是 `git diff` 的整体 |
 
 ## 问题与解决
@@ -299,7 +298,7 @@ a0463d7、ffbbd53）；剩下子代理审查和收尾体检、交接报告。
 | 2026-10-08 | 集成测试有一次运行到一半，HYSYS 进程消失，后面 21 个测试都报 `E_COM_DISCONNECTED`（1A 任务 7） | 查 Windows 事件日志：当天（UTC 11:44 至 13:47）`aspenhysys.exe` 有 11 次 `HysysEng.dll` 访问冲突（`0xc0000005`）加 1 次堆损坏，其中 13:47:14 的一次就是这次测试；之后连跑 6 次完整集成测试没有再现 | HYSYS 自己的偶发缺陷，不是 Backend 的问题（错误被正确转成了 `E_COM_DISCONNECTED`）。对策：夹具自愈；阶段 4 的 `session.restart` 和执行器的 R1 要覆盖它。**不说已解决**。台账 L33 |
 | 2026-10-09 | 收尾的独立审查（子代理，不带本阶段上下文）报告 8 条清单问题加 7 条额外发现 | 逐条对照代码验证；`ToolExecutor(register_tools(...))` 过不了 mypy 这一条用 `MYPYPATH=src` 的 mypy 复现确认了（测试不过 mypy，所以之前没暴露，1C 装配时才会炸） | 采纳 14 项并修复（提交 41f4fdf、7015316）：装配类型错误；先校验再创建（不留空物流）；读回 `EndBasisChange`、`CanSolve`、`Close`；流体包已存在但 Basis 没结束要报冲突；每个工具调用外层再套一层 COM 异常转换；连接中途失败和另存失败不留孤儿实例和 Case；`connect` 发现旧会话进程没了就重连；重复的 `Item(0)` 等抽进 `lookup.py`；位置元组改成 `SaveData` 和冻结的 dataclass；读回的值不符合契约时转领域错误；注释里的具体体系名；新增无 HYSYS 的单元测试和“只在一个文件里”的隔离检查。**没有采纳**：非领域异常也发 Trace 事件（程序缺陷没有可记录的结果）；COM 返回 None 的防御（推测，没有证据）；`NOT_FOUND`、`IO` 用于确定性的前置错误（可重试集合按计划 §13.2 定）；建一半失败的清理（计划规定由上层丢弃 Case）；集成测试里复刻三个场景（提示词要求，那条不变量针对 `src/` 和 `skills/`） |
 | 2026-10-09 | `test_hysys_backend_isolation.py` 报 `recipes/gibbs.py: 'C'` 和 `validation/checks.py: 'kW'`：HYSYS 的单位字符串只能出现在 `variables.py`（1B） | 那个检查按字符串常量逐个比，不分上下文：碳的分子式 `"C"` 和说明文字里的 `"kW"` 都被当成单位 | 没有放宽检查：说明文字里去掉单位（变量名 `duty_kw` 本来带单位）；气化反应写成 `"C + H2O -> CO + H2"` 一个字符串，分子式在运行时解析出来，反而比四个常量更容易读 |
-| 2026-10-09 | 用户还没有运行 D1 的连通性命令（`--ask-key`），输出文件仍是没有密钥时的旧内容 | 每个阶段的提交点检查一次输出文件的修改时间 | 未解决，等用户；探针输出文件没有提交旧内容的新版本 |
+| 2026-10-09 | D1 的连通性测试要用户在自己的终端里输入密钥（助手的进程读不到环境变量） | 探针加 `--ask-key`（`getpass` 不回显，没有控制台时不等待，密钥只留在进程内存里）；助手在每个提交点看输出文件的修改时间，等用户运行 | 已解决：用户 2026-10-09 10:08 运行，三个模型都返回 200，`json_object` 和 `tools` 通过（台账 L35）；旧的无密钥输出不提交，提交的是这次的输出 |
 
 ## 与计划的偏差
 

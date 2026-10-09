@@ -905,7 +905,7 @@ R1 至 R12 在阶段 1A 已经按"已确认"的内容实现，`src/reactor_agent
   - **助手的进程读不到密钥**：进程、用户、机器三级环境变量里都没有 `DASHSCOPE_API_KEY`（用户设在自己终端的会话里）；通过终端工具新开的标签也不行（标签的 shell 集成加载失败，命令没有被输入）。所以没有发出过带真实密钥的请求。
   - **网络是通的**：用一个假密钥，国内站和国际站都在 0.34 秒、0.05 秒内返回 HTTP 401（`invalid_api_key`，带 `request_id`），说明这台机器能直连百炼的两个站点；国际站对“Incorrect API key”的回应也说明接口是 OpenAI 兼容的。
   - **探针的逻辑用本机的假接口检查过**（临时脚本，不入库）：200 的解析、404 的错误分支、JSON 输出、函数调用的 `tool_calls` 分支、401 的两站依次尝试，都符合预期；错误文字里没有出现密钥。
-- **结论**：E0 的网络部分通过；真实密钥的调用没有做，**D1 不标完成**。需要用户在设了变量的终端里运行 `.\.venv\Scripts\python.exe spikes\e0_llm_connectivity.py --tag run1 --capabilities`，日志 `spikes/out/e0_llm_connectivity_run1.txt` 不含密钥。如果用户想让助手自己运行，需要用户自己把变量永久写进用户环境（在自己的终端里 `setx DASHSCOPE_API_KEY …`），助手不收密钥。
+- **结论**：E0 的网络部分通过；真实密钥的调用没有做，**D1 不标完成**。需要用户在设了变量的终端里运行 `.\.venv\Scripts\python.exe spikes\e0_llm_connectivity.py --tag run1 --capabilities`，日志 `spikes/out/e0_llm_connectivity_run1.txt` 不含密钥。如果用户想让助手自己运行，需要用户自己把变量永久写进用户环境（在自己的终端里 `setx DASHSCOPE_API_KEY …`），助手不收密钥。**（2026-10-09 已补做，通过，见 L35。）**
 - **脚本与输出**：`spikes/e0_llm_connectivity.py`。
 
 
@@ -950,3 +950,16 @@ R1 至 R12 在阶段 1A 已经按"已确认"的内容实现，`src/reactor_agent
 - **结果**（`spikes/out/e15_fixed_k_order_run1.txt`）：新建的平衡反应 `ReactionPhase` 0、`Basis` 1、`LnKSource` 2、`AutoDetect` True。`PhaseFirst`：写 `ReactionPhase = 0` 无变化；**写 `Basis = 5` 之后 `ReactionPhase` 变成 5**；写 `LnKSource = 3` 之后 `AutoDetect` 变成 False；写 `EquilibriumConstant = 4` 读回 4.0。`PhaseLast`：固定 K 写完后 `ReactionPhase` 是 5，**最后写 0 之后** `ReactionPhase` 0、`Basis` 5、`LnKSource` 3、K 4.0 全部保持。`GibbsSource`：写 0 之后 `LnKSource` 仍是 2。求解：流程图 5 个对象全是 OK，出口摩尔分率 CO 0.1667、H2O 0.1667、CO2 0.3333、氢气 0.3333，与质量作用定律的手算解（反应进度 x 满足 x² / (0.5 − x)² = 4，x = 1/3）偏差 0.00000。
 - **结论**：写 `Basis` 会静默重置 `ReactionPhase`，没有报错；只有读回比对能发现。Backend 的固定 K 反应改成“先写 `Basis`、`LnKSource`、`EquilibriumConstant`，最后写 `ReactionPhase`”，并保留读回比对。固定 K 的含义是摩尔分率基准的 Πxᵢ^νᵢ（产物比反应物），台账 H10 已补充。教训：枚举和相关成员的写入顺序要靠读回验证，不能只看单个成员的写入有没有报错。
 - **脚本与输出**：`spikes/e15_fixed_k_order.py`；`spikes/out/e15_fixed_k_order_run1.txt`、`e15_fixed_k_order_run1.hsc`（Case）。
+
+
+### L35 E0：LLM 连通性，真实密钥的调用通过，D1 完成（2026-10-09，0A 任务 4 补做完成）
+
+- **目的**：补完 L30 留下的部分：用真实密钥从这台机器发出请求，确认三个模型都能调通，并看主模型的结构化输出和函数调用能力（阶段 2A 要用）。
+- **做法**：助手的进程仍然读不到 `DASHSCOPE_API_KEY`（密钥只设在用户自己的终端会话里），所以给探针加了 `--ask-key`：环境变量里没有密钥时，在真正的控制台里用 `getpass` 提示输入（不回显；没有可交互的控制台时不等待，直接当作没有密钥）。用户在自己的终端里运行 `./.venv/Scripts/python.exe spikes/e0_llm_connectivity.py --ask-key --tag run1 --capabilities` 并输入密钥。密钥只在那个进程的内存里，不写文件、不进日志，输出里只有“来自终端输入，长度 117”。
+- **结果**（`spikes/out/e0_llm_connectivity_run1.txt`）：
+  - 接口地址：国内站 `https://dashscope.aliyuncs.com/compatible-mode/v1` 第一个就通（探针只在它失败时才试国际站）。
+  - 三个模型都返回 HTTP 200，回复 `OK`，`finish_reason` 为 `stop`，响应里的 `model` 与请求一致：主模型 `qwen3.8-max` 2.46 秒（另一次 3.03 秒）、快速模型 `qwen3.8-flash` 1.36 秒、备用模型 `qwen3.7-plus` 1.14 秒。每个响应都带 `reasoning_content` 字段（模型有思考输出；能不能关闭、对延迟和用量的影响没有测）。
+  - 结构化输出：`response_format={"type": "json_object"}` 通过，系统提示和用户提示里都明确要求输出 JSON；返回内容可以直接解析成 `{"answer": 2, "unit": "none"}`（4.22 秒）。
+  - 函数调用：`tools=[add]` 通过，`finish_reason` 是 `tool_calls`，`arguments` 是 JSON 字符串 `{"a": 1, "b": 1}`，`content` 为空（1.99 秒）。
+- **结论**：E0 通过，**D1 完成**。2A 可以基于 OpenAI 兼容接口封装 Provider。已验证的只有：三个模型的普通对话、主模型的 `json_object` 模式和 `tools`。**没有测试**：`json_schema` 严格模式、流式输出、关闭思考的参数、限流（429）和 5xx 的表现、超时设置、另外两个模型的 `json_object` 和 `tools`；这些由 2A 在自己的任务里测，不要当成已确认。
+- **脚本与输出**：`spikes/e0_llm_connectivity.py`；`spikes/out/e0_llm_connectivity_run1.txt`。

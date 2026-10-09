@@ -1,0 +1,14 @@
+== Q1 密钥 ==
+  DASHSCOPE_API_KEY 来自终端输入，长度 117（不打印内容）
+== Q2 接口地址 ==
+  https://dashscope.aliyuncs.com/compatible-mode/v1 用 qwen3.8-max：状态 200，2.46 秒，返回 model='qwen3.8-max'，回复 'OK'，finish_reason='stop'，用量 68+38 tokens，含 reasoning_content
+  可用的接口地址：https://dashscope.aliyuncs.com/compatible-mode/v1
+== Q3 三个模型 ==
+  主模型 qwen3.8-max：状态 200，3.03 秒，返回 model='qwen3.8-max'，回复 'OK'，finish_reason='stop'，用量 68+38 tokens，含 reasoning_content
+  快速模型 qwen3.8-flash：状态 200，1.36 秒，返回 model='qwen3.8-flash'，回复 'OK'，finish_reason='stop'，用量 68+32 tokens，含 reasoning_content
+  备用模型 qwen3.7-plus：状态 200，1.14 秒，返回 model='qwen3.7-plus'，回复 'OK'，finish_reason='stop'，用量 17+24 tokens，含 reasoning_content
+== Q4 主模型的结构化输出和函数调用 ==
+  response_format=json_object：状态 200，4.22 秒，返回 model='qwen3.8-max'，回复 '{\n  "answer": 2,\n  "unit": "none"\n}'，finish_reason='stop'，用量 91+56 tokens，含 reasoning_content
+      解析为 JSON：{'answer': 2, 'unit': 'none'}
+  tools=[add]：状态 200，1.99 秒，返回 model='qwen3.8-max'，回复 ''，finish_reason='tool_calls'，用量 337+53 tokens，tool_calls=[{'function': {'arguments': '{"a": 1, "b": 1}', 'name': 'add'}, 'id': 'call_01da85c0a2824e24a5ecd448', 'index': 0, 'type': 'function'}]，含 reasoning_content
+== E0 通过：三个模型都返回了 200 ==
