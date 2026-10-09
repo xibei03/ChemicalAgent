@@ -10,7 +10,7 @@
 
 import time
 from collections.abc import Callable, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -75,8 +75,8 @@ class Dependencies:
     trace: TraceWriter
     recipes: Mapping[ReactorType, ReactorRecipe]
     components: ComponentTable
-    # SELECT 状态的处理函数。只有从文字描述开始的任务才有这个状态，规格文件开始的任务不需要。
-    select: Handler | None = None
+    # 除了规格文件开始的任务要走的这几个状态之外，别的状态的处理函数（SELECT，之后还有 SPECIFY）。
+    extra_handlers: Mapping[WorkflowState, Handler] = field(default_factory=dict)
 
 
 class Engine:
@@ -97,9 +97,8 @@ class Engine:
             WorkflowState.SOLVE: self._solve,
             WorkflowState.VERIFY: self._verify,
             WorkflowState.REPORT: self._report,
+            **deps.extra_handlers,
         }
-        if deps.select is not None:
-            self._handlers[WorkflowState.SELECT] = deps.select
 
     # ---- 对外的三样：创建任务、推进一步、反复推进 ----
 

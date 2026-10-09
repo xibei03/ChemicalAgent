@@ -15,7 +15,7 @@ from reactor_agent.errors import ErrorCode, ReactorAgentError
 from reactor_agent.spec.base import FrozenModel
 from reactor_agent.spec.enums import CheckId, Checkpoint, EventType, TaskStatus, WorkflowState
 from reactor_agent.spec.llm import LlmCallSummary
-from reactor_agent.spec.loading import parse_model
+from reactor_agent.spec.loading import parse_model, read_utf8
 from reactor_agent.spec.selection import SelectionResult
 
 TRACE_FILE = "trace.jsonl"
@@ -97,10 +97,7 @@ def read_events(path: Path) -> list[TraceEvent]:
     """
     if not path.is_file():
         return []
-    try:
-        lines = path.read_text(encoding="utf-8").splitlines()
-    except OSError as error:
-        raise ReactorAgentError(ErrorCode.IO, f"读不了 Trace {path}：{error}") from error
+    lines = read_utf8(path).splitlines()
     events = []
     for number, line in enumerate(lines, start=1):
         if not line.strip():
@@ -126,7 +123,7 @@ def _loads(line: str) -> object:
 def llm_call_event(summary: LlmCallSummary, duration_ms: int) -> EventBody:
     """一次 LLM 调用的 Trace 事件，名字是调用点。"""
     return EventBody(
-        type=EventType.LLM_CALL, name=summary.call_point, llm=summary, duration_ms=duration_ms
+        type=EventType.LLM_CALL, name=summary.call_point.value, llm=summary, duration_ms=duration_ms
     )
 
 

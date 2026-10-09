@@ -1,6 +1,6 @@
 """把 Trace 和任务结果渲染成人能读的文本：时间线、失败诊断、结果摘要。
 
-三个都是纯函数，输出文本，不打印。执行器只管流程，文本的拼接在这里。
+这些都是纯函数，输出文本，不打印。执行器只管流程，文本的拼接在这里。
 """
 
 from collections.abc import Mapping, Sequence
@@ -170,11 +170,14 @@ def _selection_lines(result: SelectionResult) -> list[str]:
         head = f"选型结论：{REACTOR_NAMES[result.reactor_type]}"
     lines = [f"{head}（{DECISION_TEXT[result.decision]}）", "规则的推导："]
     lines.extend(f"{INDENT}- {note}" for note in result.rule_notes)
-    if result.decision is Decision.RULES_PREVAILED and result.llm_recommendation is not None:
-        recommended = REACTOR_NAMES[result.llm_recommendation]
-        lines.append(f"LLM 曾推荐 {recommended}（理由：{result.llm_rationale}），规则没有采纳。")
-    elif result.decision is not Decision.RULES_PREVAILED:
+    if result.decision is not Decision.RULES_PREVAILED:
         lines.append(f"LLM 的理由：{result.llm_rationale}")
+        return lines
+    if result.llm_recommendation is None:
+        said = "认为这不是反应过程"
+    else:
+        said = f"推荐 {REACTOR_NAMES[result.llm_recommendation]}"
+    lines.append(f"LLM 曾{said}（理由：{result.llm_rationale}），规则没有采纳。")
     return lines
 
 
@@ -188,8 +191,11 @@ def render_selection(result: SelectionResult) -> str:
     if result.alternatives:
         lines.append("备选类型：")
         for item in result.alternatives:
-            status = "能建" if item.buildable else "不能建"
-            lines.append(f"{INDENT}{REACTOR_NAMES[item.reactor_type]}（{status}）：{item.reason}")
+            marks = ["能建" if item.buildable else "不能建"]
+            if item.recommended_by_llm:
+                marks.append("LLM 曾推荐")
+            name = REACTOR_NAMES[item.reactor_type]
+            lines.append(f"{INDENT}{name}（{'，'.join(marks)}）：{item.reason}")
     if result.dropped_evidence:
         lines.append("已丢弃的依据（在原文里找不到原话）：")
         lines.extend(f"{INDENT}“{text}”" for text in result.dropped_evidence)

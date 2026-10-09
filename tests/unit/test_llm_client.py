@@ -15,6 +15,7 @@ from reactor_agent.llm.client import (
     CORRECTION_TEMPLATE,
     MAX_ATTEMPTS,
     MAX_PROBLEMS_SHOWN,
+    LlmError,
     RawReply,
     StructuredClient,
 )
@@ -101,6 +102,17 @@ def test_a_reply_that_is_still_invalid_after_the_second_ask_is_an_llm_error():
     assert "Answer" in caught.value.message
     assert "kind" in caught.value.details["校验发现的问题"]
     assert caught.value.details["最后一次的回复"] == json.dumps({"kind": 3})
+
+
+def test_a_reply_that_stays_invalid_keeps_both_exchanges_and_the_usage_in_the_error():
+    provider = Scripted(["不是 JSON", json.dumps({"kind": 3})])
+    with pytest.raises(LlmError) as caught:
+        StructuredClient(provider).complete(SYSTEM, USER, Answer)
+    record = caught.value.record
+    assert record.model == "stub-model" and record.system_prompt == SYSTEM
+    assert [a.reply_text for a in record.attempts] == ["不是 JSON", json.dumps({"kind": 3})]
+    assert all(a.validation_error for a in record.attempts)
+    assert record.total_tokens == 240
 
 
 def test_there_is_never_a_third_attempt():

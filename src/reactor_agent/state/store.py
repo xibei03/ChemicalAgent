@@ -13,8 +13,9 @@ from typing import TypeVar
 from pydantic import BaseModel
 
 from reactor_agent.errors import ErrorCode, ReactorAgentError
+from reactor_agent.spec.enums import CallPoint
 from reactor_agent.spec.llm import LlmCallRecord
-from reactor_agent.spec.loading import parse_model, read_document
+from reactor_agent.spec.loading import parse_model, read_document, read_utf8
 from reactor_agent.state.models import TaskState
 
 STATE_FILE = "state.json"
@@ -127,13 +128,9 @@ class StateStore:
 
     def read_input(self, task_id: str) -> str:
         """读回用户的原文。"""
-        path = self.artifact_path(task_id, ArtifactName.INPUT)
-        try:
-            return path.read_text(encoding="utf-8")
-        except OSError as error:
-            raise ReactorAgentError(ErrorCode.IO, f"读不了文件 {path}：{error}") from error
+        return read_utf8(self.artifact_path(task_id, ArtifactName.INPUT))
 
-    def write_llm_log(self, task_id: str, call_point: str, record: LlmCallRecord) -> Path:
+    def write_llm_log(self, task_id: str, call_point: CallPoint, record: LlmCallRecord) -> Path:
         """把一次 LLM 调用的全文存到 llm/<调用点>-<序号>.json，序号取第一个没用过的。"""
         directory = self.run_dir(task_id) / LLM_DIR
         try:
@@ -141,7 +138,7 @@ class StateStore:
         except OSError as error:
             raise ReactorAgentError(ErrorCode.IO, f"建不了目录 {directory}：{error}") from error
         number = 1
-        while (path := directory / f"{call_point}-{number}.json").exists():
+        while (path := directory / f"{call_point.value}-{number}.json").exists():
             number += 1
         _write_atomically(path, record.model_dump_json(indent=2))
         return path

@@ -5,6 +5,7 @@
 """
 
 from reactor_agent.spec.base import FrozenModel
+from reactor_agent.spec.enums import CallPoint
 
 
 class LlmAttempt(FrozenModel):
@@ -39,7 +40,7 @@ class LlmCallRecord(FrozenModel):
 class LlmCallSummary(FrozenModel):
     """Trace 里记的 LLM 调用摘要：调用点、模型、Skill 的名字和内容哈希、用量、往返次数。"""
 
-    call_point: str
+    call_point: CallPoint
     model: str
     skill: str
     skill_hash: str
@@ -49,7 +50,7 @@ class LlmCallSummary(FrozenModel):
 
 
 def summarize_call(
-    call_point: str, skill: str, skill_hash: str, record: LlmCallRecord
+    call_point: CallPoint, skill: str, skill_hash: str, record: LlmCallRecord
 ) -> LlmCallSummary:
     """从完整的调用记录得到 Trace 里的摘要。"""
     return LlmCallSummary(

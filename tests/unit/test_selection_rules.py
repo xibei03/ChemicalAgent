@@ -327,7 +327,7 @@ def test_alternatives_use_the_llm_reason_then_the_default_and_say_what_is_missin
 def test_an_overridden_llm_recommendation_is_listed_as_an_alternative():
     _, result = settle(make_features(F.REACTION_DEFINED), GIBBS)
     gibbs = next(item for item in result.alternatives if item.reactor_type is GIBBS)
-    assert gibbs.recommended_by_llm and "LLM 推荐过它" in gibbs.reason
+    assert gibbs.recommended_by_llm and gibbs.reason == LOWER_PRIORITY_REASON
     assert all(not item.recommended_by_llm for item in result.alternatives if item is not gibbs)
 
 

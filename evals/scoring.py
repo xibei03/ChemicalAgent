@@ -27,7 +27,6 @@ from reactor_agent.spec.selection import (
 )
 
 NONE_TYPE = "none"
-SCENARIO_REPEATS = 5
 # 门槛（阶段 2A 完成标准第 3 条）：三个原文场景全部正确，其余用例至多错这么多个。
 MAX_WRONG = 1
 FLAG_FEATURES = frozenset(
@@ -81,12 +80,9 @@ class EvalCase(BaseModel):
     purpose: str
     input: str
     source: str | None = None
+    scenario: bool = False  # 是不是三个考核场景的原文：门槛要求它们全部正确
     repeats: int = 1
     expected: Expected
-
-    @property
-    def is_scenario(self) -> bool:
-        return self.repeats == SCENARIO_REPEATS
 
 
 def load_cases(directory: Path) -> list[EvalCase]:
@@ -95,7 +91,7 @@ def load_cases(directory: Path) -> list[EvalCase]:
         EvalCase.model_validate(yaml.safe_load(path.read_text(encoding="utf-8")))
         for path in sorted(directory.glob("*.yaml"))
     ]
-    return sorted(cases, key=lambda case: (not case.is_scenario, case.id))
+    return sorted(cases, key=lambda case: (not case.scenario, case.id))
 
 
 class RunRecord(BaseModel):
@@ -171,32 +167,35 @@ def _rate(part: int, whole: int) -> float:
     return part / whole if whole else 0.0
 
 
+def _decision_counts(records: Sequence[RunRecord]) -> dict[str, int]:
+    return dict(Counter(r.selection.decision.value for r in records if r.selection is not None))
+
+
+def _consistent_cases(cases: Sequence[EvalCase], by_case: Mapping[str, list[RunRecord]]) -> int:
+    """重复运行的用例里，每次的最终结论都相同的个数。"""
+    repeated = [by_case[case.id] for case in cases if len(by_case[case.id]) > 1]
+    return sum(1 for runs in repeated if len({r.final_type for r in runs}) == 1)
+
+
 def summarize(cases: Sequence[EvalCase], records: Sequence[RunRecord]) -> Summary:
     by_case = {case.id: [r for r in records if r.case_id == case.id] for case in cases}
     pairs = [(case, record) for case in cases for record in by_case[case.id]]
-    scenarios = [case for case in cases if case.is_scenario]
-    others = [case for case in cases if not case.is_scenario]
-    scenario_pairs = [(c, r) for c, r in pairs if c.is_scenario]
+    scenario_pairs = [(c, r) for c, r in pairs if c.scenario]
+    others = [case for case in cases if not case.scenario]
     matched = [feature_matches(case, record) for case, record in pairs]
-    repeated = [case for case in cases if len(by_case[case.id]) > 1]
-    decisions = Counter(r.selection.decision.value for r in records if r.selection is not None)
     wrong_others = sum(1 for case in others if not case_passes(case, by_case[case.id]))
     scenario_correct = sum(1 for case, record in scenario_pairs if type_correct(case, record))
-    gate = scenario_correct == len(scenario_pairs) and wrong_others <= MAX_WRONG
+    first_llm = sum(
+        r.has_first_answer and r.first_recommendation == c.expected.reactor for c, r in pairs
+    )
+    first_rules = sum(
+        r.has_first_answer and r.first_rule_type == c.expected.reactor for c, r in pairs
+    )
     return Summary(
         runs=len(records),
         final_accuracy=_rate(sum(type_correct(c, r) for c, r in pairs), len(pairs)),
-        llm_first_accuracy=_rate(
-            sum(
-                r.has_first_answer and r.first_recommendation == c.expected.reactor
-                for c, r in pairs
-            ),
-            len(pairs),
-        ),
-        rules_first_accuracy=_rate(
-            sum(r.has_first_answer and r.first_rule_type == c.expected.reactor for c, r in pairs),
-            len(pairs),
-        ),
+        llm_first_accuracy=_rate(first_llm, len(pairs)),
+        rules_first_accuracy=_rate(first_rules, len(pairs)),
         scenario_correct=scenario_correct,
         scenario_runs=len(scenario_pairs),
         other_wrong_cases=wrong_others,
@@ -204,14 +203,14 @@ def summarize(cases: Sequence[EvalCase], records: Sequence[RunRecord]) -> Summar
         legal_rate=_rate(sum(r.selection is not None for r in records), len(records)),
         reask_rate=_rate(sum(r.reasked for r in records), len(records)),
         feature_accuracy=_rate(sum(m for m, _ in matched), sum(t for _, t in matched)),
-        decisions=dict(decisions),
-        consistent_cases=sum(
-            1 for c in repeated if len({r.final_type for r in by_case[c.id]}) == 1
-        ),
-        repeated_cases=len(repeated),
+        decisions=_decision_counts(records),
+        consistent_cases=_consistent_cases(cases, by_case),
+        repeated_cases=sum(1 for case in cases if len(by_case[case.id]) > 1),
         tokens=sum(r.tokens for r in records),
         seconds=sum(r.seconds for r in records),
-        gate_passed=gate and bool(scenarios),
+        gate_passed=bool(scenario_pairs)
+        and scenario_correct == len(scenario_pairs)
+        and wrong_others <= MAX_WRONG,
     )
 
 

@@ -63,11 +63,12 @@ def test_the_text_files_for_the_command_line_equal_the_scenario_cases(number, ca
     assert path.read_text(encoding="utf-8").strip() == CASES[case_id]["input"]
 
 
-@pytest.mark.parametrize("case_id", SCENARIO_LINES)
-def test_the_scenarios_are_repeated_five_times_and_the_others_once(case_id):
-    assert CASES[case_id]["repeats"] == SCENARIO_REPEATS
-    others = [case for key, case in CASES.items() if key not in SCENARIO_LINES]
-    assert all(case.get("repeats", 1) == 1 for case in others)
+def test_only_the_three_scenarios_are_flagged_and_repeated_five_times():
+    flagged = {key for key, case in CASES.items() if case.get("scenario")}
+    assert flagged == set(SCENARIO_LINES)
+    for key, case in CASES.items():
+        assert case.get("repeats", 1) == (SCENARIO_REPEATS if key in flagged else 1)
+        assert bool(case.get("source")) == (key in flagged)
 
 
 def test_the_scenario_expectations_are_the_ones_the_requirement_asks_for():

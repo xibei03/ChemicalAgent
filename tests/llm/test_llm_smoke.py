@@ -30,4 +30,6 @@ def test_a_real_call_returns_a_validated_instance_with_a_record():
     assert reply.value.word.lower() == "pong" and reply.value.number == 3
     record = reply.record
     assert record.model == settings.model and record.total_tokens > 0
-    assert record.attempts[0].reply_text and settings.api_key_env not in record.system_prompt
+    key = os.environ[settings.api_key_env]
+    texts = [record.system_prompt, *(a.user_content + a.reply_text for a in record.attempts)]
+    assert record.attempts[0].reply_text and not any(key in text for text in texts)

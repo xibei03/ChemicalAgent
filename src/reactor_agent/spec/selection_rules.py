@@ -39,7 +39,6 @@ POLYMER_EXCEPTION_NOTE = (
 )
 KINETIC_NOTE_PREFIX = "给出了动力学参数，选动力学反应器："
 LOWER_PRIORITY_REASON = "优先级低于所选类型"
-LLM_RECOMMENDED_PREFIX = "LLM 推荐过它，规则没有采纳："
 # 动力学反应器之间的选择（需求 §8 第 3 条和第 1 条的默认值）。
 FORM_CHOICE: Mapping[EquipmentForm, ReactorType] = MappingProxyType(
     {EquipmentForm.TUBULAR: ReactorType.PFR, EquipmentForm.VESSEL: ReactorType.CSTR}
@@ -302,7 +301,7 @@ def _alternatives(verdict: RuleVerdict, draft: SelectionDraft) -> tuple[Alternat
         Alternative(
             reactor_type=kind,
             buildable=buildable,
-            reason=(LLM_RECOMMENDED_PREFIX if kind is draft.recommended_type else "") + reason,
+            reason=reason,
             recommended_by_llm=kind is draft.recommended_type,
         )
         for kind, buildable, reason in found

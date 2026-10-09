@@ -13,7 +13,7 @@ from pathlib import Path
 from reactor_agent.harness.budgets import MAX_SELECTION_REASKS
 from reactor_agent.harness.context import Prompt, reask_content, selection_prompt
 from reactor_agent.harness.results import write_result
-from reactor_agent.llm.client import LlmClient
+from reactor_agent.llm.client import LlmClient, LlmError
 from reactor_agent.llm.system_prompt import load_system_prompt
 from reactor_agent.observability.trace import (
     EventBody,
@@ -23,15 +23,14 @@ from reactor_agent.observability.trace import (
 )
 from reactor_agent.recipes.base import ReactorRecipe
 from reactor_agent.skill_loader import Skill, load_rules, load_skill
-from reactor_agent.spec.enums import Checkpoint, EventType, ReactorType, WorkflowState
-from reactor_agent.spec.llm import summarize_call
+from reactor_agent.spec.enums import CallPoint, Checkpoint, EventType, ReactorType, WorkflowState
+from reactor_agent.spec.llm import LlmCallRecord, summarize_call
 from reactor_agent.spec.selection import SelectionDraft, SelectionResult, SelectionRules
 from reactor_agent.spec.selection_rules import assess, build_result, require_supported
 from reactor_agent.state.models import TaskState
 from reactor_agent.state.store import ArtifactName, StateStore
 
 SELECTION_SKILL = "reactor-selection"
-SELECT_CALL_POINT = "select"
 Ask = Callable[[str], SelectionDraft]
 
 
@@ -81,11 +80,19 @@ class Selector:
         return WorkflowState.SPECIFY
 
     def _ask(self, task: TaskState, skill: Skill, system: str, user: str) -> SelectionDraft:
-        reply = self.llm.complete(system, user, SelectionDraft)
-        self.store.write_llm_log(task.task_id, SELECT_CALL_POINT, reply.record)
-        summary = summarize_call(SELECT_CALL_POINT, skill.name, skill.content_hash, reply.record)
-        self._emit(task, llm_call_event(summary, reply.record.duration_ms))
+        try:
+            reply = self.llm.complete(system, user, SelectionDraft)
+        except LlmError as error:  # 校验两次都没通过：回复全文也要留下，排查时要看
+            self._record(task, skill, error.record)
+            raise
+        self._record(task, skill, reply.record)
         return reply.value
+
+    def _record(self, task: TaskState, skill: Skill, record: LlmCallRecord) -> None:
+        """一次 LLM 调用的全文存进 llm/，摘要进 Trace。"""
+        self.store.write_llm_log(task.task_id, CallPoint.SELECT, record)
+        summary = summarize_call(CallPoint.SELECT, skill.name, skill.content_hash, record)
+        self._emit(task, llm_call_event(summary, record.duration_ms))
 
     def _emit(self, task: TaskState, body: EventBody) -> None:
         self.trace.append(task.task_id, task.spec_hash, task.current_state, None, body)

@@ -15,10 +15,12 @@ from reactor_agent.errors import ErrorCode, ReactorAgentError
 from reactor_agent.harness.budgets import MAX_SELECTION_REASKS
 from reactor_agent.harness.engine import Dependencies, Engine
 from reactor_agent.harness.selection import SELECTION_SKILL, Selector
+from reactor_agent.llm.client import LlmError
 from reactor_agent.observability.trace import TRACE_FILE, TraceWriter, read_events
 from reactor_agent.recipes import RECIPES
 from reactor_agent.skill_loader import load_skill
 from reactor_agent.spec.enums import (
+    CallPoint,
     Checkpoint,
     EventType,
     ReactorType,
@@ -26,6 +28,7 @@ from reactor_agent.spec.enums import (
     TaskStatus,
     WorkflowState,
 )
+from reactor_agent.spec.llm import LlmAttempt, LlmCallRecord
 from reactor_agent.spec.selection import Decision, FeedPhase, Flag, SelectionResult
 from reactor_agent.spec.selection import FeatureName as F
 from reactor_agent.state.models import TaskState
@@ -70,7 +73,7 @@ def select(tmp_path: Path, features, replies, text: str | None = None) -> Run:
         trace=trace,
         recipes=RECIPES,
         components=component_table(),
-        select=selector.run,
+        extra_handlers={WorkflowState.SELECT: selector.run},
     )
     engine = Engine(deps)
     task = selector.create_task(evidence_text(features) if text is None else text)
@@ -124,7 +127,7 @@ def test_the_rule_side_explanation_matches_the_final_type_even_when_the_llm_is_o
 def test_there_is_never_a_third_ask(tmp_path):
     drafts = [make_draft(EQUILIBRIUM_FEATURES, GIBBS)] * 3
     run = select(tmp_path, EQUILIBRIUM_FEATURES, drafts)
-    assert run.llm.calls == 2 and len(drafts) - run.llm.calls == 1
+    assert run.llm.calls == 2 and run.llm.remaining == 1
 
 
 def test_a_request_that_is_not_a_reaction_ends_unsupported_with_the_selection_saved(tmp_path):
@@ -201,7 +204,7 @@ def test_the_calls_leave_full_logs_and_trace_summaries_with_skill_name_and_hash(
     calls = [e for e in run.events if e.type is EventType.LLM_CALL]
     assert len(calls) == 2
     summary = calls[0].llm
-    assert (summary.call_point, summary.model) == ("select", MODEL_NAME)
+    assert (summary.call_point, summary.model) == (CallPoint.SELECT, MODEL_NAME)
     assert (summary.skill, summary.skill_hash) == (skill.name, skill.content_hash)
     assert (summary.prompt_tokens, summary.completion_tokens) == (PROMPT_TOKENS, COMPLETION_TOKENS)
     assert calls[0].duration_ms == 1500
@@ -243,3 +246,24 @@ def test_a_failure_before_any_case_is_retried_but_never_rebuilt(tmp_path):
         RecoveryAction.ABORT,
     ]
     assert run.task.rebuilds == 0 and run.llm.calls == 3
+
+
+def test_an_exchange_that_failed_validation_still_leaves_its_log_and_a_trace_event(tmp_path):
+    attempt = LlmAttempt(
+        user_content="问",
+        reply_text="不是 JSON",
+        prompt_tokens=10,
+        completion_tokens=5,
+        duration_ms=700,
+        validation_error="- 第 1 行：不是 JSON",
+    )
+    record = LlmCallRecord(model=MODEL_NAME, system_prompt="系统", attempts=(attempt, attempt))
+    error = LlmError("连续两次没有通过校验", {"校验发现的问题": "x"}, record)
+    run = select(tmp_path, EQUILIBRIUM_FEATURES, [error])
+    assert run.task.status is TaskStatus.FAILED and run.task.errors[-1].code is ErrorCode.LLM
+    saved = LlmCallRecord.model_validate_json(
+        (run.run_dir / "llm" / "select-1.json").read_text(encoding="utf-8")
+    )
+    assert saved == record and saved.attempts[0].reply_text == "不是 JSON"
+    [call] = [e for e in run.events if e.type is EventType.LLM_CALL]
+    assert call.llm.attempts == 2 and call.llm.prompt_tokens == 20 and call.duration_ms == 1400

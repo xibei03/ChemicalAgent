@@ -212,6 +212,12 @@ class EventType(StrEnum):
     LLM_CALL = "llm_call"
 
 
+class CallPoint(StrEnum):
+    """调用 LLM 的地方，名字用在 llm/ 日志的文件名和 Trace 事件里。之后往这里加写规格、写解读。"""
+
+    SELECT = "select"
+
+
 class Checkpoint(StrEnum):
     """检查点事件的名字：输入保存、选型保存、规格冻结、计划保存、工况的 Case 保存、结果保存。"""
 

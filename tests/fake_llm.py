@@ -27,6 +27,11 @@ class FakeLlm:
     def calls(self) -> int:
         return len(self.requests)
 
+    @property
+    def remaining(self) -> int:
+        """脚本里还没有被问到的回复个数。"""
+        return len(self._replies)
+
     def complete(self, system: str, user: str, output: type[ModelT]) -> LlmReply[ModelT]:
         self.requests.append((system, user))
         reply = self._replies.pop(0)

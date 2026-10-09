@@ -59,6 +59,14 @@ class LlmReply(Generic[ModelT]):
     record: LlmCallRecord
 
 
+class LlmError(ReactorAgentError):
+    """LLM 的输出连续没有通过校验。多带一份调用记录：两次回复的全文和用量不随异常丢掉。"""
+
+    def __init__(self, message: str, details: Mapping[str, str], record: LlmCallRecord) -> None:
+        super().__init__(ErrorCode.LLM, message, details)
+        self.record = record
+
+
 class LlmClient(Protocol):
     """harness 用的接口。测试里的桩是它的第二个实现。"""
 
@@ -97,17 +105,17 @@ class StructuredClient:
                 problem = _problems(error)
             else:
                 attempts.append(self._attempt(content, raw, elapsed_ms, None))
-                return LlmReply(
-                    value,
-                    LlmCallRecord(
-                        model=self._provider.model, system_prompt=system, attempts=tuple(attempts)
-                    ),
-                )
+                return LlmReply(value, self._record(system, attempts))
             attempts.append(self._attempt(content, raw, elapsed_ms, problem))
             content = CORRECTION_TEMPLATE.format(user=user, reply=raw.text, problem=problem)
         details = {"最后一次的回复": raw.text[:FAILURE_REPLY_CHARS], "校验发现的问题": problem}
         message = f"LLM 的输出连续 {MAX_ATTEMPTS} 次没有通过 {output.__name__} 的校验"
-        raise ReactorAgentError(ErrorCode.LLM, message, details)
+        raise LlmError(message, details, self._record(system, attempts))
+
+    def _record(self, system: str, attempts: list[LlmAttempt]) -> LlmCallRecord:
+        return LlmCallRecord(
+            model=self._provider.model, system_prompt=system, attempts=tuple(attempts)
+        )
 
     @staticmethod
     def _attempt(content: str, raw: RawReply, elapsed_ms: int, problem: str | None) -> LlmAttempt:

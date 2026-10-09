@@ -12,7 +12,10 @@ from reactor_agent.spec.selection_rules import (
 )
 from selection_builders import make_features
 
-TEXT = "甲苯进料流量10000kg/h，进料温度为380℃，操作压力2.5MPa，发生歧化反应：2C₇H₈ → C₆H₆ + C₈H₁₀。"
+TEXT = (
+    "乙酸进料流量500kg/h，反应温度为65℃，操作压力1.2MPa，"
+    "发生酯化反应：CH₃COOH + C₂H₅OH → CH₃COOC₂H₅ + H₂O。"
+)
 
 
 def features_citing(evidence: str):
@@ -23,14 +26,14 @@ def features_citing(evidence: str):
 @pytest.mark.parametrize(
     "evidence",
     [
-        "甲苯进料流量10000kg/h",
-        "甲苯 进料流量 10000 kg/h",  # 空白不同
-        "进料温度为380°C",  # ℃ 与 °C
-        "进料温度为380℃",
-        "操作压力２．５ＭＰａ",  # 全角数字和字母
-        "2C7H8 → C6H6 + C8H10",  # 上下标写成普通数字
-        "2C₇H₈→C₆H₆+C₈H₁₀",
-        "甲苯进料流量10000kg/h，\n进料温度为380℃",  # 换行
+        "乙酸进料流量500kg/h",
+        "乙酸 进料流量 500 kg/h",  # 空白不同
+        "反应温度为65°C",  # ℃ 与 °C
+        "反应温度为65℃",
+        "操作压力１．２ＭＰａ",  # 全角数字和字母
+        "CH3COOH + C2H5OH → CH3COOC2H5 + H2O",  # 上下标写成普通数字
+        "CH₃COOH+C₂H₅OH→CH₃COOC₂H₅+H₂O",
+        "乙酸进料流量500kg/h，\n反应温度为65℃",  # 换行
     ],
 )
 def test_evidence_that_differs_only_in_width_script_or_spaces_is_accepted(evidence):
@@ -38,8 +41,7 @@ def test_evidence_that_differs_only_in_width_script_or_spaces_is_accepted(eviden
 
 
 @pytest.mark.parametrize(
-    "evidence",
-    ["甲苯转化率为50%", "进料温度为400℃", "操作压力2.5MPa，温度380℃，", "…进料温度为380℃…"],
+    "evidence", ["乙酸转化率为50%", "反应温度为70℃", "操作压力1.2MPa，温度65℃，", "…反应温度为65℃…"]
 )
 def test_evidence_that_is_not_in_the_text_is_rejected(evidence):
     assert invalid_evidence(features_citing(evidence), TEXT) == (evidence,)
@@ -65,18 +67,18 @@ def test_dropping_removes_only_the_evidence_that_is_not_in_the_text():
     base = make_features()
     features = base.model_copy(
         update={
-            "kinetics_given": Flag(value=True, evidence="进料温度为380℃"),
+            "kinetics_given": Flag(value=True, evidence="反应温度为65℃"),
             "reaction_defined": Flag(value=True, evidence="原文里没有"),
         }
     )
     kept = drop_invalid_evidence(features, TEXT)
-    assert kept.kinetics_given == Flag(value=True, evidence="进料温度为380℃")
+    assert kept.kinetics_given == Flag(value=True, evidence="反应温度为65℃")
     assert kept.reaction_defined == Flag(value=True, evidence=None)
 
 
 def test_normalizing_is_idempotent_and_removes_all_whitespace():
-    once = normalize_text("　甲苯\t 10000 ｋｇ/ｈ\n")
-    assert once == "甲苯10000kg/h"
+    once = normalize_text("　乙酸\t 500 ｋｇ/ｈ\n")
+    assert once == "乙酸500kg/h"
     assert normalize_text(once) == once
 
 

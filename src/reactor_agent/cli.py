@@ -16,6 +16,7 @@ import os
 import sys
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from contextlib import contextmanager
+from dataclasses import dataclass
 from pathlib import Path
 
 from reactor_agent.backends.base import SimBackend
@@ -103,7 +104,10 @@ def create_llm_client(settings: LlmSettings) -> LlmClient:
 
 
 def _engine(
-    tools: ToolExecutor, store: StateStore, trace: TraceWriter, select: Handler | None
+    tools: ToolExecutor,
+    store: StateStore,
+    trace: TraceWriter,
+    handlers: Mapping[WorkflowState, Handler],
 ) -> Engine:
     deps = Dependencies(
         tools=tools,
@@ -111,7 +115,7 @@ def _engine(
         trace=trace,
         recipes=RECIPES,
         components=load_component_table(COMPONENTS_FILE),
-        select=select,
+        extra_handlers=handlers,
     )
     return Engine(deps)
 
@@ -119,31 +123,41 @@ def _engine(
 def run_spec(tools: ToolExecutor, spec: ModelSpec, spec_path: Path, runs_dir: Path) -> int:
     """用这些工具把一份规格跑到终态，打印结果，返回退出码。"""
     store = StateStore(runs_dir)
-    engine = _engine(tools, store, TraceWriter(runs_dir), select=None)
+    engine = _engine(tools, store, TraceWriter(runs_dir), handlers={})
     task = engine.create_task(spec, spec_path)
     engine.run(task)
     return _print_outcome(store, task)
 
 
-def build_text_run(llm: LlmClient, runs_dir: Path) -> tuple[Selector, Engine, StateStore]:
-    """从文字描述开始的任务用的一套对象。没有 Backend：目前只做到选型。"""
+@dataclass(frozen=True)
+class TextRun:
+    """从文字描述开始的任务用的一套对象：创建任务的 Selector、执行器、状态存储。"""
+
+    selector: Selector
+    engine: Engine
+    store: StateStore
+
+
+def build_text_run(llm: LlmClient, runs_dir: Path) -> TextRun:
+    """装配文字描述的运行。没有 Backend：目前只做到选型。"""
     store = StateStore(runs_dir)
     trace = TraceWriter(runs_dir)
     selector = Selector(llm, store, trace, RECIPES, SKILLS_DIR)
-    return selector, _engine(ToolExecutor({}), store, trace, selector.run), store
+    handlers = {WorkflowState.SELECT: selector.run}
+    return TextRun(selector, _engine(ToolExecutor({}), store, trace, handlers), store)
 
 
 def run_text(llm: LlmClient, text: str, runs_dir: Path, *, dry_run: bool) -> int:
     """选型：打印结果，返回退出码。阶段 2B 之前不会往下走，所以不带 dry_run 时也在这里停下。"""
-    selector, engine, store = build_text_run(llm, runs_dir)
-    task = selector.create_task(text)
-    engine.run(task, stop_at=WorkflowState.SPECIFY)
-    return _print_selection_outcome(store, task, dry_run=dry_run)
+    run = build_text_run(llm, runs_dir)
+    task = run.selector.create_task(text)
+    run.engine.run(task, stop_at=WorkflowState.SPECIFY)
+    return _print_selection_outcome(run.store, task, dry_run=dry_run)
 
 
 def _text_of(args: argparse.Namespace) -> str:
     """命令行给的描述：文件，或者直接作为参数。"""
-    if args.text_file:
+    if args.text_file is not None:
         return read_text_file(Path(args.text_file).resolve())
     if not args.text.strip():
         raise ReactorAgentError(ErrorCode.SCHEMA, "给的描述是空的，没有可模拟的内容")
@@ -152,7 +166,7 @@ def _text_of(args: argparse.Namespace) -> str:
 
 def _run_command(args: argparse.Namespace) -> int:
     runs_dir = Path(args.runs_dir).resolve()
-    if args.spec:
+    if args.spec is not None:
         if args.dry_run:
             raise ReactorAgentError(
                 ErrorCode.SCHEMA, "--dry-run 只用于文字描述，规格文件没有选型这一步"

@@ -16,7 +16,7 @@ from reactor_agent.observability.trace import (
     selection_saved_event,
 )
 from reactor_agent.skill_loader import list_files, load_skill, read_file
-from reactor_agent.spec.enums import EventType, ReactorType, WorkflowState
+from reactor_agent.spec.enums import CallPoint, EventType, ReactorType, WorkflowState
 from reactor_agent.spec.llm import LlmAttempt, LlmCallRecord, summarize_call
 from reactor_agent.spec.selection import FeatureName as F
 from reactor_agent.spec.selection import FeedPhase
@@ -106,14 +106,9 @@ def test_llm_logs_are_numbered_per_call_point_and_hold_the_full_exchange(tmp_pat
     store = StateStore(tmp_path)
     task_id = store.new_run(datetime.now().astimezone())
     record = LlmCallRecord(model=MODEL_NAME, system_prompt="系统", attempts=(attempt("回复全文"),))
-    first = store.write_llm_log(task_id, "select", record)
-    second = store.write_llm_log(task_id, "select", record)
-    other = store.write_llm_log(task_id, "specify", record)
-    assert [p.name for p in (first, second, other)] == [
-        "select-1.json",
-        "select-2.json",
-        "specify-1.json",
-    ]
+    first = store.write_llm_log(task_id, CallPoint.SELECT, record)
+    second = store.write_llm_log(task_id, CallPoint.SELECT, record)
+    assert [p.name for p in (first, second)] == ["select-1.json", "select-2.json"]
     saved = LlmCallRecord.model_validate_json(first.read_text(encoding="utf-8"))
     assert saved == record and saved.attempts[0].reply_text == "回复全文"
 
@@ -123,7 +118,7 @@ def test_llm_logs_are_numbered_per_call_point_and_hold_the_full_exchange(tmp_pat
 
 def summary(attempts: int = 1):
     record = LlmCallRecord(model=MODEL_NAME, system_prompt="系统", attempts=(attempt(),) * attempts)
-    return summarize_call("select", "reactor-selection", "abc123", record), record
+    return summarize_call(CallPoint.SELECT, "reactor-selection", "abc123", record), record
 
 
 def test_the_summary_adds_up_the_tokens_of_all_attempts():
@@ -188,6 +183,18 @@ def test_an_overruled_selection_shows_the_rule_conclusion_and_what_the_llm_said(
     assert text.startswith("选型结论：Equilibrium（规则的推导与 LLM 的推荐不一致，采用规则的结论）")
     assert "LLM 曾推荐 Gibbs（理由：测试用的理由），规则没有采纳。" in text
     assert "LLM 的理由：" not in text
+
+
+def test_the_overruled_recommendation_is_marked_in_the_alternatives():
+    text = render_selection(settle(FEATURES, GIBBS))
+    assert "Gibbs（能建，LLM 曾推荐）：" in text
+    assert "PFR（不能建）：" in text
+
+
+def test_when_the_llm_said_it_is_not_a_reaction_and_the_rules_disagree_its_reason_is_shown():
+    text = render_selection(settle(FEATURES, None))
+    assert text.startswith("选型结论：Equilibrium（规则的推导与 LLM 的推荐不一致")
+    assert "LLM 曾认为这不是反应过程（理由：测试用的理由），规则没有采纳。" in text
 
 
 def test_a_selection_after_a_second_ask_says_so():

@@ -1,15 +1,15 @@
 """运行选型评测：每个用例跑真实的选型（和 `run --dry-run` 同一条路径），打分，写评测结果文件。
 
-三个原文场景各重复 5 次，其余用例各 1 次（次数写在用例文件里）。需要 LLM 密钥：
-  python evals/run_evals.py [--ask-key] [--cases L1-S1,L1-K1] [--output docs/EVAL_RESULTS.md]
-密钥只从环境变量读（名字在 config/settings.yaml）；--ask-key 是环境变量里没有时在终端里提示输入，
-不回显，只留在这个进程的内存里。每次运行的目录在 runs/evals-<时间>/ 下，有 LLM 的提示和回复全文。
-退出码：门槛通过是 0，没通过是 1。
+三个原文场景各重复 5 次，其余用例各 1 次（次数写在用例文件里）。
+  python evals/run_evals.py [--cases L1-S1,L1-K1] [--output 结果文件]
+需要 LLM 密钥，只从环境变量读（名字在 config/settings.yaml）。没有设置环境变量时，用
+`python evals/interactive.py` 在终端里输入一次密钥，再从菜单运行评测。
+每次运行的目录在 runs/evals-<时间>/ 下，有 LLM 的提示和回复全文。
+默认：跑全部用例写 docs/EVAL_RESULTS.md；只跑部分用例写在运行目录里，不覆盖完整的结果。
+退出码：门槛通过是 0，没通过是 1，没有密钥是 2。
 """
 
 import argparse
-import getpass
-import os
 import subprocess
 import sys
 import time
@@ -28,16 +28,18 @@ from reactor_agent.cli import (
 from reactor_agent.errors import ReactorAgentError
 from reactor_agent.harness.selection import SELECTION_SKILL
 from reactor_agent.llm.client import LlmClient
-from reactor_agent.skill_loader import load_rules, load_skill
+from reactor_agent.skill_loader import Skill, load_rules, load_skill
 from reactor_agent.spec.enums import WorkflowState
 from reactor_agent.spec.llm import LlmCallRecord
 from reactor_agent.spec.selection import SelectionDraft, SelectionResult, SelectionRules
 from reactor_agent.spec.selection_rules import check_rules
-from reactor_agent.spec.settings import load_settings
-from reactor_agent.state.store import ArtifactName
+from reactor_agent.spec.settings import LlmSettings, load_settings
+from reactor_agent.state.models import TaskState
+from reactor_agent.state.store import ArtifactName, StateStore
 
 CASES_DIR = REPO_ROOT / "evals" / "cases"
 DEFAULT_OUTPUT = REPO_ROOT / "docs" / "EVAL_RESULTS.md"
+EXIT_NO_KEY = 2
 
 
 def read_logs(run_dir: Path) -> list[LlmCallRecord]:
@@ -46,93 +48,55 @@ def read_logs(run_dir: Path) -> list[LlmCallRecord]:
     return [LlmCallRecord.model_validate_json(f.read_text(encoding="utf-8")) for f in files]
 
 
-def run_one(
-    llm: LlmClient, case: EvalCase, repeat: int, runs_dir: Path, rules: SelectionRules
+def first_answer(logs: list[LlmCallRecord]) -> SelectionDraft | None:
+    """第一次调用拿到的、通过了校验的回答。第一次调用就没有拿到合法的输出时是 None。"""
+    if not logs or logs[0].attempts[-1].validation_error is not None:
+        return None
+    return SelectionDraft.model_validate_json(logs[0].attempts[-1].reply_text)
+
+
+def record_of(
+    case: EvalCase, repeat: int, task: TaskState, store: StateStore, rules: SelectionRules
 ) -> RunRecord:
-    """跑一次选型，收集打分需要的东西。"""
-    selector, engine, store = build_text_run(llm, runs_dir)
-    started = time.monotonic()
-    task = selector.create_task(case.input)
-    engine.run(task, stop_at=WorkflowState.SPECIFY)
-    seconds = time.monotonic() - started
-    run_dir = store.run_dir(task.task_id)
-    path = store.artifact_path(task.task_id, ArtifactName.SELECTION)
-    selection = (
-        store.read_artifact(task.task_id, ArtifactName.SELECTION, SelectionResult)
-        if path.is_file()
-        else None
-    )
-    logs = read_logs(run_dir)
-    first = SelectionDraft.model_validate_json(logs[0].attempts[-1].reply_text) if logs else None
-    first_rule = (
-        check_rules(first.features, rules, first.recommended_type).reactor_type if first else None
-    )
+    """从运行目录里收集打分需要的东西。"""
+    saved = store.artifact_path(task.task_id, ArtifactName.SELECTION)
+    selection = None
+    if saved.is_file():
+        selection = store.read_artifact(task.task_id, ArtifactName.SELECTION, SelectionResult)
+    logs = read_logs(store.run_dir(task.task_id))
+    first = first_answer(logs)
     return RunRecord(
         case_id=case.id,
         repeat=repeat,
         selection=selection,
         first_recommendation=first.recommended_type if first else None,
-        first_rule_type=first_rule,
+        first_rule_type=check_rules(first.features, rules, first.recommended_type).reactor_type
+        if first
+        else None,
         has_first_answer=first is not None,
         error=task.errors[-1].message if task.errors else None,
         tokens=sum(log.total_tokens for log in logs),
-        seconds=seconds,
+        seconds=0.0,
         reasked=len(logs) > 1,
     )
 
 
-def git_state() -> str:
-    """提交哈希，工作区有未提交改动时注明。"""
-
-    def git(*args: str) -> str:
-        return subprocess.run(
-            ["git", *args],
-            cwd=REPO_ROOT,
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            check=False,
-        ).stdout.strip()
-
-    dirty = "，有未提交的改动" if git("status", "--porcelain") else ""
-    return f"{git('rev-parse', '--short', 'HEAD')}{dirty}"
+def run_one(
+    llm: LlmClient, case: EvalCase, repeat: int, runs_dir: Path, rules: SelectionRules
+) -> RunRecord:
+    """跑一次选型，返回打分需要的记录。"""
+    run = build_text_run(llm, runs_dir)
+    started = time.monotonic()
+    task = run.selector.create_task(case.input)
+    run.engine.run(task, stop_at=WorkflowState.SPECIFY)
+    seconds = time.monotonic() - started
+    return record_of(case, repeat, task, run.store, rules).model_copy(update={"seconds": seconds})
 
 
-def result_file(runs_dir: Path, *, partial: bool) -> Path:
-    """跑全部用例写 docs/EVAL_RESULTS.md；只跑一部分写在运行目录里，不覆盖完整的结果。"""
-    return runs_dir / "EVAL_PARTIAL.md" if partial else DEFAULT_OUTPUT
-
-
-def main() -> int:
-    parser = argparse.ArgumentParser(
-        description=__doc__, formatter_class=argparse.RawTextHelpFormatter
-    )
-    parser.add_argument("--ask-key", action="store_true", help="环境变量里没有密钥时在终端里输入")
-    parser.add_argument("--cases", help="只跑这些用例（逗号分隔的编号），默认全部")
-    parser.add_argument(
-        "--output", help="结果文件。默认：全部用例写 docs/EVAL_RESULTS.md，部分用例写在运行目录里"
-    )
-    args = parser.parse_args()
-    for stream in (sys.stdout, sys.stderr):
-        stream.reconfigure(encoding="utf-8")
-    settings = load_settings(SETTINGS_FILE).llm
-    if not os.environ.get(settings.api_key_env) and args.ask_key:
-        os.environ[settings.api_key_env] = getpass.getpass(
-            f"请输入 {settings.api_key_env}（输入时不显示）："
-        ).strip()
-    try:
-        llm = create_llm_client(settings)
-    except ReactorAgentError as error:
-        print(f"错误：{error.code.value}：{error.message}", file=sys.stderr)
-        return 2
-    cases = load_cases(CASES_DIR)
-    if args.cases:
-        wanted = set(args.cases.split(","))
-        cases = [case for case in cases if case.id in wanted]
-    skill = load_skill(SKILLS_DIR, SELECTION_SKILL)
-    rules = load_rules(skill, SelectionRules)
-    runs_dir = REPO_ROOT / "runs" / f"evals-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
-    runs_dir.mkdir(parents=True)
+def run_all(
+    llm: LlmClient, cases: list[EvalCase], runs_dir: Path, rules: SelectionRules
+) -> list[RunRecord]:
+    """按顺序跑全部用例的全部重复，边跑边打印进度。"""
     records = []
     for case in cases:
         for repeat in range(1, case.repeats + 1):
@@ -144,15 +108,67 @@ def main() -> int:
                 f"{mark} {case.id} {where}：{record.final_type}（{record.seconds:.1f} 秒）",
                 flush=True,
             )
-    meta = {
+    return records
+
+
+def git_state() -> str:
+    """提交哈希，工作区有未提交改动时注明。"""
+
+    def git(*args: str) -> str:
+        done = subprocess.run(
+            ["git", *args], cwd=REPO_ROOT, capture_output=True, text=True, encoding="utf-8"
+        )
+        return done.stdout.strip()
+
+    dirty = "，有未提交的改动" if git("status", "--porcelain") else ""
+    return f"{git('rev-parse', '--short', 'HEAD')}{dirty}"
+
+
+def metadata(settings: LlmSettings, skill: Skill, runs_dir: Path) -> dict[str, str]:
+    """写进结果文件开头的信息：模型、Skill 的版本和哈希、提交、时间、运行目录。"""
+    return {
         "模型": settings.model,
         "Skill": f"{skill.name} {skill.version}（内容哈希 {skill.content_hash[:12]}）",
         "提交": git_state(),
         "时间": datetime.now().astimezone().strftime("%Y-%m-%d %H:%M:%S %z"),
         "运行目录": runs_dir.relative_to(REPO_ROOT).as_posix(),
     }
-    report = render_report(cases, records, meta)
-    output = Path(args.output) if args.output else result_file(runs_dir, partial=bool(args.cases))
+
+
+def output_file(requested: str | None, runs_dir: Path, *, partial: bool) -> Path:
+    """结果文件：指定了就用它；否则全部用例写 docs/EVAL_RESULTS.md，部分用例写在运行目录里。"""
+    if requested:
+        return Path(requested)
+    return runs_dir / "EVAL_PARTIAL.md" if partial else DEFAULT_OUTPUT
+
+
+def parse_arguments() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawTextHelpFormatter
+    )
+    parser.add_argument("--cases", help="只跑这些用例（逗号分隔的编号），默认全部")
+    parser.add_argument("--output", help="结果文件，默认见上面的说明")
+    return parser.parse_args()
+
+
+def main() -> int:
+    args = parse_arguments()
+    for stream in (sys.stdout, sys.stderr):
+        stream.reconfigure(encoding="utf-8")
+    settings = load_settings(SETTINGS_FILE).llm
+    try:
+        llm = create_llm_client(settings)
+    except ReactorAgentError as error:
+        print(f"错误：{error.code.value}：{error.message}", file=sys.stderr)
+        return EXIT_NO_KEY
+    wanted = set(args.cases.split(",")) if args.cases else None
+    cases = [case for case in load_cases(CASES_DIR) if wanted is None or case.id in wanted]
+    skill = load_skill(SKILLS_DIR, SELECTION_SKILL)
+    runs_dir = REPO_ROOT / "runs" / f"evals-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
+    runs_dir.mkdir(parents=True)
+    records = run_all(llm, cases, runs_dir, load_rules(skill, SelectionRules))
+    output = output_file(args.output, runs_dir, partial=wanted is not None)
+    report = render_report(cases, records, metadata(settings, skill, runs_dir))
     output.write_text(report, encoding="utf-8")
     summary = summarize(cases, records)
     print(f"\n{'门槛通过' if summary.gate_passed else '门槛没有通过'}，结果写在 {output}")

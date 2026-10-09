@@ -39,7 +39,7 @@ def test_every_case_file_loads_and_scenarios_come_first():
     cases = load_cases(CASES_DIR)
     assert len(cases) == 29
     assert [c.id for c in cases[:3]] == ["L1-S1", "L1-S2", "L1-S3"]
-    assert all(c.is_scenario for c in cases[:3]) and not any(c.is_scenario for c in cases[3:])
+    assert all(c.scenario for c in cases[:3]) and not any(c.scenario for c in cases[3:])
 
 
 def test_expected_features_use_only_known_names_and_values(tmp_path):

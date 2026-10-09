@@ -60,7 +60,11 @@ def test_nothing_in_a_dry_run_touches_hysys(tmp_path, monkeypatch):
         raise AssertionError("dry-run 不应该创建 Backend")
 
     monkeypatch.setattr(cli, "_hysys", refuse)
-    assert run_text(equilibrium_llm(), TEXT, tmp_path, dry_run=True) == EXIT_OK
+    monkeypatch.setattr(cli, "create_llm_client", lambda _settings: equilibrium_llm())
+    description = tmp_path / "d.txt"
+    description.write_text(TEXT, encoding="utf-8")
+    arguments = ["run", "--text-file", str(description), "--dry-run"]
+    assert main([*arguments, "--runs-dir", str(tmp_path / "runs")]) == EXIT_OK
 
 
 def test_main_reads_the_description_from_a_utf8_file_and_stops_after_selection(
@@ -117,7 +121,8 @@ def test_a_missing_api_key_names_the_variable_and_how_to_set_it_without_a_traceb
     monkeypatch.delenv("DASHSCOPE_API_KEY", raising=False)
     description = tmp_path / "d.txt"
     description.write_text(TEXT, encoding="utf-8")
-    code = main(["run", "--text-file", str(description), "--dry-run", "--runs-dir", str(tmp_path)])
+    arguments = ["run", "--text-file", str(description), "--dry-run"]
+    code = main([*arguments, "--runs-dir", str(tmp_path / "runs")])
     err = capsys.readouterr().err
     assert code == EXIT_FAILED
     assert "E_LLM" in err and "DASHSCOPE_API_KEY" in err and "Read-Host -AsSecureString" in err
@@ -162,3 +167,16 @@ def test_an_llm_failure_prints_the_diagnosis_and_exits_non_zero(tmp_path, capsys
     assert code == EXIT_FAILED
     assert "E_LLM" in captured.err and "网络不通" in captured.err
     assert "选型结论" not in captured.out
+
+
+@pytest.mark.parametrize("flag", ["--text-file", "--spec"])
+def test_an_empty_path_argument_is_a_domain_error_not_a_crash(flag, tmp_path, capsys):
+    code = main(["run", flag, "", "--runs-dir", str(tmp_path / "runs")])
+    err = capsys.readouterr().err
+    assert code == EXIT_FAILED and "E_IO" in err and "Traceback" not in err
+    assert not (tmp_path / "runs").exists()
+
+
+def test_an_empty_positional_description_is_a_schema_error(tmp_path, capsys):
+    code = main(["run", "   ", "--runs-dir", str(tmp_path / "runs")])
+    assert code == EXIT_FAILED and "E_SCHEMA" in capsys.readouterr().err
