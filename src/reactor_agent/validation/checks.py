@@ -56,7 +56,7 @@ WantedT = TypeVar("WantedT")
 
 
 def check_solved(context: CheckContext) -> CheckResult:
-    """V1：求解器空闲，各对象的状态都是已求解。变量有没有值归 V5。"""
+    """V1：求解器空闲，各对象的状态都是已求解（HYSYS 的“警告”状态算已求解）。变量有没有值归 V5。"""
     solve = context.snapshot.solve
     problems = [f"{item.name} 处于 {item.state.value} 状态" for item in solve.unsolved_objects]
     if solve.is_solving:
