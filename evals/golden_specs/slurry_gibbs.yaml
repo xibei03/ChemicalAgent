@@ -1,0 +1,61 @@
+# 场景 3：水煤浆气化（计划 §17.3）。手写的规格，供 Recipe 编译和结果验证的测试使用。
+#
+# 气化是高温、机理复杂的黑箱体系，副反应写不全，所以是 Gibbs 反应器；副反应通过组分表体现，
+# 把可能生成的 CO2 和 CH4 加进组分表。进料含固体碳，Recipe 把它编译成“转化反应器 + Gibbs 反应器”
+# 两段式（D14 方案 A，台账 L24、L25）；规格里仍然只有一台 Gibbs 反应器。
+reactor_type: gibbs
+property_package: peng_robinson
+components: [Carbon, H2O, CO, Hydrogen, CO2, Methane]
+
+feeds:
+  - name: Feed
+    temperature_c: 40.0
+    pressure_bar: 40.0
+    # 80000 Nm3/h 按总摩尔流量理解，标准状态 0 °C、101.325 kPa：80000 / 22.414 = 3569.197823 kmol/h。
+    molar_flow_kmol_h: 3569.197823
+    # 水煤浆浓度 62 wt%：碳 0.62、水 0.38（质量分率），按组分表的分子量换算成摩尔分率：
+    #   碳   0.62 / 12.011 = 0.0516193 kmol
+    #   水   0.38 / 18.015 = 0.0210936 kmol
+    #   x(碳) = 0.0516193 / 0.0727129 = 0.709906518，x(水) = 0.290093482
+    composition:
+      - {component: Carbon, mole_fraction: 0.709906518}
+      - {component: H2O, mole_fraction: 0.290093482}
+
+# Gibbs 反应器不需要反应式
+reactions: []
+
+pressure_drop_bar: 0.0
+heat_mode: specified_outlet_temperature
+cases:
+  - {name: base, outlet_temperature_c: 1400.0}
+
+metrics:
+  # CO 收率：出口 CO 摩尔流量 ÷ 进料碳摩尔流量（题面提示：有多少煤转化成了 CO）
+  - {kind: yield, product: CO, basis: Carbon}
+  - {kind: conversion, component: Carbon}
+
+assumptions:
+  - id: A3-1
+    field_path: feeds[0].composition
+    value: "煤按纯碳（石墨）处理，进料只有煤和水"
+    reason: 题面说明不考虑灰分，并且用 C 书写主反应；进料不含氧气。
+  - id: A3-2
+    field_path: feeds[0].molar_flow_kmol_h
+    value: "80000 Nm3/h 是进料的总摩尔流量（碳和水合计）"
+    reason: Nm3/h 是气体体积单位，用于浆料不寻常，按以标准体积表示的摩尔流量理解。流量不影响出口组成和收率。
+  - id: A3-3
+    field_path: feeds[0].composition
+    value: "62 wt% 是碳的质量分率，水为 38 wt%"
+    reason: 水煤浆浓度的通常含义。
+  - id: A3-4
+    field_path: feeds[0].pressure_bar
+    value: "40 bar 为绝压"
+    reason: 题面只给了一个压力。
+  - id: A3-5
+    field_path: pressure_drop_bar
+    value: "0"
+    reason: 题面只给了一个压力，压降为 0。
+  - id: A3-6
+    field_path: metrics[0]
+    value: "CO 收率 = 出口 CO 摩尔流量 ÷ 进料碳摩尔流量"
+    reason: 来自题面提示。

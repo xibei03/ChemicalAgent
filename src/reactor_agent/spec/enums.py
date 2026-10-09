@@ -112,3 +112,51 @@ class ObjectState(StrEnum):
     WARNING = "warning"
     UNDER_SPECIFIED = "under_specified"
     ERROR = "error"
+
+
+class MetricKind(StrEnum):
+    """待求指标的种类。"""
+
+    CONVERSION = "conversion"
+    YIELD = "yield"
+    RATIO = "ratio"
+
+
+class MetricUnit(StrEnum):
+    """指标值的单位：百分数，或者无量纲的比值。"""
+
+    PERCENT = "percent"
+    RATIO = "ratio"
+
+
+class ComponentPhase(StrEnum):
+    """组分在常温常压下的相态。"""
+
+    GAS = "gas"
+    LIQUID = "liquid"
+    SOLID = "solid"
+
+
+class StepPhase(StrEnum):
+    """建模计划里一步所属的阶段：Basis、流程图，或者某个工况。"""
+
+    BASIS = "basis"
+    FLOWSHEET = "flowsheet"
+    CASE = "case"
+
+
+class CheckSeverity(StrEnum):
+    """检查的级别：致命的失败使任务失败，警告只使任务带警告完成。"""
+
+    FATAL = "fatal"
+    WARNING = "warning"
+
+
+class TaskStatus(StrEnum):
+    """任务的终态。"""
+
+    COMPLETE = "complete"
+    COMPLETE_WITH_WARNINGS = "complete_with_warnings"
+    FAILED = "failed"
+    UNSUPPORTED = "unsupported"
+    NEEDS_INPUT = "needs_input"

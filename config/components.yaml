@@ -1,0 +1,71 @@
+# 组分表：HYSYS 规范名、别名、分子式、分子量（kg/kmol）、常温常压下的相态。
+#
+# 规范名都是在 HYSYS V15 里实测过的名字（docs/HYSYS_INTEGRATION.md “组分规范名”一节）。凭记忆写的
+# 规范名在 HYSYS 里很可能对不上（分子式、Water 一类的俗名都会被拒绝），所以这里只登记实测过的，
+# 其余组分等需要它们的阶段去加，并且在 HYSYS 里实测规范名之后再登记。
+components:
+  - name: Methane
+    aliases: [甲烷, CH4, methane]
+    formula: CH4
+    molecular_weight_kg_per_kmol: 16.043
+    phase: gas
+
+  - name: H2O
+    aliases: [水, 水蒸气, 蒸汽, water, steam]
+    formula: H2O
+    molecular_weight_kg_per_kmol: 18.015
+    phase: liquid
+
+  - name: CO
+    aliases: [一氧化碳, carbon monoxide]
+    formula: CO
+    molecular_weight_kg_per_kmol: 28.010
+    phase: gas
+
+  - name: CO2
+    aliases: [二氧化碳, carbon dioxide]
+    formula: CO2
+    molecular_weight_kg_per_kmol: 44.010
+    phase: gas
+
+  - name: Hydrogen
+    aliases: [氢气, 氢, H2, hydrogen]
+    formula: H2
+    molecular_weight_kg_per_kmol: 2.016
+    phase: gas
+
+  - name: Toluene
+    aliases: [甲苯, C7H8, toluene]
+    formula: C7H8
+    molecular_weight_kg_per_kmol: 92.141
+    phase: liquid
+
+  - name: Benzene
+    aliases: [苯, C6H6, benzene]
+    formula: C6H6
+    molecular_weight_kg_per_kmol: 78.114
+    phase: liquid
+
+  - name: p-Xylene
+    aliases: [对二甲苯, 对-二甲苯, PX, para-xylene]
+    formula: C8H10
+    molecular_weight_kg_per_kmol: 106.167
+    phase: liquid
+
+  - name: m-Xylene
+    aliases: [间二甲苯, 间-二甲苯, MX, meta-xylene]
+    formula: C8H10
+    molecular_weight_kg_per_kmol: 106.167
+    phase: liquid
+
+  - name: o-Xylene
+    aliases: [邻二甲苯, 邻-二甲苯, OX, ortho-xylene]
+    formula: C8H10
+    molecular_weight_kg_per_kmol: 106.167
+    phase: liquid
+
+  - name: Carbon
+    aliases: [碳, 固体碳, 煤, 石墨, C, coal, graphite, carbon]
+    formula: C
+    molecular_weight_kg_per_kmol: 12.011
+    phase: solid

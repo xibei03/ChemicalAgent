@@ -42,7 +42,8 @@ PressureDropBar = Annotated[float, Field(ge=0.0, allow_inf_nan=False)]
 FiniteFloat = Annotated[float, Field(allow_inf_nan=False)]
 
 
-def _check_unique(names: tuple[str, ...], what: str) -> None:
+def check_unique(names: tuple[str, ...], what: str) -> None:
+    """名字不能重复，重复就抛 ValueError（用在 pydantic 的校验器里）。"""
     if len(set(names)) != len(names):
         raise ValueError(f"{what}里有重复的名字")
 
@@ -83,7 +84,7 @@ class StoichiometricReaction(FrozenModel):
     def _has_reactants_and_products(
         cls, terms: tuple[StoichiometricTerm, ...]
     ) -> tuple[StoichiometricTerm, ...]:
-        _check_unique(tuple(term.component for term in terms), "反应式")
+        check_unique(tuple(term.component for term in terms), "反应式")
         if not any(term.coefficient < 0 for term in terms):
             raise ValueError("反应式里没有反应物（计量系数为负）")
         if not any(term.coefficient > 0 for term in terms):
@@ -144,7 +145,7 @@ class FeedConditions(FrozenModel):
     @field_validator("composition")
     @classmethod
     def _sums_to_one(cls, entries: tuple[CompositionEntry, ...]) -> tuple[CompositionEntry, ...]:
-        _check_unique(tuple(entry.component for entry in entries), "组成")
+        check_unique(tuple(entry.component for entry in entries), "组成")
         total = math.fsum(entry.mole_fraction for entry in entries)
         if not math.isclose(total, 1.0, abs_tol=COMPOSITION_SUM_TOLERANCE):
             raise ValueError(f"摩尔分率之和应为 1，实际是 {total}")
@@ -192,7 +193,7 @@ class EnsureThermoArgs(FrozenModel):
     @field_validator("components")
     @classmethod
     def _unique_components(cls, names: tuple[str, ...]) -> tuple[str, ...]:
-        _check_unique(names, "组分表")
+        check_unique(names, "组分表")
         return names
 
 
@@ -212,7 +213,7 @@ class EnsureReactionSetArgs(FrozenModel):
     @field_validator("reactions")
     @classmethod
     def _unique_reactions(cls, names: tuple[str, ...]) -> tuple[str, ...]:
-        _check_unique(names, "反应集")
+        check_unique(names, "反应集")
         return names
 
 
@@ -249,7 +250,7 @@ class EnsureReactorArgs(FrozenModel):
 
     @model_validator(mode="after")
     def _connections_are_consistent(self) -> Self:
-        _check_unique((*self.feeds, self.vapour_product, self.liquid_product), "反应器的物流")
+        check_unique((*self.feeds, self.vapour_product, self.liquid_product), "反应器的物流")
         if (self.heat_mode is HeatMode.ADIABATIC) != (self.energy_stream is None):
             raise ValueError("绝热的反应器不接能流，其他热模式必须接能流")
         return self

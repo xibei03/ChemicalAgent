@@ -1,0 +1,55 @@
+# 场景 2：甲苯歧化（计划 §17.2）。手写的规格，供 Recipe 编译和结果验证的测试使用。
+#
+# 用户显式指定了转化率反应器，给出了转化率，并声明不讨论动力学，所以是转化反应器。
+reactor_type: conversion
+property_package: peng_robinson
+components: [Toluene, Benzene, p-Xylene, m-Xylene, o-Xylene]
+
+feeds:
+  - name: Feed
+    temperature_c: 380.0
+    pressure_bar: 25.0          # 2.5 MPa = 25 bar
+    mass_flow_kg_h: 10000.0
+    composition:
+      - {component: Toluene, mole_fraction: 1.0}
+
+reactions:
+  # 2 甲苯 -> 苯 + 二甲苯。二甲苯三种异构体按对 : 间 : 邻 = 24 : 52 : 24 分配，
+  # 用一个反应的分数计量系数表示：2 C7H8 -> 1 C6H6 + 0.24 pX + 0.52 mX + 0.24 oX（台账 H9：分数系数可用）。
+  - kind: conversion
+    stoichiometry:
+      - {component: Toluene, coefficient: -2.0}
+      - {component: Benzene, coefficient: 1.0}
+      - {component: p-Xylene, coefficient: 0.24}
+      - {component: m-Xylene, coefficient: 0.52}
+      - {component: o-Xylene, coefficient: 0.24}
+    base_component: Toluene
+    conversion_percent: 50.0
+    phase: vapour
+
+pressure_drop_bar: 0.0
+heat_mode: adiabatic
+cases:
+  - {name: base}
+
+assumptions:
+  - id: A2-1
+    field_path: feeds[0].pressure_bar
+    value: "2.5 MPa 为绝压"
+    reason: 题面只给了操作压力，进料压力等于操作压力。
+  - id: A2-2
+    field_path: pressure_drop_bar
+    value: "0"
+    reason: 题面只给了操作压力，压降为 0。
+  - id: A2-3
+    field_path: heat_mode
+    value: adiabatic
+    reason: 题面没有给出口温度，该反应热效应不强，出口温度作为结果输出。
+  - id: A2-4
+    field_path: reactions[0].stoichiometry
+    value: "二甲苯异构体 对 : 间 : 邻 = 24 : 52 : 24"
+    reason: 题面没有给分配比，取反应温度附近热力学平衡分布的文献近似值，可由用户覆盖。
+  - id: A2-5
+    field_path: reactions[0].conversion_percent
+    value: "50%，以甲苯为基准，与温度无关"
+    reason: 题面给的是固定值。
