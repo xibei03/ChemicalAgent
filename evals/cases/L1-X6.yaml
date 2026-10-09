@@ -1,0 +1,8 @@
+id: L1-X6
+purpose: "要求模拟管壳式换热器：有“管”字但不是反应过程，应当明确不支持"
+input: |-
+  帮我模拟一台管壳式换热器，用 120°C 的饱和水蒸气加热管程里的原油，原油流量 30000 kg/h，从 25°C 加热到 90°C，请算需要的蒸汽量和换热面积。
+expected:
+  reactor: none
+  features:
+    is_reaction_process: false

@@ -1,0 +1,12 @@
+id: L1-A2
+purpose: "反应釜、给出了体积、没有动力学：设备的叫法和尺寸不等于动力学，反应明确所以是 Equilibrium"
+input: |-
+  在一台体积 5 m3 的反应釜里，乙酸与甲醇发生酯化反应 CH3COOH + CH3OH ⇌ CH3COOCH3 + H2O，65°C、常压，等摩尔进料各 30 kmol/h，没有动力学数据，请计算反应达到平衡时的组成。
+expected:
+  reactor: equilibrium
+  features:
+    kinetics_given: false
+    dimensions_given: true
+    equipment_form: vessel
+    reaction_defined: true
+    conversion_data_given: false

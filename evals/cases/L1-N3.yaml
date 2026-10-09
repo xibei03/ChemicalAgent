@@ -1,0 +1,10 @@
+id: L1-N3
+purpose: "点名 CSTR 并给出动力学，反应物是气相：点名优先于“气相用 PFR”"
+input: |-
+  请用 CSTR 模拟气相 HI 分解反应 2HI → H2 + I2，二级反应，速率常数 k = 1.6×10^11·exp(-22000/T) m3/(kmol·s)（T 为 K），反应器体积 3 m3。进料纯 HI 80 kmol/h，温度 450°C，压力 5 bar。
+expected:
+  reactor: cstr
+  features:
+    named_reactor: cstr
+    kinetics_given: true
+    phase: gas

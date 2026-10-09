@@ -1,0 +1,11 @@
+id: L1-K1b
+purpose: "气相、有动力学和体积，没有说明设备形式：按相态选 PFR"
+input: |-
+  气相 N2O 分解反应 2N2O → 2N2 + O2，二级反应，速率常数 k = 5.0×10^11·exp(-24000/T) m3/(kmol·s)（T 为 K），反应器体积 12 m3。进料为含 N2O 20%（摩尔分数）的氮气混合气，流量 300 kmol/h，温度 850°C，压力 2 bar。请模拟反应器出口的组成。
+expected:
+  reactor: pfr
+  features:
+    kinetics_given: true
+    dimensions_given: true
+    equipment_form: unspecified
+    phase: gas

@@ -1,0 +1,10 @@
+id: L1-A1
+purpose: "只写了主要反应，又要求考虑未列出的副反应：反应没有明确，也不是已知转化率，落到 Gibbs"
+input: |-
+  苯与丙烯烷基化制异丙苯，主反应为 C6H6 + C3H6 → C9H12，同时存在多异丙苯等副反应，请考虑这些副反应。进料苯 100 kmol/h，丙烯 40 kmol/h，温度 200°C，压力 30 bar。请给出出口组成。
+expected:
+  reactor: gibbs
+  features:
+    reaction_defined: false
+    conversion_data_given: false
+    kinetics_given: false

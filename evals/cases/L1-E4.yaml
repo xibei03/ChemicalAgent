@@ -1,0 +1,9 @@
+id: L1-E4
+purpose: "点名平衡反应器，但没有说明有哪些反应：必要输入不齐，不能采纳，往下判断得到 Gibbs"
+input: |-
+  请用平衡反应器模拟某硫磺回收装置尾气处理段的催化反应。进料含 H2S、SO2、COS 和水蒸气，温度 300°C，压力 1.3 bar，具体会发生哪些反应我们还没有梳理清楚，请你们自行考虑，给出出口组成。
+expected:
+  reactor: gibbs
+  features:
+    named_reactor: equilibrium
+    reaction_defined: false

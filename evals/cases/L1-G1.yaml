@@ -1,0 +1,11 @@
+id: L1-G1
+purpose: "乙烷蒸汽裂解，求裂解气组成：裂解是黑箱体系，裂解炉是管式但没有动力学"
+input: |-
+  我想模拟乙烷的蒸汽裂解过程。乙烷与水蒸气按摩尔比 1:0.4 进入裂解炉，炉出口温度 850°C，压力 1.8 bar，乙烷进料 2000 kg/h，进料温度 600°C。请给出裂解气的组成。
+expected:
+  reactor: gibbs
+  features:
+    black_box_system: true
+    kinetics_given: false
+    reaction_defined: false
+    named_reactor: null

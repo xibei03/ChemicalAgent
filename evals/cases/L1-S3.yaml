@@ -1,0 +1,15 @@
+id: L1-S3
+purpose: "考核场景 3 原文：收率是待求量，只写了主要反应并要求考虑副反应，气化是黑箱体系"
+source: "docs/REQUIREMENT.md 第 57 行和第 60 行"
+repeats: 5
+input: |-
+  "我要模拟水煤浆的气化过程。进料为煤炭和水，流量80000Nm3/h,压力40bar，水煤浆进料浓度62wt%,进料温度40摄氏度，主要反应：C+H2O → CO+H2。 请帮我计算一下气化炉出口温度为1400度时出口组成及CO的收率"反应器灰分不做考虑
+  提示：CO收率就是煤炭有多少转化成CO，这一点很重要。同时希望考虑到里面有副反应的情况**
+expected:
+  reactor: gibbs
+  features:
+    named_reactor: null
+    kinetics_given: false
+    conversion_data_given: false
+    reaction_defined: false
+    black_box_system: true

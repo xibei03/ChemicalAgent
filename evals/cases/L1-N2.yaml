@@ -1,0 +1,9 @@
+id: L1-N2
+purpose: "点名 Gibbs 反应器，反应也已明确：点名优先于 Equilibrium"
+input: |-
+  请使用吉布斯反应器（Gibbs Reactor）计算一氧化碳与水蒸气在 500°C、20 bar 下反应后的出口组成，反应为 CO + H2O → CO2 + H2，进料 CO 100 kmol/h，水蒸气 300 kmol/h。
+expected:
+  reactor: gibbs
+  features:
+    named_reactor: gibbs
+    reaction_defined: true

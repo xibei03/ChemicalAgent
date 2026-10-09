@@ -1,0 +1,9 @@
+id: L1-K1c
+purpose: "管式、有动力学，同时提到转化率目标：动力学优先于转化率"
+input: |-
+  气相乙醛热分解 CH3CHO → CH4 + CO 在管式反应器中进行，二级反应，指前因子 1.0×10^10 m3/(kmol·s)，活化能 190 kJ/mol，管长 5 m、内径 0.1 m。进料纯乙醛 100 kmol/h，520°C，1.2 bar。设计目标是出口转化率约 80%，请模拟。
+expected:
+  reactor: pfr
+  features:
+    kinetics_given: true
+    equipment_form: tubular

@@ -1,0 +1,10 @@
+id: L1-C4
+purpose: "管式反应器但没有动力学，只有转化率：回到转化率的规则，选 Conversion"
+input: |-
+  在一台管式反应器里进行 1-丁烯异构化为 2-丁烯的气相反应，没有现成的动力学数据，但中试给出了单程转化率 65%。进料 1-丁烯 200 kmol/h，温度 350°C，压力 3 bar。请模拟出口组成。
+expected:
+  reactor: conversion
+  features:
+    kinetics_given: false
+    equipment_form: tubular
+    conversion_data_given: true

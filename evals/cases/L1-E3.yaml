@@ -1,0 +1,9 @@
+id: L1-E3
+purpose: "点名平衡反应器，反应明确：采纳用户点名的类型"
+input: |-
+  请用平衡反应器（Equilibrium Reactor）模拟二氧化氮二聚反应 2NO2 ⇌ N2O4，进料为纯 NO2，流量 50 kmol/h，温度 25°C，压力 1 atm，求平衡时 N2O4 的摩尔分数。
+expected:
+  reactor: equilibrium
+  features:
+    named_reactor: equilibrium
+    reaction_defined: true

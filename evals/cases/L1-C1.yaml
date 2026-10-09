@@ -1,0 +1,9 @@
+id: L1-C1
+purpose: "给出转化率和选择性的简单反应：Conversion"
+input: |-
+  甲醇与异丁烯在液相中合成 MTBE：CH3OH + i-C4H8 → MTBE。已知异丁烯单程转化率为 92%，对 MTBE 的选择性为 98%，其余 2% 的异丁烯生成二异丁烯。进料异丁烯 80 kmol/h，甲醇 88 kmol/h，温度 60°C，压力 10 bar。请计算出口物流组成。
+expected:
+  reactor: conversion
+  features:
+    conversion_data_given: true
+    kinetics_given: false

@@ -1,0 +1,11 @@
+id: L1-K1
+purpose: "气相反应，给出指前因子、活化能、反应级数和管长管径，管式：PFR"
+input: |-
+  气相正丁烷异构化反应 n-C4H10 → i-C4H10 在一台管式反应器中进行，请帮我模拟。反应为一级不可逆，速率常数 k = A·exp(-Ea/RT)，指前因子 A = 3.2×10^8 1/s，活化能 Ea = 112 kJ/mol。反应管长 8 m，内径 0.06 m，共 120 根并联。进料为纯正丁烷，流量 500 kmol/h，进料温度 420°C，压力 8 bar，要求计算出口组成。
+expected:
+  reactor: pfr
+  features:
+    kinetics_given: true
+    dimensions_given: true
+    equipment_form: tubular
+    phase: gas

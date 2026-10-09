@@ -1,0 +1,11 @@
+id: L1-E2
+purpose: "平衡转化率是待求量：不是已知的转化率，反应明确所以是 Equilibrium"
+input: |-
+  我想知道水煤气变换反应 CO + H2O ⇌ CO2 + H2 在 400°C、25 bar 下能达到的平衡转化率。进料 CO 与水蒸气摩尔比为 1:3，CO 流量 200 kmol/h。请计算 CO 的转化率和出口气体组成。
+expected:
+  reactor: equilibrium
+  features:
+    conversion_data_given: false
+    reaction_defined: true
+    kinetics_given: false
+    phase: gas

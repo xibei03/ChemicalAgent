@@ -1,0 +1,10 @@
+id: L1-G3
+purpose: "用户明说产物分布未知：即使温度不高、有催化剂也属于黑箱"
+input: |-
+  丙烷在 600°C、1.5 bar 下通过催化剂床层发生脱氢，同时伴随裂解和结焦，实际会出现哪些产物我们并不清楚，想先从热力学上看看产物分布。进料丙烷 300 kmol/h，进料温度 550°C。
+expected:
+  reactor: gibbs
+  features:
+    black_box_system: true
+    kinetics_given: false
+    conversion_data_given: false

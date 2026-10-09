@@ -1,0 +1,9 @@
+id: L1-C2
+purpose: "点名转化率反应器，用户把名字写成了“Conversation”：对错别字鲁棒"
+input: |-
+  用 Conversation 反应器模拟环己烷脱氢 C6H12 → C6H6 + 3H2，环己烷单程转化率设为 95%，进料环己烷 60 kmol/h，温度 400°C，压力 2 bar。
+expected:
+  reactor: conversion
+  features:
+    named_reactor: conversion
+    conversion_data_given: true

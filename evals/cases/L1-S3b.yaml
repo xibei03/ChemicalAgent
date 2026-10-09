@@ -1,0 +1,10 @@
+id: L1-S3b
+purpose: "场景 3 的改写，只问 CO 收率：“收率”是待求量，不能因为这两个字选 Conversion"
+input: |-
+  我要模拟水煤浆的气化过程。进料为煤炭和水，水煤浆进料浓度62wt%，压力40bar，进料温度40摄氏度，气化炉出口温度1400度。请问CO的收率是多少？
+expected:
+  reactor: gibbs
+  features:
+    named_reactor: null
+    conversion_data_given: false
+    black_box_system: true

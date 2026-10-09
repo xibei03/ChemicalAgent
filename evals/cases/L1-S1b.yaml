@@ -1,0 +1,12 @@
+id: L1-S1b
+purpose: "场景 1 的英文改写，单位换成 MPa 和 K：类型不因语言和单位而变"
+input: |-
+  I need to simulate methane steam reforming. The feed is methane and steam at a molar ratio of 1:2.7. Two reactions take place: in the main reaction, methane reacts with water to give carbon monoxide and hydrogen; in the side reaction, carbon monoxide reacts with steam to give carbon dioxide and hydrogen. Please analyze the outlet composition of the reformer in two cases: (1) reformer outlet temperature 983 K, pressure 1.35 MPa, feed temperature 793 K; (2) reformer outlet temperature 873 K, pressure 1.35 MPa, feed temperature 793 K. The feed flow rate is up to you, but it should match the normal annual throughput of a plant.
+expected:
+  reactor: equilibrium
+  features:
+    kinetics_given: false
+    conversion_data_given: false
+    reaction_defined: true
+    black_box_system: false
+    phase: gas

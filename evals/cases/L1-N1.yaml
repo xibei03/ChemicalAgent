@@ -1,0 +1,10 @@
+id: L1-N1
+purpose: "点名 PFR，但没有动力学参数：必要输入不齐，往下判断，给出转化率所以是 Conversion"
+input: |-
+  请用平推流反应器 PFR 模拟气相反应 CH3OH → CH2O + H2（甲醇脱氢制甲醛）。目前没有速率方程和活化能等动力学数据，但已知甲醇的转化率为 75%。进料甲醇 120 kmol/h，温度 600°C，压力 1.2 bar。
+expected:
+  reactor: conversion
+  features:
+    named_reactor: pfr
+    kinetics_given: false
+    conversion_data_given: true

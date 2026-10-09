@@ -1,0 +1,12 @@
+id: L1-E1
+purpose: "甲醇合成，给出平衡常数与温度的关系：Equilibrium"
+input: |-
+  甲醇合成反应 CO + 2H2 ⇌ CH3OH 在 250°C、70 bar 下达到化学平衡，已知该反应的平衡常数 lnKp = 9140/T - 21.2（Kp 以 bar 为单位表示，T 为 K）。进料为 CO 和 H2 摩尔比 1:2.2 的合成气，流量 1000 kmol/h。请计算平衡时的出口组成。
+expected:
+  reactor: equilibrium
+  features:
+    equilibrium_constant_given: true
+    reaction_defined: true
+    kinetics_given: false
+    conversion_data_given: false
+    black_box_system: false

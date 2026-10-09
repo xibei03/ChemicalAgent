@@ -1,0 +1,11 @@
+id: L1-K3
+purpose: "聚合反应，给出动力学：需求 §8 规定的例外，不套用 CSTR/PFR；给出单体转化率，所以是 Conversion"
+input: |-
+  苯乙烯本体自由基聚合，在一台釜式反应器中进行。已知引发剂分解速率常数 kd = 1.0×10^-5 1/s，链增长速率常数 kp = 480 m3/(kmol·s)，链终止速率常数 kt = 6.0×10^7 m3/(kmol·s)，引发效率 0.6，釜体积 8 m3。进料为苯乙烯单体与少量引发剂，温度 90°C，压力 2 bar。单体转化率要求达到 80%，请模拟。
+expected:
+  reactor: conversion
+  features:
+    kinetics_given: true
+    polymerization: true
+    conversion_data_given: true
+    equipment_form: vessel

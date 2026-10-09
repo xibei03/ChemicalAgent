@@ -1,0 +1,11 @@
+id: L1-K2
+purpose: "液相反应，给出动力学和釜体积，釜式：CSTR"
+input: |-
+  液相乙酸酐水解 (CH3CO)2O + H2O → 2CH3COOH 在一台带搅拌的反应釜中进行，一级反应，k = 1.8×10^7·exp(-5600/T) 1/s（T 为 K），釜体积 4 m3。进料为乙酸酐 5 kmol/h 与大量水混合的水溶液，温度 40°C，压力 1.5 bar。请模拟釜出口的组成。
+expected:
+  reactor: cstr
+  features:
+    kinetics_given: true
+    dimensions_given: true
+    equipment_form: vessel
+    phase: liquid

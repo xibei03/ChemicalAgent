@@ -1,0 +1,8 @@
+id: L1-X5
+purpose: "要求模拟精馏塔：不是反应过程，应当明确不支持"
+input: |-
+  请模拟一座精馏塔，分离苯和甲苯的混合物，进料中苯占 50%（摩尔分数），流量 100 kmol/h，理论板数 20，回流比 2.5，塔顶压力 1 atm，求塔顶和塔底的组成。
+expected:
+  reactor: none
+  features:
+    is_reaction_process: false

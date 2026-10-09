@@ -1,0 +1,11 @@
+id: L1-K2b
+purpose: "液相、有动力学和体积，没有说明设备形式：按相态选 CSTR"
+input: |-
+  液相反应 乙酸 + 丁醇 → 乙酸丁酯 + 水，二级反应，已知 70°C 下 k = 2.4×10^-4 m3/(kmol·s)，活化能 52 kJ/mol，反应器有效体积 6 m3。乙酸与丁醇等摩尔进料，各 20 kmol/h，温度 70°C，压力 1.2 bar。请模拟出口组成。
+expected:
+  reactor: cstr
+  features:
+    kinetics_given: true
+    dimensions_given: true
+    equipment_form: unspecified
+    phase: liquid

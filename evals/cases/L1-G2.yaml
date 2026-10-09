@@ -1,0 +1,9 @@
+id: L1-G2
+purpose: "生物质气化，求产气组成：气化是黑箱体系；要求计算的碳转化不是已知条件"
+input: |-
+  生物质气化制合成气：木屑按 C6H9O4 近似表示，和水蒸气一起进入气化炉，木屑进料 1500 kg/h，蒸汽 1000 kg/h，气化炉温度 850°C，压力 5 bar，进料温度 150°C。请计算产气组成和碳的转化情况。
+expected:
+  reactor: gibbs
+  features:
+    black_box_system: true
+    conversion_data_given: false
