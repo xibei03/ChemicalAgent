@@ -9,12 +9,12 @@ from datetime import UTC, datetime
 
 import pytest
 from plan_runner import compile_plan, run_cases
-from references import CO_YIELD_RANGE_PERCENT, REFERENCES, SPEC_NAMES
+from references import REFERENCES, SPEC_NAMES, YIELD_RANGE_PERCENT
 
 from builders import GOLDEN, TABLE_FILE
 from reactor_agent.recipes import recipe_for
 from reactor_agent.spec.components import load_component_table, molecular_weights
-from reactor_agent.spec.enums import TaskStatus
+from reactor_agent.spec.enums import MetricKind, TaskStatus
 from reactor_agent.spec.model_spec import load_model_spec, spec_hash
 from reactor_agent.spec.results import CaseRecord, CheckContext, Provenance
 from reactor_agent.validation.checks import run_common_checks
@@ -71,9 +71,12 @@ def test_real_results_agree_with_the_reference_values_of_the_plan(executor, fres
                 assert component.mole_fraction == pytest.approx(
                     fractions[component.name], abs=tolerance
                 ), (name, result.case_name, component.name)
-    if name == "slurry_gibbs":
-        co_yield = next(m.value for _, r in results for m in r.metrics if m.name.startswith("CO"))
-        assert CO_YIELD_RANGE_PERCENT[0] <= co_yield <= CO_YIELD_RANGE_PERCENT[1]
+    if name in YIELD_RANGE_PERCENT:
+        low, high = YIELD_RANGE_PERCENT[name]
+        yields = [
+            m.value for _, r in results for m in r.metrics if m.request.kind is MetricKind.YIELD
+        ]
+        assert yields and all(low <= value <= high for value in yields), yields
 
 
 def test_an_empty_outlet_reads_back_as_known_zero_flows_with_a_state(executor, fresh_case):

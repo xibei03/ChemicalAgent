@@ -24,4 +24,5 @@ REFERENCES = {
     },
     "slurry_gibbs": {"base": ("Vap-2", {"CO": 0.500, "Hydrogen": 0.482}, 0.02)},
 }
-CO_YIELD_RANGE_PERCENT = (38.0, 42.0)
+# 规格 → 收率（百分数）应当落在的范围；没有列出的规格不检查收率。
+YIELD_RANGE_PERCENT = {"slurry_gibbs": (38.0, 42.0)}

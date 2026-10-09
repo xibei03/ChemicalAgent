@@ -9,14 +9,15 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import pytest
-from references import CO_YIELD_RANGE_PERCENT, REFERENCES, SPEC_NAMES
+from references import REFERENCES, SPEC_NAMES, YIELD_RANGE_PERCENT
 
 from builders import GOLDEN, component_table
+from reactor_agent.errors import ErrorCode
 from reactor_agent.harness.engine import Dependencies, Engine
 from reactor_agent.observability.render import render_timeline
 from reactor_agent.observability.trace import TRACE_FILE, TraceWriter, read_events
 from reactor_agent.recipes import RECIPES
-from reactor_agent.spec.enums import CaseMode, EventType, TaskStatus, ToolName
+from reactor_agent.spec.enums import CaseMode, EventType, MetricKind, TaskStatus, ToolName
 from reactor_agent.spec.model_spec import ModelSpec, load_model_spec
 from reactor_agent.spec.plan import (
     BuildPlan,
@@ -157,9 +158,11 @@ def assert_matches_the_references(name: str, execution: Execution) -> None:
                 assert component.mole_fraction == pytest.approx(
                     fractions[component.name], abs=tolerance
                 ), (name, record.case_name, component.name)
-    if name == "slurry_gibbs":
-        metric = next(m for r in result.cases if r.result for m in r.result.metrics)
-        assert CO_YIELD_RANGE_PERCENT[0] <= metric.value <= CO_YIELD_RANGE_PERCENT[1]
+    if name in YIELD_RANGE_PERCENT:
+        low, high = YIELD_RANGE_PERCENT[name]
+        metrics = [m for r in result.cases if r.result for m in r.result.metrics]
+        yields = [m.value for m in metrics if m.request.kind is MetricKind.YIELD]
+        assert yields and all(low <= value <= high for value in yields), yields
 
 
 def outlet_numbers(execution: Execution) -> dict[tuple[str, str, str], tuple[float, float]]:
@@ -242,3 +245,45 @@ def test_a_conflicting_object_triggers_exactly_one_clean_rebuild_and_the_task_st
     assert_matches_the_references("toluene_conversion", execution)
     timeline = render_timeline(events)
     assert "rebuild (E_CONFLICT)" in timeline and timeline.rstrip().endswith("complete")
+
+
+class FailSecondSolve(ToolExecutor):
+    """测试专用的包装：第二次求解直接返回 E_NOT_SOLVED（不真的调用），其余照常。"""
+
+    def __init__(self, inner: ToolExecutor) -> None:
+        super().__init__({})
+        self._inner = inner
+        self._solves = 0
+
+    def call(self, name: str, args: object) -> ToolResult:
+        if name == ToolName.SOLVER_SOLVE:
+            self._solves += 1
+            if self._solves == 2:
+                return ToolResult.failure(ErrorCode.NOT_SOLVED, "测试注入的失败", {"ERV-100": "x"})
+        return self._inner.call(name, args)
+
+
+def outlet_temperature_in(executor: ToolExecutor, execution: Execution, path: Path) -> float:
+    """关掉活动的 Case，重新打开 path，读气相出料的温度。"""
+    executor.call(ToolName.CASE_CLOSE, CloseCaseArgs(save=False))
+    opened = executor.call(ToolName.CASE_ENSURE, EnsureCaseArgs(path=path, mode=CaseMode.OPEN))
+    assert opened.ok, opened.error
+    (name,) = system_vapour_outlets(execution.plan())
+    outlet = the_snapshot(executor).stream(name)
+    assert outlet is not None and outlet.temperature_c is not None
+    return outlet.temperature_c
+
+
+def test_an_abort_in_the_second_case_keeps_the_first_cases_file_and_saves_the_failure_apart(
+    executor, tmp_path, close_the_case
+):
+    execution = execute(FailSecondSolve(executor), "smr_equilibrium", tmp_path / "runs")
+    assert execution.task.status is TaskStatus.FAILED
+    assert execution.task.errors[-1].code is ErrorCode.NOT_SOLVED
+    first, failed = execution.run_dir / "T710.hsc", execution.run_dir / "work" / "failed.hsc"
+    assert failed.is_file() and failed.stat().st_size > 0
+    report = execution.task.failure_report(execution.run_dir / TRACE_FILE, first)
+    assert report is not None and report.case_path == failed
+    # 第一个工况的文件还是 710 °C 的状态；现场是第二个工况改了规定、还没解出来的状态（600 °C）
+    assert outlet_temperature_in(executor, execution, first) == pytest.approx(710.0, abs=0.1)
+    assert outlet_temperature_in(executor, execution, failed) == pytest.approx(600.0, abs=0.1)
