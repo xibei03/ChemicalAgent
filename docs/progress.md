@@ -184,6 +184,25 @@
 `tests/fake_tools.py` 是 `ToolExecutor` 的桩；`tests/integration/test_engine_real.py`（7 个，`-m hysys`）和 `references.py`（三份规格的参照值，与 `test_validation_real.py` 共用）。
 探针 `spikes/e17_session_loss.py`。
 
+### 阶段 2A 新增（`src/` 合计 5637 行代码，1C 之后是 4631 行）
+
+| 文件 | 职责 | 行 |
+|---|---|---|
+| `spec/selection.py` | 选型的数据模型：特征 `SelectionFeatures`（`Flag`、`NamedReactor`、`EquipmentForm`、`FeedPhase`）、LLM 的输出 `SelectionDraft`、规则表 `SelectionRules`、规则结论 `RuleVerdict`、结果 `SelectionResult`、摘要 `SelectionSummary`、`Decision` | 163 |
+| `spec/selection_rules.py` | 纯函数：原文依据检查（NFKC 加去空白）、`check_rules`（第一层能不能建、第二层每一条、PFR 与 CSTR 的选择、聚合反应的例外）、`assess`（对照）、`build_result`、`reask_feedback`、`require_supported` | 281 |
+| `spec/llm.py`、`spec/settings.py` | LLM 调用记录和 Trace 里的摘要；`config/settings.yaml` 的模型和加载 | 38、15 |
+| `llm/client.py` | `LlmClient`（harness 看见的接口）、`ChatProvider`（供应商只实现这一个方法）、`StructuredClient`（pydantic 校验加一次带错误的重问，不通过抛 `E_LLM`） | 78 |
+| `llm/providers/dashscope.py` | 百炼：openai SDK、温度 0、`json_schema` strict、**关闭思考**、读超时 60 秒加连接超时 10 秒、SDK 重试 2 次、异常转 `E_LLM` | 56 |
+| `llm/system_prompt.py`、`llm/prompts/system.md` | 三个调用点共用的系统提示（不做算术和换算、不悄悄补信息、只按结构输出） | 10 |
+| `skill_loader.py` | 按名字加载 Skill：元数据、正文、按需读 `references/` 和 `examples/`、`rules.yaml`、内容哈希（换行无关） | 76 |
+| `harness/selection.py` | `Selector`（`create_task` 从文字创建任务，`run` 是 SELECT 的处理函数）和 `select_reactor`（问、对照、至多重问一次） | 70 |
+| `harness/context.py` | 组装给 LLM 的上下文：系统提示加 Skill 加参考文件加示例放 system，原文放 user；重问的内容 | 20 |
+| 改动 | `harness/engine.py`（`Dependencies.select`、没有 Case 的阶段不重建，285 行）、`harness/recovery.py`（`case_exists`）、`state/models.py`（规格字段可空、`selection`、`BEFORE_CASE_STATES`）、`state/store.py`（`input.txt`、`selection.json`、`llm/` 日志）、`observability/`（`llm_call` 事件、选型渲染、`spec_hash` 可空）、`cli.py`（文字入口、`--dry-run`、缺密钥的提示，195 行） | — |
+
+`harness/` 合计 450 行（上限约 450）。运行目录里新增：`artifacts/input.txt`、`artifacts/selection.json`、`llm/select-<n>.json`（每次调用的提示和回复全文）。
+`skills/reactor-selection/`：`SKILL.md`、`references/selection_rules.md`、`references/pitfalls.md`、`examples/`（4 个）、`rules.yaml`。评测：`evals/cases/`（29 个）、`evals/inputs/`（三个场景的文本文件）、`evals/run_evals.py`、`scoring.py`、`demo_scenarios.py`、`interactive.py`（用户要求的交互入口：终端输入一次密钥，菜单运行探针、场景选型、评测）。
+测试：`test_selection_rules.py`（59）、`test_selection_evidence.py`、`test_select_state.py`（16）、`test_text_cli.py`（19）、`test_selection_support.py`（20）、`test_skill_content.py`（29）、`test_skill_loader.py`（15）、`test_llm_client.py`（11）、`test_dashscope_provider.py`（13）、`test_eval_cases.py`、`test_eval_runner.py`（16）、`test_interactive.py`（13）；`tests/fake_llm.py`、`tests/selection_builders.py`；`tests/llm/test_llm_smoke.py`（`-m llm`，一个）。探针 `spikes/e18_llm_structured.py`。
+
 ## 进行中
 
 **阶段 2A（反应器选型）进行中**，2026-10-09 22:03 开始（UTC+8）。时间盒约 2.5 小时。
