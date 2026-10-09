@@ -10,11 +10,14 @@ from reactor_agent.spec.components import (
     ComponentEntry,
     ComponentTable,
     atoms_by_component,
+    feed_molar_flow_kmol_h,
     find_component,
     load_component_table,
+    names_with_formula,
     parse_formula,
 )
 from reactor_agent.spec.enums import ComponentPhase
+from reactor_agent.spec.tool_args import CompositionEntry, FeedConditions
 
 REPO = Path(__file__).resolve().parents[2]
 TABLE_FILE = REPO / "config" / "components.yaml"
@@ -121,6 +124,49 @@ class TestComponentTable:
     def test_non_positive_molecular_weight_is_rejected(self):
         with pytest.raises(ValidationError):
             entry("Methane", weight=0.0)
+
+
+class TestFormulaLookup:
+    def test_components_are_found_by_formula(self):
+        table = load_component_table(TABLE_FILE)
+        assert names_with_formula(table, "H2O") == ("H2O",)
+        assert names_with_formula(table, "H2") == ("Hydrogen",)
+        assert names_with_formula(table, "CO") == ("CO",)
+        assert names_with_formula(table, "C") == ("Carbon",)
+
+    def test_isomers_share_a_formula(self):
+        table = load_component_table(TABLE_FILE)
+        assert names_with_formula(table, "C8H10") == ("p-Xylene", "m-Xylene", "o-Xylene")
+
+    def test_the_order_of_the_elements_in_the_formula_does_not_matter(self):
+        table = load_component_table(TABLE_FILE)
+        assert names_with_formula(table, "OH2") == ("H2O",)
+
+    def test_unknown_formula_finds_nothing(self):
+        assert names_with_formula(load_component_table(TABLE_FILE), "NH3") == ()
+
+
+class TestFeedFlow:
+    def feed(self, **changes):
+        values = {
+            "temperature_c": 25.0,
+            "pressure_bar": 1.0,
+            "composition": (
+                CompositionEntry(component="Methane", mole_fraction=0.5),
+                CompositionEntry(component="H2O", mole_fraction=0.5),
+            ),
+        }
+        return FeedConditions(**{**values, **changes})
+
+    def test_molar_flow_is_used_as_given(self):
+        table = load_component_table(TABLE_FILE)
+        assert feed_molar_flow_kmol_h(self.feed(molar_flow_kmol_h=12.5), table) == 12.5
+
+    def test_mass_flow_is_divided_by_the_mean_molecular_weight(self):
+        table = load_component_table(TABLE_FILE)
+        mean_weight = 0.5 * 16.043 + 0.5 * 18.015
+        flow = feed_molar_flow_kmol_h(self.feed(mass_flow_kg_h=1000.0), table)
+        assert flow == pytest.approx(1000.0 / mean_weight)
 
 
 class TestLoading:

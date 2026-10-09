@@ -3,6 +3,7 @@
 读不到的值是 None。仿真软件的空值哨兵数不会离开 Backend。
 """
 
+from collections.abc import Iterable
 from pathlib import Path
 
 from reactor_agent.spec.base import FrozenModel
@@ -25,14 +26,15 @@ class SolveStatus(FrozenModel):
     objects: tuple[ObjectStatus, ...]
 
     @property
+    def unsolved_objects(self) -> tuple[ObjectStatus, ...]:
+        """处于未求解、欠规定或错误状态的对象。"""
+        healthy = {ObjectState.OK, ObjectState.WARNING}
+        return tuple(item for item in self.objects if item.state not in healthy)
+
+    @property
     def solved(self) -> bool:
         """求解器空闲，有对象，并且没有对象处于未求解、欠规定或错误状态。"""
-        healthy = {ObjectState.OK, ObjectState.WARNING}
-        return (
-            not self.is_solving
-            and bool(self.objects)
-            and all(item.state in healthy for item in self.objects)
-        )
+        return not self.is_solving and bool(self.objects) and not self.unsolved_objects
 
 
 class ComponentInfo(FrozenModel):
@@ -120,3 +122,14 @@ class ModelSnapshot(FrozenModel):
     energy_streams: tuple[EnergyStreamSnapshot, ...]
     reactors: tuple[ReactorSnapshot, ...]
     solve: SolveStatus
+
+    def stream(self, name: str) -> StreamSnapshot | None:
+        """按名字取一股物料物流，没有就是 None。"""
+        return next((item for item in self.streams if item.name == name), None)
+
+    def streams_named(self, names: Iterable[str]) -> tuple[StreamSnapshot, ...] | None:
+        """按名字取一组物料物流；任何一股不存在就是 None，不让缺失的物流悄悄少算。"""
+        found = [self.stream(name) for name in names]
+        if any(item is None for item in found):
+            return None
+        return tuple(item for item in found if item is not None)

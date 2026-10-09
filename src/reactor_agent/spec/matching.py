@@ -28,7 +28,6 @@ from reactor_agent.spec.tool_args import (
 STOICHIOMETRY_TOLERANCE = 1e-3
 # 写进去再读回来的物理量，只有换算和浮点表示的误差。
 VALUE_REL_TOLERANCE = 1e-6
-VALUE_ABS_TOLERANCE = 1e-6
 
 
 def _close(first: float | None, second: float | None, tolerance: float) -> bool:
@@ -37,9 +36,11 @@ def _close(first: float | None, second: float | None, tolerance: float) -> bool:
     return math.isclose(first, second, rel_tol=tolerance, abs_tol=tolerance)
 
 
-def values_close(first: float | None, second: float | None) -> bool:
-    """写进去再读回来的物理量是否相同：只允许换算和浮点表示的误差。读不到（None）算不同。"""
-    return _close(first, second, VALUE_REL_TOLERANCE)
+def values_close(
+    first: float | None, second: float | None, tolerance: float = VALUE_REL_TOLERANCE
+) -> bool:
+    """两个物理量是否相同：默认只允许换算和浮点表示的误差。读不到（None）算不同。"""
+    return _close(first, second, tolerance)
 
 
 def _difference(what: str, existing: object, wanted: object) -> str:
@@ -129,36 +130,42 @@ def reaction_set_differences(
     return tuple(found)
 
 
-def _composition_differences(existing: StreamSnapshot, wanted: FeedConditions) -> list[str]:
+def _composition_differences(
+    existing: StreamSnapshot, wanted: FeedConditions, tolerance: float
+) -> list[str]:
     have = {item.name: item.mole_fraction for item in existing.components}
     want = {entry.component: entry.mole_fraction for entry in wanted.composition}
     return [
         _difference(f"{name} 的摩尔分率", have.get(name), want.get(name, 0.0))
         for name in sorted(have.keys() | want.keys())
-        if not _close(have.get(name), want.get(name, 0.0), VALUE_ABS_TOLERANCE)
+        if not _close(have.get(name), want.get(name, 0.0), tolerance)
     ]
 
 
-def stream_differences(existing: StreamSnapshot, wanted: FeedConditions) -> tuple[str, ...]:
-    """已有的物流与期望的规定（温度、压力、组成、流量）有哪些不同。"""
+def stream_differences(
+    existing: StreamSnapshot, wanted: FeedConditions, tolerance: float = VALUE_REL_TOLERANCE
+) -> tuple[str, ...]:
+    """已有的物流与期望的规定（温度、压力、组成、流量）有哪些不同，容差默认只含读写的误差。"""
     found = []
-    if not values_close(existing.temperature_c, wanted.temperature_c):
+    if not values_close(existing.temperature_c, wanted.temperature_c, tolerance):
         found.append(_difference("温度 °C", existing.temperature_c, wanted.temperature_c))
-    if not values_close(existing.pressure_bar, wanted.pressure_bar):
+    if not values_close(existing.pressure_bar, wanted.pressure_bar, tolerance):
         found.append(_difference("压力 bar", existing.pressure_bar, wanted.pressure_bar))
-    found += _composition_differences(existing, wanted)
+    found += _composition_differences(existing, wanted, tolerance)
     if wanted.molar_flow_kmol_h is not None:
-        if not values_close(existing.molar_flow_kmol_h, wanted.molar_flow_kmol_h):
+        if not values_close(existing.molar_flow_kmol_h, wanted.molar_flow_kmol_h, tolerance):
             found.append(
                 _difference("摩尔流量 kmol/h", existing.molar_flow_kmol_h, wanted.molar_flow_kmol_h)
             )
-    elif not values_close(existing.mass_flow_kg_h, wanted.mass_flow_kg_h):
+    elif not values_close(existing.mass_flow_kg_h, wanted.mass_flow_kg_h, tolerance):
         found.append(_difference("质量流量 kg/h", existing.mass_flow_kg_h, wanted.mass_flow_kg_h))
     return tuple(found)
 
 
-def reactor_differences(existing: ReactorSnapshot, wanted: EnsureReactorArgs) -> tuple[str, ...]:
-    """已有的反应器与期望的类型、连接、反应集和压降有哪些不同。进料的顺序无关。"""
+def reactor_connection_differences(
+    existing: ReactorSnapshot, wanted: EnsureReactorArgs
+) -> tuple[str, ...]:
+    """已有的反应器与期望的类型、连接和反应集有哪些不同。进料的顺序无关。"""
     found = [*name_differences(existing.name, wanted.name)]
     if existing.reactor_type != wanted.reactor_type:
         found.append(_difference("反应器类型", existing.reactor_type, wanted.reactor_type))
@@ -172,6 +179,12 @@ def reactor_differences(existing: ReactorSnapshot, wanted: EnsureReactorArgs) ->
     ):
         if have != want:
             found.append(_difference(what, have, want))
+    return tuple(found)
+
+
+def reactor_differences(existing: ReactorSnapshot, wanted: EnsureReactorArgs) -> tuple[str, ...]:
+    """已有的反应器与期望的类型、连接、反应集和压降有哪些不同。"""
+    found = [*reactor_connection_differences(existing, wanted)]
     if not values_close(existing.pressure_drop_bar, wanted.pressure_drop_bar):
         found.append(_difference("压降 bar", existing.pressure_drop_bar, wanted.pressure_drop_bar))
     return tuple(found)

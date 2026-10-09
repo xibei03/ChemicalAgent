@@ -145,6 +145,21 @@ class StepPhase(StrEnum):
     CASE = "case"
 
 
+class CheckId(StrEnum):
+    """结果检查的编号。V1 至 V8 见计划 §12.3；带后缀的是某种反应器专有的检查。"""
+
+    SOLVED = "V1"
+    STRUCTURE = "V2"
+    FEEDS = "V3"
+    SPECIFICATIONS = "V4"
+    OUTPUTS = "V5"
+    PHYSICAL = "V6"
+    CONSERVATION = "V7"
+    REQUESTED = "V8"
+    CONVERSION_SPECIFIED = "V4-conversion"
+    FIXED_K_SATISFIED = "V4-fixed-k"
+
+
 class CheckSeverity(StrEnum):
     """检查的级别：致命的失败使任务失败，警告只使任务带警告完成。"""
 

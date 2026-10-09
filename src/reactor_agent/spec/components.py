@@ -15,6 +15,7 @@ from pydantic import Field, field_validator, model_validator
 from reactor_agent.spec.base import FrozenModel
 from reactor_agent.spec.enums import ComponentPhase
 from reactor_agent.spec.loading import parse_model, read_document
+from reactor_agent.spec.tool_args import FeedConditions
 
 # 元素符号加个数，或者括号的开和闭（闭括号后面可以跟倍数）。
 FORMULA_TOKEN = re.compile(r"([A-Z][a-z]?)(\d*)|(\()|(\))(\d*)")
@@ -93,6 +94,23 @@ def find_component(table: ComponentTable, text: str) -> ComponentEntry | None:
         if key in {normalize_name(name) for name in (entry.name, *entry.aliases)}:
             return entry
     return None
+
+
+def names_with_formula(table: ComponentTable, formula: str) -> tuple[str, ...]:
+    """分子式等于给定写法的组分的规范名，如 H2O。按“元素 → 原子数”比较，所以写法的顺序无关。"""
+    wanted = parse_formula(formula)
+    return tuple(e.name for e in table.components if parse_formula(e.formula) == wanted)
+
+
+def feed_molar_flow_kmol_h(feed: FeedConditions, table: ComponentTable) -> float:
+    """进料的摩尔流量：给了摩尔流量就用它，给的是质量流量就除以平均分子量。"""
+    if feed.molar_flow_kmol_h is not None:
+        return feed.molar_flow_kmol_h
+    mass_flow = feed.mass_flow_kg_h
+    assert mass_flow is not None  # FeedConditions 保证两种流量给了一种
+    weights = {entry.name: entry.molecular_weight_kg_per_kmol for entry in table.components}
+    mean_weight = sum(item.mole_fraction * weights[item.component] for item in feed.composition)
+    return mass_flow / mean_weight
 
 
 def atoms_by_component(table: ComponentTable) -> Mapping[str, Mapping[str, int]]:

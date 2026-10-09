@@ -14,6 +14,7 @@ from reactor_agent.spec.matching import (
     name_differences,
     reaction_differences,
     reaction_set_differences,
+    reactor_connection_differences,
     reactor_differences,
     require_match,
     stream_differences,
@@ -225,6 +226,25 @@ class TestStreams:
         noisy = stream_snapshot(temperature_c=380.0000000001, pressure_bar=25.0000001)
         assert stream_differences(noisy, conditions()) == ()
 
+    def test_a_looser_tolerance_accepts_what_the_default_rejects(self):
+        off = stream_snapshot(temperature_c=380.01, pressure_bar=25.001, mass_flow_kg_h=10000.5)
+        assert stream_differences(off, conditions())
+        assert stream_differences(off, conditions(), tolerance=1e-4) == ()
+
+    def test_a_looser_tolerance_still_rejects_real_differences(self):
+        assert stream_differences(stream_snapshot(temperature_c=381.0), conditions(), 1e-4)
+        off = stream_snapshot(
+            components=(
+                StreamComponent(
+                    name="Toluene", mole_fraction=0.99, molar_flow_kmol_h=None, mass_flow_kg_h=None
+                ),
+                StreamComponent(
+                    name="Benzene", mole_fraction=0.01, molar_flow_kmol_h=None, mass_flow_kg_h=None
+                ),
+            )
+        )
+        assert len(stream_differences(off, conditions(), 1e-4)) == 2
+
 
 def reactor_snapshot(**changes):
     values = {
@@ -272,6 +292,11 @@ class TestReactors:
             {"pressure_drop_bar": 0.5},
         ):
             assert reactor_differences(reactor_snapshot(**changes), reactor_args()), changes
+
+    def test_connection_comparison_leaves_the_pressure_drop_to_the_full_comparison(self):
+        existing = reactor_snapshot(pressure_drop_bar=0.5)
+        assert reactor_connection_differences(existing, reactor_args()) == ()
+        assert len(reactor_differences(existing, reactor_args())) == 1
 
     def test_unconnected_reaction_set_is_a_difference(self):
         assert reactor_differences(reactor_snapshot(reaction_set=None), reactor_args())
@@ -321,6 +346,10 @@ class TestValuesClose:
 
     def test_different_values_are_not_close(self):
         assert not values_close(380.0, 380.1)
+
+    def test_tolerance_can_be_given(self):
+        assert not values_close(100.0, 100.5)
+        assert values_close(100.0, 100.005, tolerance=1e-4)
 
     def test_unknown_values_are_close_only_to_each_other(self):
         assert values_close(None, None)
