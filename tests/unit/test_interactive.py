@@ -89,11 +89,11 @@ def test_a_menu_choice_runs_its_script(choice, script):
     assert console.commands[0][0] == sys.executable
 
 
-def test_all_runs_the_three_steps_in_order_and_reports_each_exit_code(capsys):
+def test_all_runs_the_scenario_demo_and_the_evaluation_and_reports_each_exit_code(capsys):
     console = Console(["a", "q"])
     console.session()
-    assert script_names(console) == ["e18_llm_structured.py", "demo_scenarios.py", "run_evals.py"]
-    assert "步骤 1：退出码 0" in capsys.readouterr().out
+    assert script_names(console) == ["demo_scenarios.py", "run_evals.py"]
+    assert "步骤 2：退出码 0" in capsys.readouterr().out
 
 
 def test_a_description_typed_in_runs_a_dry_run_selection_with_the_text_as_an_argument():

@@ -49,12 +49,12 @@ STEPS: dict[str, Step] = {
         [PYTHON, str(REPO_ROOT / "evals" / "run_evals.py")],
     ),
 }
-RUN_ALL = ("1", "2", "3")
+RUN_ALL = ("2", "3")  # 探针 E18 已经跑过，结果在台账 L39
 MENU = (
     *(f"  {key}  {step.title}" for key, step in STEPS.items()),
     "  4  对你输入的一段描述做选型（输入一行文字，或者一个文本文件的路径）",
     "  5  只重跑指定的评测用例（输入编号，逗号分隔），结果不覆盖 docs/EVAL_RESULTS.md",
-    "  a  依次运行 1、2、3",
+    "  a  依次运行 2、3",
     "  q  退出",
 )
 
