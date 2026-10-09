@@ -1,0 +1,14 @@
+$ reactor-agent run --text-file evals/inputs/scenario-1.txt --dry-run
+错误：E_LLM：环境变量 DASHSCOPE_API_KEY 没有设置，没法调用 LLM
+  在自己的终端里设置（输入时不回显），然后重新运行：$key = Read-Host -AsSecureString 'DASHSCOPE_API_KEY'; $env:DASHSCOPE_API_KEY = [System.Net.NetworkCredential]::new('', $key).Password
+退出码：1
+
+$ reactor-agent run --text-file evals/inputs/scenario-2.txt --dry-run
+错误：E_LLM：环境变量 DASHSCOPE_API_KEY 没有设置，没法调用 LLM
+  在自己的终端里设置（输入时不回显），然后重新运行：$key = Read-Host -AsSecureString 'DASHSCOPE_API_KEY'; $env:DASHSCOPE_API_KEY = [System.Net.NetworkCredential]::new('', $key).Password
+退出码：1
+
+$ reactor-agent run --text-file evals/inputs/scenario-3.txt --dry-run
+错误：E_LLM：环境变量 DASHSCOPE_API_KEY 没有设置，没法调用 LLM
+  在自己的终端里设置（输入时不回显），然后重新运行：$key = Read-Host -AsSecureString 'DASHSCOPE_API_KEY'; $env:DASHSCOPE_API_KEY = [System.Net.NetworkCredential]::new('', $key).Password
+退出码：1

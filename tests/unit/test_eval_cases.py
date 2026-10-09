@@ -57,6 +57,12 @@ def test_the_scenario_inputs_are_copied_verbatim_from_the_requirement_document(c
     assert CASES[case_id]["input"] == "\n".join(wanted)
 
 
+@pytest.mark.parametrize(("number", "case_id"), enumerate(SCENARIO_LINES, start=1))
+def test_the_text_files_for_the_command_line_equal_the_scenario_cases(number, case_id):
+    path = REPO_ROOT / "evals" / "inputs" / f"scenario-{number}.txt"
+    assert path.read_text(encoding="utf-8").strip() == CASES[case_id]["input"]
+
+
 @pytest.mark.parametrize("case_id", SCENARIO_LINES)
 def test_the_scenarios_are_repeated_five_times_and_the_others_once(case_id):
     assert CASES[case_id]["repeats"] == SCENARIO_REPEATS
