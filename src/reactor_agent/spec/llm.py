@@ -34,3 +34,30 @@ class LlmCallRecord(FrozenModel):
     def duration_ms(self) -> int:
         """全部往返的耗时。"""
         return sum(item.duration_ms for item in self.attempts)
+
+
+class LlmCallSummary(FrozenModel):
+    """Trace 里记的 LLM 调用摘要：调用点、模型、Skill 的名字和内容哈希、用量、往返次数。"""
+
+    call_point: str
+    model: str
+    skill: str
+    skill_hash: str
+    prompt_tokens: int
+    completion_tokens: int
+    attempts: int
+
+
+def summarize_call(
+    call_point: str, skill: str, skill_hash: str, record: LlmCallRecord
+) -> LlmCallSummary:
+    """从完整的调用记录得到 Trace 里的摘要。"""
+    return LlmCallSummary(
+        call_point=call_point,
+        model=record.model,
+        skill=skill,
+        skill_hash=skill_hash,
+        prompt_tokens=sum(item.prompt_tokens for item in record.attempts),
+        completion_tokens=sum(item.completion_tokens for item in record.attempts),
+        attempts=len(record.attempts),
+    )

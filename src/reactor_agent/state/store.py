@@ -13,6 +13,7 @@ from typing import TypeVar
 from pydantic import BaseModel
 
 from reactor_agent.errors import ErrorCode, ReactorAgentError
+from reactor_agent.spec.llm import LlmCallRecord
 from reactor_agent.spec.loading import parse_model, read_document
 from reactor_agent.state.models import TaskState
 
@@ -20,6 +21,8 @@ STATE_FILE = "state.json"
 ARTIFACTS_DIR = "artifacts"
 # 建模用的 Case 和出错时留下的现场放在这里，不和各工况的 .hsc 混在一起，也就不会撞名。
 WORK_DIR = "work"
+# LLM 调用的全文（提示和回复）。摘要进 Trace，全文放这里。
+LLM_DIR = "llm"
 MAX_ID_ATTEMPTS = 20
 TEMPORARY_SUFFIX = ".tmp"
 TASK_ID_TIME_FORMAT = "%Y%m%d-%H%M%S"
@@ -29,6 +32,8 @@ ModelT = TypeVar("ModelT", bound=BaseModel)
 class ArtifactName(StrEnum):
     """artifacts/ 下的文件。"""
 
+    INPUT = "input.txt"
+    SELECTION = "selection.json"
     MODEL_SPEC = "model_spec.json"
     PLAN = "plan.json"
     RESULT = "result.json"
@@ -113,3 +118,30 @@ class StateStore:
     def read_artifact(self, task_id: str, name: ArtifactName, model: type[ModelT]) -> ModelT:
         """读 artifacts/ 下的 JSON 文件并校验。"""
         return parse_model(model, read_document(self.artifact_path(task_id, name)), name.value)
+
+    def write_input(self, task_id: str, text: str) -> Path:
+        """把用户的原文存成 artifacts/input.txt，之后每一步都从这里读，不依赖调用方还拿着它。"""
+        path = self.artifact_path(task_id, ArtifactName.INPUT)
+        _write_atomically(path, text)
+        return path
+
+    def read_input(self, task_id: str) -> str:
+        """读回用户的原文。"""
+        path = self.artifact_path(task_id, ArtifactName.INPUT)
+        try:
+            return path.read_text(encoding="utf-8")
+        except OSError as error:
+            raise ReactorAgentError(ErrorCode.IO, f"读不了文件 {path}：{error}") from error
+
+    def write_llm_log(self, task_id: str, call_point: str, record: LlmCallRecord) -> Path:
+        """把一次 LLM 调用的全文存到 llm/<调用点>-<序号>.json，序号取第一个没用过的。"""
+        directory = self.run_dir(task_id) / LLM_DIR
+        try:
+            directory.mkdir(exist_ok=True)
+        except OSError as error:
+            raise ReactorAgentError(ErrorCode.IO, f"建不了目录 {directory}：{error}") from error
+        number = 1
+        while (path := directory / f"{call_point}-{number}.json").exists():
+            number += 1
+        _write_atomically(path, record.model_dump_json(indent=2))
+        return path

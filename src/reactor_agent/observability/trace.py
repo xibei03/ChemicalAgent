@@ -13,8 +13,10 @@ from pydantic import AwareDatetime, JsonValue
 
 from reactor_agent.errors import ErrorCode, ReactorAgentError
 from reactor_agent.spec.base import FrozenModel
-from reactor_agent.spec.enums import CheckId, EventType, TaskStatus, WorkflowState
+from reactor_agent.spec.enums import CheckId, Checkpoint, EventType, TaskStatus, WorkflowState
+from reactor_agent.spec.llm import LlmCallSummary
 from reactor_agent.spec.loading import parse_model
+from reactor_agent.spec.selection import SelectionResult
 
 TRACE_FILE = "trace.jsonl"
 
@@ -22,7 +24,7 @@ TRACE_FILE = "trace.jsonl"
 class EventBody(FrozenModel):
     """调用方说得出的那部分：发生了什么。时间、序号和所处的状态由 TraceWriter 补上。
 
-    verdict 只有验证事件有：每项检查是否通过。
+    verdict 只有验证事件有：每项检查是否通过。llm 只有 LLM 调用事件有。
     """
 
     type: EventType
@@ -31,19 +33,23 @@ class EventBody(FrozenModel):
     input: JsonValue = None
     output: JsonValue = None
     verdict: Mapping[CheckId, bool] | None = None
+    llm: LlmCallSummary | None = None
     duration_ms: int | None = None
     error: str | None = None
 
 
 class TraceEvent(EventBody):
-    """trace.jsonl 里的一行。state 是事件发生时的状态；任务到了终态，就是终态。"""
+    """trace.jsonl 里的一行。state 是事件发生时的状态；任务到了终态，就是终态。
+
+    spec_hash 在规格冻结之前（从文字描述开始的任务还在选型、写规格时）是 None。
+    """
 
     ts: AwareDatetime
     task_id: str
     seq: int
     state: WorkflowState | TaskStatus
     case: str | None
-    spec_hash: str
+    spec_hash: str | None
 
 
 class TraceWriter:
@@ -56,7 +62,7 @@ class TraceWriter:
     def append(
         self,
         task_id: str,
-        spec_hash: str,
+        spec_hash: str | None,
         state: WorkflowState | TaskStatus,
         case: str | None,
         body: EventBody,
@@ -115,3 +121,23 @@ def _loads(line: str) -> object:
         return json.loads(line)
     except json.JSONDecodeError as error:
         raise ReactorAgentError(ErrorCode.SCHEMA, f"不是合法的 JSON：{error}") from error
+
+
+def llm_call_event(summary: LlmCallSummary, duration_ms: int) -> EventBody:
+    """一次 LLM 调用的 Trace 事件，名字是调用点。"""
+    return EventBody(
+        type=EventType.LLM_CALL, name=summary.call_point, llm=summary, duration_ms=duration_ms
+    )
+
+
+def selection_saved_event(result: SelectionResult) -> EventBody:
+    """选型结果保存的检查点事件，带结论、决定方式和被丢弃的依据（它们只在这里留痕）。"""
+    return EventBody(
+        type=EventType.CHECKPOINT,
+        name=Checkpoint.SELECTION_SAVED.value,
+        output={
+            "reactor_type": None if result.reactor_type is None else result.reactor_type.value,
+            "decision": result.decision.value,
+            "dropped_evidence": list(result.dropped_evidence),
+        },
+    )

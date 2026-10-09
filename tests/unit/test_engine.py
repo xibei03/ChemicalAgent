@@ -139,7 +139,7 @@ def test_run_directory_holds_state_trace_and_artifacts(conversion, tmp_path):
     directory = run.store.run_dir(run.task.task_id)
     assert (directory / "state.json").is_file()
     assert (directory / TRACE_FILE).is_file()
-    for name in ArtifactName:
+    for name in (ArtifactName.MODEL_SPEC, ArtifactName.PLAN, ArtifactName.RESULT):
         assert run.store.artifact_path(run.task.task_id, name).is_file()
     assert not list(directory.rglob("*.tmp"))
 

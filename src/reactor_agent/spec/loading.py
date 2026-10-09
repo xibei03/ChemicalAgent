@@ -33,6 +33,19 @@ def read_document(path: Path) -> object:
         raise ReactorAgentError(ErrorCode.SCHEMA, message) from error
 
 
+def read_text_file(path: Path) -> str:
+    """读用户给的文字描述（UTF-8，有无 BOM 都行）。读不了是 E_IO，不合法或为空是 E_SCHEMA。"""
+    try:
+        text = path.read_text(encoding="utf-8-sig")
+    except UnicodeDecodeError as error:
+        raise ReactorAgentError(ErrorCode.SCHEMA, f"{path.name} 不是 UTF-8 编码的文本") from error
+    except OSError as error:
+        raise ReactorAgentError(ErrorCode.IO, f"读不了文件 {path}：{error}") from error
+    if not text.strip():
+        raise ReactorAgentError(ErrorCode.SCHEMA, f"{path.name} 是空的，没有可模拟的描述")
+    return text.strip()
+
+
 def field_path(location: tuple[int | str, ...]) -> str:
     """把 pydantic 的出错位置写成固定的字段路径，如 feeds[0].temperature_c。"""
     path = ""

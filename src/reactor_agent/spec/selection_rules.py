@@ -5,7 +5,7 @@
 """
 
 import unicodedata
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Collection, Mapping
 from dataclasses import dataclass
 from types import MappingProxyType
 
@@ -325,4 +325,41 @@ def build_result(
         llm_rationale=draft.rationale,
         features=drop_invalid_evidence(draft.features, text),
         alternatives=_alternatives(verdict, draft),
+        dropped_evidence=assessment.invalid_evidence,
     )
+
+
+def _type_text(reactor_type: ReactorType | None) -> str:
+    return (
+        "不是反应过程（recommended_type 为 null）"
+        if reactor_type is None
+        else REACTOR_NAMES[reactor_type]
+    )
+
+
+def reask_feedback(draft: SelectionDraft, assessment: Assessment) -> str:
+    """重问时告诉 LLM 要核对什么：与规则结论的分歧，以及在原文里找不到原话的依据。"""
+    problems = []
+    if not assessment.agrees:
+        steps = "\n".join(f"   - {note}" for note in assessment.verdict.notes)
+        problems.append(
+            f"你推荐的是 {_type_text(draft.recommended_type)}，但按选择规则，由你抽取的特征推出的"
+            f"结论是 {_type_text(assessment.verdict.reactor_type)}。规则的推导：\n{steps}"
+        )
+    if assessment.invalid_evidence:
+        quoted = "；".join(f"“{text}”" for text in assessment.invalid_evidence)
+        problems.append(
+            f"这些依据在原文里找不到原话：{quoted}。依据必须逐字摘自原文；"
+            "找不到原话支持的特征，请改成“否”。"
+        )
+    return "\n".join(f"{number}. {problem}" for number, problem in enumerate(problems, start=1))
+
+
+def unsupported_reason(result: SelectionResult, buildable: Collection[ReactorType]) -> str | None:
+    """选型的结论系统做不做得了：不是反应过程，或者这种类型还不能建模，返回原因；做得了是 None。"""
+    if result.reactor_type is None:
+        return "这不是反应过程的模拟请求，系统只处理反应器的建模"
+    if result.reactor_type not in buildable:
+        name = REACTOR_NAMES[result.reactor_type]
+        return f"选型的结论是 {name}，系统还不支持这种反应器的建模"
+    return None

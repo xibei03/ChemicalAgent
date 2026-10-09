@@ -209,11 +209,14 @@ class EventType(StrEnum):
     CHECKPOINT = "checkpoint"
     RECOVERY = "recovery"
     ERROR = "error"
+    LLM_CALL = "llm_call"
 
 
 class Checkpoint(StrEnum):
-    """检查点事件的名字：规格冻结、计划保存、工况的 Case 保存、结果保存。"""
+    """检查点事件的名字：输入保存、选型保存、规格冻结、计划保存、工况的 Case 保存、结果保存。"""
 
+    INPUT_SAVED = "input_saved"
+    SELECTION_SAVED = "selection_saved"
     SPEC_FROZEN = "spec_frozen"
     PLAN_SAVED = "plan_saved"
     CASE_SAVED = "case_saved"

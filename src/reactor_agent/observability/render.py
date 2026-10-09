@@ -9,7 +9,9 @@ from itertools import groupby
 from reactor_agent.errors import ErrorCode
 from reactor_agent.observability.trace import TraceEvent
 from reactor_agent.spec.enums import EventType, MetricUnit
+from reactor_agent.spec.llm import LlmCallSummary
 from reactor_agent.spec.results import FailureReport, NormalizedResult, RunResult, StreamResult
+from reactor_agent.spec.selection import REACTOR_NAMES, Decision, SelectionResult
 
 LABEL_WIDTH = 18
 LABEL_GAP = 2
@@ -21,6 +23,11 @@ DETAIL_HEADINGS: Mapping[ErrorCode, str] = {
     ErrorCode.VALIDATION_FATAL: "没有通过的检查",
 }
 DEFAULT_DETAIL_HEADING = "详情"
+DECISION_TEXT: Mapping[Decision, str] = {
+    Decision.AGREED: "规则的推导与 LLM 的推荐一致",
+    Decision.AGREED_AFTER_REASK: "对照原文重新核对特征之后，规则的推导与 LLM 的推荐一致",
+    Decision.RULES_PREVAILED: "规则的推导与 LLM 的推荐不一致，采用规则的结论",
+}
 # 出料里摩尔分率低于这个值的组分不在摘要里列出，避免一长串零。
 SHOWN_FRACTION = 1e-4
 
@@ -47,7 +54,16 @@ def _event_text(event: TraceEvent) -> str | None:
         return f"[{event.name}]"
     if event.type is EventType.RECOVERY:
         return f"→ {event.name} ({_code_of(event)})"
+    if event.type is EventType.LLM_CALL and event.llm is not None:
+        return _llm_text(event.name, event.llm, event.duration_ms)
     return None
+
+
+def _llm_text(point: str, call: LlmCallSummary, duration_ms: int | None) -> str:
+    seconds = (duration_ms or 0) / 1000
+    again = f"，校验重问 {call.attempts - 1} 次" if call.attempts > 1 else ""
+    tokens = call.prompt_tokens + call.completion_tokens
+    return f"LLM {point}（{call.model}，{tokens} tokens，{seconds:.1f} 秒{again}）"
 
 
 def _validation_text(event: TraceEvent) -> str:
@@ -74,7 +90,8 @@ def render_timeline(events: Sequence[TraceEvent]) -> str:
         return "（没有事件）"
     groups = [(label, list(group)) for label, group in groupby(events, key=_group_label)]
     width = max(LABEL_WIDTH, max(len(label) for label, _ in groups) + LABEL_GAP)
-    lines = [f"Task {events[0].task_id}   规格哈希 {events[0].spec_hash[:12]}"]
+    frozen = events[-1].spec_hash  # 规格冻结之前的事件没有哈希，所以看最后一条
+    lines = [f"Task {events[0].task_id}" + (f"   规格哈希 {frozen[:12]}" if frozen else "")]
     for label, group in groups:
         texts = [text for text in map(_event_text, group) if text is not None]
         lines.append(f"{INDENT}{label:<{width}}{_merged(texts)}".rstrip())
@@ -143,4 +160,37 @@ def render_summary(result: RunResult) -> str:
     for record in result.cases:
         if record.result is not None:
             lines.extend(_case_text(record.result))
+    return "\n".join(lines)
+
+
+def _selection_lines(result: SelectionResult) -> list[str]:
+    if result.reactor_type is None:
+        head = "选型结论：无（这不是反应过程的模拟请求）"
+    else:
+        head = f"选型结论：{REACTOR_NAMES[result.reactor_type]}"
+    lines = [f"{head}（{DECISION_TEXT[result.decision]}）", "规则的推导："]
+    lines.extend(f"{INDENT}- {note}" for note in result.rule_notes)
+    if result.decision is Decision.RULES_PREVAILED and result.llm_recommendation is not None:
+        recommended = REACTOR_NAMES[result.llm_recommendation]
+        lines.append(f"LLM 曾推荐 {recommended}（理由：{result.llm_rationale}），规则没有采纳。")
+    elif result.decision is not Decision.RULES_PREVAILED:
+        lines.append(f"LLM 的理由：{result.llm_rationale}")
+    return lines
+
+
+def render_selection(result: SelectionResult) -> str:
+    """选型结果：类型和怎么定的、规则的推导、LLM 的理由、原文依据、备选和不选的原因。"""
+    lines = _selection_lines(result)
+    quotes = result.features.quotes()
+    if quotes:
+        lines.append("原文依据：")
+        lines.extend(f"{INDENT}[{quote.label}] “{quote.text}”" for quote in quotes)
+    if result.alternatives:
+        lines.append("备选类型：")
+        for item in result.alternatives:
+            status = "能建" if item.buildable else "不能建"
+            lines.append(f"{INDENT}{REACTOR_NAMES[item.reactor_type]}（{status}）：{item.reason}")
+    if result.dropped_evidence:
+        lines.append("已丢弃的依据（在原文里找不到原话）：")
+        lines.extend(f"{INDENT}“{text}”" for text in result.dropped_evidence)
     return "\n".join(lines)

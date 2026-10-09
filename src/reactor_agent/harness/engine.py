@@ -75,6 +75,8 @@ class Dependencies:
     trace: TraceWriter
     recipes: Mapping[ReactorType, ReactorRecipe]
     components: ComponentTable
+    # SELECT 状态的处理函数。只有从文字描述开始的任务才有这个状态，规格文件开始的任务不需要。
+    select: Handler | None = None
 
 
 class Engine:
@@ -86,7 +88,7 @@ class Engine:
         self._trace = deps.trace
         self._recipes = deps.recipes
         self._components = deps.components
-        self._handlers: Mapping[WorkflowState, Handler] = {
+        self._handlers: dict[WorkflowState, Handler] = {
             WorkflowState.INIT: self._init,
             WorkflowState.PLAN: self._plan,
             WorkflowState.PREFLIGHT: self._preflight,
@@ -96,6 +98,8 @@ class Engine:
             WorkflowState.VERIFY: self._verify,
             WorkflowState.REPORT: self._report,
         }
+        if deps.select is not None:
+            self._handlers[WorkflowState.SELECT] = deps.select
 
     # ---- 对外的三样：创建任务、推进一步、反复推进 ----
 
@@ -209,7 +213,7 @@ class Engine:
             simulator_version=task.simulator_version,
             case_path=case_file,
             read_at=datetime.now(UTC),
-            spec_hash=task.spec_hash,
+            spec_hash=task.frozen_spec_hash,
         )
         return assemble_result(context, checks, provenance)
 

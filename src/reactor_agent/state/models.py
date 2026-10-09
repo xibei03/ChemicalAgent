@@ -20,6 +20,7 @@ from reactor_agent.spec.enums import (
     WorkflowState,
 )
 from reactor_agent.spec.results import FailureReport
+from reactor_agent.spec.selection import SelectionSummary
 
 # 在这些状态里，事件和诊断要带上正在处理的工况名。
 PER_CASE_STATES = frozenset({WorkflowState.SOLVE, WorkflowState.VERIFY})
@@ -79,9 +80,10 @@ class TaskState(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     task_id: str
-    spec_file: Path
-    spec_hash: str
-    case_names: tuple[str, ...]
+    spec_file: Path | None = None
+    spec_hash: str | None = None
+    case_names: tuple[str, ...] = ()
+    selection: SelectionSummary | None = None
     current_state: WorkflowState = WorkflowState.INIT
     status: TaskStatus | None = None
     steps: tuple[StepRecord, ...] = ()
@@ -106,6 +108,13 @@ class TaskState(BaseModel):
         if self.current_state not in PER_CASE_STATES:
             return None
         return self.case_names[self.case_index]
+
+    @property
+    def frozen_spec_hash(self) -> str:
+        """冻结的规格的哈希。规格冻结之前（从文字描述开始的任务还在选型）取它是调用顺序的错误。"""
+        if self.spec_hash is None:
+            raise RuntimeError("规格还没有冻结")
+        return self.spec_hash
 
     @property
     def simulator_version(self) -> str:
@@ -139,6 +148,10 @@ class TaskState(BaseModel):
         )
         self.steps = (*self.steps, record)
         self.cursor = number
+
+    def record_selection(self, summary: SelectionSummary) -> None:
+        """记录选型的结论：类型和它是怎么定的。完整的结果在 artifacts/selection.json。"""
+        self.selection = summary
 
     def set_session(self, version: str, process_id: int | None) -> None:
         """记录连接上的 HYSYS。"""
