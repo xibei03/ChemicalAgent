@@ -97,6 +97,7 @@
 | 1C | 任务 9：会话失效的试验（E17） | a8c909d | `spikes/e17_session_loss.py`：第 9 次调用之后 `taskkill`，下一次调用得到 `E_COM_DISCONNECTED`，执行器不到 1 秒以 `FAILED` 结束，诊断里有停在的状态、出错的步骤、错误码和重跑命令，照命令重跑退出码 0、终态 complete；命令行收尾对已不存在的进程没有出错，没有残留进程。台账 L37 |
 | 1C | 旧集成测试的间歇性失败（台账 L38，D20） | 499ef30 | 11 次全量运行里 7 次出现 2 至 3 个旧测试失败，根因没有查明；对策是每个测试文件一个新的 HYSYS 实例，之后连续通过 |
 | 1C | 独立审查（子代理，不带本阶段上下文）和修复 | fb92a8c、d68863a | 20 条，逐条对照代码核实；采纳 7 条确定的缺陷、清单违反里的大部分和测试缺口，没有采纳的写在 1C 设计决定第 11 条；修复后 `pytest` 837 passed，集成测试 54 passed |
+| 2A | 任务 1 评测用例；任务 5 选型模型和规则检查 | 9606da4、本次提交 | `evals/cases/` 29 个用例（3 个原文场景逐字取自需求文档、各重复 5 次，其余 26 个覆盖计划 §15.3 的每一类，避开留出体系），`test_eval_cases.py` 按行号核对原文；`spec/selection.py`（特征、LLM 输出、规则表、结果模型）和 `spec/selection_rules.py`（原文依据检查、规则检查、对照、结果组装，纯函数），`skills/reactor-selection/rules.yaml`；`pytest` 951 passed（含 73 个选型测试：第一层五种类型、第二层每一条、PFR/CSTR 的选择、聚合例外、点名缺必要输入、黑箱写出反应式、依据的全角半角上下标空白） |
 | 0A | 4（补）LLM 连通性（E0） | d4bb9c0（`--ask-key`）、本次提交（输出） | `spikes/e0_llm_connectivity.py --ask-key --tag run1 --capabilities` 由用户在自己的终端里运行，密钥 `getpass` 输入；三个模型都是 HTTP 200（`qwen3.8-max` 2.46 秒、`qwen3.8-flash` 1.36 秒、`qwen3.7-plus` 1.14 秒），`response_format=json_object` 返回可解析的 JSON，`tools` 返回 `tool_calls`；输出文件里只有密钥的长度。台账 L35，**D1 完成** |
 | 0A | 只读勘查（计划模式下完成，无脚本） | 2427c43 | 注册表 ProgID、`hysys.tlb` 的接口名与集合的 `Add` 签名、安装目录里的 `hysys.hh`、定义文件、帮助文件，写入台账 L0 和"创建反应的线索"初稿（均未运行验证） |
 

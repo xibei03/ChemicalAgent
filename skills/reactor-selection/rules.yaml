@@ -1,0 +1,27 @@
+# 选型规则表，由 spec/selection.py 的 SelectionRules 读取，规则检查在 spec/selection_rules.py。
+# PFR 与 CSTR 之间怎么选、聚合反应的例外是需求 §8 的内容，写在代码里，不在这里。
+
+# 第一层：每种类型“能建”所需的特征，都必须为“是”。
+requirements:
+  conversion: [conversion_data_given]
+  equilibrium: [reaction_defined]
+  gibbs: []
+  pfr: [kinetics_given]
+  cstr: [kinetics_given]
+
+# 第二层：在能建的类型里，按这个顺序取第一条命中的。
+# candidates 是这一条可以选的类型，when 是必须为“是”的另一个特征。
+priority:
+  - rule: named_reactor
+  - rule: kinetic
+    candidates: [pfr, cstr]
+  - rule: conversion
+    candidates: [conversion]
+  - rule: black_box
+    candidates: [gibbs]
+    when: black_box_system
+  - rule: equilibrium
+    candidates: [equilibrium]
+
+# 第二层都不命中时选的类型。
+fallback: gibbs
