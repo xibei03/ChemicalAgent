@@ -121,6 +121,18 @@ class Scenario:
             snapshot=self.snapshot,
         )
 
+    def with_spec(self, spec: ModelSpec) -> "Scenario":
+        """换一份规格，快照和计划不变：用来检查结果检查是拿快照和规格比，而不是和计划自己比。"""
+        return replace(self, spec=spec)
+
+    def with_reactor(self, index: int, **changes: object) -> "Scenario":
+        """把第 index 台反应器的某些字段改掉。"""
+        reactors = tuple(
+            r.model_copy(update=changes) if i == index else r
+            for i, r in enumerate(self.snapshot.reactors)
+        )
+        return self.with_snapshot(reactors=reactors)
+
     def with_snapshot(self, **changes: object) -> "Scenario":
         return replace(self, snapshot=self.snapshot.model_copy(update=changes))
 
@@ -254,19 +266,20 @@ def equilibrium_scenario(case_name: str = "T710", spec: ModelSpec | None = None)
         "CO2": shift,
     }
     case = next(c for c in spec.cases if c.name == case_name)
-    temperature = case.outlet_temperature_c
-    assert temperature is not None
+    # 规定热负荷的工况没有给出口温度，用一个合理的值
+    temperature = 710.0 if case.outlet_temperature_c is None else case.outlet_temperature_c
+    duty = STEAM_REFORMING_DUTY_KW if case.duty_kw is None else case.duty_kw
     outlets = {"Vap": (temperature, vapour), "Liq": (temperature, {})}
-    return build_scenario(spec, outlets, {"Q-100": STEAM_REFORMING_DUTY_KW}, case_name)
+    return build_scenario(spec, outlets, {"Q-100": duty}, case_name)
 
 
 GASIFICATION_METHANATION = 0.05
 GASIFICATION_SHIFT = 0.02
 
 
-def gasification_scenario() -> Scenario:
+def gasification_scenario(spec: ModelSpec | None = None) -> Scenario:
     """两段式：水限量，第一段水全部变成 CO 和氢气（进度 W）；第二段气相再有两个反应。"""
-    spec = golden_spec("slurry_gibbs")
+    spec = spec or golden_spec("slurry_gibbs")
     feed = feed_flows(spec)
     water = feed["H2O"]
     methanation = GASIFICATION_METHANATION * water

@@ -6,7 +6,7 @@ import pytest
 
 from builders import component_table, golden_data, golden_spec, spec_from
 from reactor_agent.backends.hysys_com.reactor_kinds import REACTOR_KINDS
-from reactor_agent.errors import ErrorCode
+from reactor_agent.errors import ErrorCode, ReactorAgentError
 from reactor_agent.recipes import RECIPES, recipe_for
 from reactor_agent.recipes.conversion import HEAT_MODES as CONVERSION_HEAT_MODES
 from reactor_agent.recipes.equilibrium import HEAT_MODES as EQUILIBRIUM_HEAT_MODES
@@ -289,6 +289,12 @@ class TestGibbsPlan:
         plan = compiled(spec_from(data))
         assert plan.args_of(EnsureReactionArgs)[0].reaction.base_component == base
         assert reactor(plan, "CRV-100").feeds == ("Feed", "Feed-2")
+
+    def test_compiling_a_spec_that_did_not_pass_the_rules_is_an_error(self):
+        data = stripped(golden_data("slurry_gibbs"), components=["Carbon", "H2O", "CO2"])
+        with pytest.raises(ReactorAgentError) as caught:
+            compiled(spec_from(data))
+        assert caught.value.code is ErrorCode.RULE
 
     def test_gas_only_feed_gets_a_single_gibbs_reactor_without_reactions(self):
         plan = compiled(spec_from(as_gibbs(golden_data("smr_equilibrium"))))
