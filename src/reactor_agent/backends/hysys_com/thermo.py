@@ -31,7 +31,7 @@ FLUID_PACKAGE_NAME = "Basis-1"
 def _component_info(component: Any) -> ComponentInfo:
     return ComponentInfo(
         name=str(component.name),
-        formula=str(component.Formula) or None,
+        formula=str(component.Formula).strip() or None,  # HYSYS 给的分子式带尾部空格
         is_solid=bool(component.IsSolid),
     )
 

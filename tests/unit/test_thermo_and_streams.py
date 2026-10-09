@@ -9,7 +9,7 @@ from types import SimpleNamespace
 import pytest
 
 from reactor_agent.backends.hysys_com.streams import ensure_stream
-from reactor_agent.backends.hysys_com.thermo import component_names, ensure_thermo
+from reactor_agent.backends.hysys_com.thermo import component_names, ensure_thermo, read_thermo
 from reactor_agent.errors import ErrorCode, ReactorAgentError
 from reactor_agent.spec.enums import PropertyPackage, ResultStatus
 from reactor_agent.spec.tool_args import (
@@ -25,7 +25,7 @@ class FakeComponents:
         self.Names = tuple(names)
 
     def Item(self, name):
-        return SimpleNamespace(name=name, Formula="", IsSolid=False)
+        return SimpleNamespace(name=name, Formula=f"{name[:2].upper()}8   ", IsSolid=False)
 
 
 def fake_case(components=("Methane", "H2O"), basis_changing=False, with_package=True):
@@ -65,6 +65,11 @@ def test_thermo_whose_basis_was_never_ended_is_not_reported_as_unchanged():
     error = error_of(lambda: ensure_thermo(case, thermo_args("Methane", "H2O")))
     assert error.code is ErrorCode.CONFLICT
     assert "Basis" in error.message
+
+
+def test_formula_padding_that_hysys_adds_is_removed():
+    thermo = read_thermo(fake_case(("Toluene",)))
+    assert thermo.components[0].formula == "TO8"
 
 
 def test_component_names_keep_the_composition_vector_order():
