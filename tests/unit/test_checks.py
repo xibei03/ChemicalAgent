@@ -15,6 +15,7 @@ from builders import (
 )
 from reactor_agent.recipes import recipe_for
 from reactor_agent.spec.enums import CheckId, CheckSeverity, KeqSource, ObjectState
+from reactor_agent.spec.plan import system_feed_names, system_outlet_names
 from reactor_agent.spec.snapshot import EnergyStreamSnapshot
 from reactor_agent.validation.checks import COMMON_CHECKS, run_common_checks
 
@@ -81,9 +82,22 @@ def with_feed_composition_changed(scenario):
 
 
 def with_carbon_moved_to_carbon_dioxide(scenario):
-    # 一氧化碳少 100，二氧化碳多 100：碳守恒，氧不守恒
-    moved = scenario.with_component("Vap", "CO", molar_flow_kmol_h=250.0)
-    return moved.with_component("Vap", "CO2", molar_flow_kmol_h=300.0)
+    # 一氧化碳少 100，二氧化碳多 100：碳守恒，氧不守恒。物流内部的数跟着重算，仍然一致
+    return scenario.with_flows("Vap", CO=250.0, CO2=300.0)
+
+
+def with_feed_flows_changed(scenario):
+    return scenario.with_flows("Feed", Methane=1100.0)
+
+
+def with_water_lost(scenario):
+    return scenario.with_flows("Vap", H2O=1852.5)
+
+
+def with_scaled_component_mass(scenario):
+    monoxide = scenario.snapshot.stream("Vap").components[2]
+    assert monoxide.name == "CO"
+    return scenario.with_component("Vap", "CO", mass_flow_kg_h=monoxide.mass_flow_kg_h * 1.05)
 
 
 def with_unknown_duty(scenario):
@@ -149,8 +163,12 @@ BREAKS = [
         id="feed temperature differs",
     ),
     pytest.param(
-        equilibrium_scenario, with_feed_composition_changed, {V3}, id="feed composition differs"
+        equilibrium_scenario,
+        with_feed_composition_changed,
+        {V3, V6},
+        id="feed fractions differ from the flows",
     ),
+    pytest.param(equilibrium_scenario, with_feed_flows_changed, {V3, V7}, id="feed flows differ"),
     pytest.param(
         equilibrium_scenario,
         lambda s: s.with_stream("Vap", temperature_c=711.0),
@@ -201,10 +219,32 @@ BREAKS = [
         id="negative flow",
     ),
     pytest.param(
-        equilibrium_scenario, lambda s: scaled_mass(s, "Vap", 1.01), {V7}, id="mass not conserved"
+        equilibrium_scenario,
+        lambda s: scaled_mass(s, "Vap", 1.01),
+        {V6, V7},
+        id="total mass of an outlet off",
     ),
+    pytest.param(equilibrium_scenario, with_water_lost, {V7}, id="mass and hydrogen lost"),
     pytest.param(
         equilibrium_scenario, with_carbon_moved_to_carbon_dioxide, {V7}, id="element not conserved"
+    ),
+    pytest.param(
+        equilibrium_scenario,
+        lambda s: s.with_stream("Vap", molar_flow_kmol_h=5040.0),
+        {V6},
+        id="total molar flow does not match the components",
+    ),
+    pytest.param(
+        equilibrium_scenario,
+        with_scaled_component_mass,
+        {V6},
+        id="component mass does not match moles times molecular weight",
+    ),
+    pytest.param(
+        equilibrium_scenario,
+        lambda s: s.with_component("Liq", "Methane", molar_flow_kmol_h=0.05),
+        {V6},
+        id="flow inside an empty stream",
     ),
     pytest.param(
         conversion_scenario,
@@ -220,13 +260,13 @@ BREAKS = [
     ),
     pytest.param(
         gasification_scenario,
-        lambda s: s.with_component("Liq-1", "Carbon", molar_flow_kmol_h=0.0, mass_flow_kg_h=0.0),
+        lambda s: s.with_flows("Liq-1", Carbon=0.0),
         {V7},
         id="solid carbon lost",
     ),
     pytest.param(
         gasification_scenario,
-        lambda s: s.with_component("Vap-1", "H2O", molar_flow_kmol_h=100.0),
+        lambda s: s.with_flows("Vap-1", H2O=100.0),
         {CONVERSION_CHECK},
         id="water left unconverted",
     ),
@@ -362,7 +402,46 @@ class TestPhysical:
         assert not passes(shifted, V6)
 
     def test_v6_accepts_a_tiny_negative_value_from_numerical_noise(self, equilibrium):
-        assert passes(equilibrium.with_component("Vap", "CO2", molar_flow_kmol_h=-1e-12), V6)
+        assert passes(equilibrium.with_component("Liq", "CO2", molar_flow_kmol_h=-1e-12), V6)
+
+    def test_v6_says_which_total_the_components_do_not_add_up_to(self, equilibrium):
+        result = result_of(equilibrium.with_stream("Vap", molar_flow_kmol_h=5040.0), V6)
+        assert "各组分摩尔流量之和" in result.actual
+
+    def test_v6_compares_component_masses_with_the_molecular_weights_of_the_table(
+        self, equilibrium
+    ):
+        result = result_of(with_scaled_component_mass(equilibrium), V6)
+        assert "分子量" in result.actual
+
+    def test_v6_accepts_the_small_molecular_weight_differences_between_tables(self, equilibrium):
+        scaled = equilibrium
+        for item in equilibrium.snapshot.stream("Vap").components:
+            scaled = scaled.with_component(
+                "Vap", item.name, mass_flow_kg_h=item.mass_flow_kg_h * 1.0005
+            )
+        mass = equilibrium.snapshot.stream("Vap").mass_flow_kg_h
+        assert passes(scaled.with_stream("Vap", mass_flow_kg_h=mass * 1.0005), V6)
+
+    def test_v6_rejects_larger_molecular_weight_differences(self, equilibrium):
+        scaled = equilibrium
+        for item in equilibrium.snapshot.stream("Vap").components:
+            scaled = scaled.with_component(
+                "Vap", item.name, mass_flow_kg_h=item.mass_flow_kg_h * 1.002
+            )
+        mass = equilibrium.snapshot.stream("Vap").mass_flow_kg_h
+        assert not passes(scaled.with_stream("Vap", mass_flow_kg_h=mass * 1.002), V6)
+
+    def test_v6_checks_that_the_fractions_are_the_shares_of_the_flows(self, equilibrium):
+        co = equilibrium.snapshot.stream("Vap").components[2]
+        fractions_off = equilibrium.with_component(
+            "Vap", "CO", mole_fraction=co.mole_fraction + 0.01
+        )
+        assert "流量占比" in result_of(fractions_off, V6).actual
+
+    def test_v6_checks_the_streams_that_have_no_flow_for_stray_component_flows(self, equilibrium):
+        stray = equilibrium.with_component("Liq", "Methane", molar_flow_kmol_h=0.05)
+        assert "各组分摩尔流量之和" in result_of(stray, V6).actual
 
     def test_v6_does_not_ask_an_empty_stream_for_fractions_that_add_up(self, conversion):
         assert conversion.snapshot.stream("Liq").molar_flow_kmol_h == 0.0
@@ -374,24 +453,29 @@ class TestPhysical:
 
 class TestConservation:
     def test_v7_accepts_a_balance_error_inside_the_tolerance(self, equilibrium):
-        assert passes(scaled_mass(equilibrium, "Vap", 1.00005), V7)
+        # 多出 0.2 kmol/h 水：质量多 3.6 kg/h（5.6e-5，在 1e-4 之内），氢、氧也在 1e-3 之内
+        assert passes(equilibrium.with_flows("Vap", H2O=1950.2), V7)
 
-    def test_v7_rejects_a_balance_error_outside_the_tolerance(self, equilibrium):
-        assert not passes(scaled_mass(equilibrium, "Vap", 1.0002), V7)
+    def test_v7_rejects_a_mass_error_outside_the_tolerance(self, equilibrium):
+        # 多出 0.5 kmol/h 水：质量多 9 kg/h（1.4e-4），元素误差仍在 1e-3 之内，所以是质量检查失败
+        result = result_of(equilibrium.with_flows("Vap", H2O=1950.5), V7)
+        assert not result.passed
+        assert "总质量" in result.actual
+        assert "元素" not in result.actual
 
-    def test_v7_accepts_a_small_element_error(self, equilibrium):
-        # 碳进料 1000 kmol/h，多出 0.5 是 5e-4，在 1e-3 之内
-        assert passes(equilibrium.with_component("Vap", "CO2", molar_flow_kmol_h=200.5), V7)
+    def test_v7_accepts_a_small_hydrogen_error(self, equilibrium):
+        # 多出 1 kmol/h 氢气：质量 3e-5，氢原子 2e-4
+        assert passes(equilibrium.with_flows("Vap", Hydrogen=1851.0), V7)
 
-    def test_v7_rejects_a_larger_element_error(self, equilibrium):
-        assert not passes(equilibrium.with_component("Vap", "CO2", molar_flow_kmol_h=205.0), V7)
+    def test_v7_rejects_a_larger_hydrogen_error(self, equilibrium):
+        assert not passes(equilibrium.with_flows("Vap", Hydrogen=1900.0), V7)
 
     def test_v7_counts_the_solid_in_the_liquid_outlet(self, gasification):
         assert passes(gasification, V7)
         assert not passes(gasification.without_stream("Liq-1"), V7)
 
     def test_v7_names_the_elements_that_are_off(self, equilibrium):
-        result = result_of(equilibrium.with_component("Vap", "CO2", molar_flow_kmol_h=300.0), V7)
+        result = result_of(equilibrium.with_flows("Vap", CO2=300.0), V7)
         assert "元素 C" in result.actual
         assert "元素 O" in result.actual
         assert "元素 H" not in result.actual
@@ -416,3 +500,64 @@ class TestFixedKCheck:
 
     def test_there_is_no_such_check_when_k_comes_from_gibbs_energy(self, equilibrium):
         assert FIXED_K_CHECK not in {check.check_id for check in all_checks(equilibrium)}
+
+
+STREAM_TOTALS = ("molar_flow_kmol_h", "mass_flow_kg_h")
+COMPONENT_FIELDS = ("mole_fraction", "molar_flow_kmol_h", "mass_flow_kg_h")
+STATE_FIELDS = ("temperature_c", "pressure_bar")
+
+
+def changed_value(value):
+    """把一个数改大 5%；原来是 0 的量改成 0.05。"""
+    return value * 1.05 if value else 0.05
+
+
+def outlets_with_flow(scenario):
+    names = [s.name for s in scenario.snapshot.streams if s.name in outlet_names(scenario)]
+    return [
+        scenario.snapshot.stream(n) for n in names if scenario.snapshot.stream(n).molar_flow_kmol_h
+    ]
+
+
+def outlet_names(scenario):
+    return set(system_outlet_names(scenario.plan))
+
+
+class TestNothingInAnOutletIsLeftUnchecked:
+    """报告会展示出料的总量和各组分的量。其中任何一个数不对，都应该有一项检查发现。"""
+
+    def test_a_wrong_total_in_a_flowing_outlet_is_noticed(self, scenario):
+        for stream in outlets_with_flow(scenario):
+            for field in STREAM_TOTALS:
+                broken = scenario.with_stream(
+                    stream.name, **{field: changed_value(getattr(stream, field))}
+                )
+                assert failed_ids(broken), (stream.name, field)
+
+    def test_a_wrong_component_value_in_a_flowing_outlet_is_noticed(self, scenario):
+        for stream in outlets_with_flow(scenario):
+            for item in stream.components:
+                for field in COMPONENT_FIELDS:
+                    new = changed_value(getattr(item, field))
+                    broken = scenario.with_component(stream.name, item.name, **{field: new})
+                    assert failed_ids(broken), (stream.name, item.name, field)
+
+    def test_a_missing_value_in_an_outlet_is_noticed(self, scenario):
+        for name in outlet_names(scenario):
+            stream = scenario.snapshot.stream(name)
+            for field in (*STATE_FIELDS, *STREAM_TOTALS):
+                assert failed_ids(scenario.with_stream(name, **{field: None})), (name, field)
+            if not stream.molar_flow_kmol_h:
+                continue
+            for item in stream.components:
+                for field in COMPONENT_FIELDS:
+                    broken = scenario.with_component(name, item.name, **{field: None})
+                    assert failed_ids(broken), (name, item.name, field)
+
+    def test_a_wrong_component_value_in_a_feed_is_noticed(self, scenario):
+        feed = scenario.snapshot.stream(system_feed_names(scenario.plan)[0])
+        for item in feed.components:
+            for field in COMPONENT_FIELDS:
+                new = changed_value(getattr(item, field))
+                broken = scenario.with_component(feed.name, item.name, **{field: new})
+                assert failed_ids(broken), (feed.name, item.name, field)

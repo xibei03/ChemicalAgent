@@ -102,13 +102,18 @@ def names_with_formula(table: ComponentTable, formula: str) -> tuple[str, ...]:
     return tuple(e.name for e in table.components if parse_formula(e.formula) == wanted)
 
 
+def molecular_weights(table: ComponentTable) -> Mapping[str, float]:
+    """每个组分（规范名）的分子量，kg/kmol。"""
+    return {entry.name: entry.molecular_weight_kg_per_kmol for entry in table.components}
+
+
 def feed_molar_flow_kmol_h(feed: FeedConditions, table: ComponentTable) -> float:
     """进料的摩尔流量：给了摩尔流量就用它，给的是质量流量就除以平均分子量。"""
     if feed.molar_flow_kmol_h is not None:
         return feed.molar_flow_kmol_h
     mass_flow = feed.mass_flow_kg_h
     assert mass_flow is not None  # FeedConditions 保证两种流量给了一种
-    weights = {entry.name: entry.molecular_weight_kg_per_kmol for entry in table.components}
+    weights = molecular_weights(table)
     mean_weight = sum(item.mole_fraction * weights[item.component] for item in feed.composition)
     return mass_flow / mean_weight
 

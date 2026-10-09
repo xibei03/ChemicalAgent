@@ -151,6 +151,19 @@ class Scenario:
         )
         return self.with_stream(stream, components=items)
 
+    def with_flows(self, stream: str, **changes: float) -> "Scenario":
+        """改掉一股物流里某些组分的摩尔流量，总量、分率和质量流量跟着重算，物流内部仍然一致。"""
+        old = self.snapshot.stream(stream)
+        assert old is not None
+        flows = {c.name: c.molar_flow_kmol_h or 0.0 for c in old.components}
+        flows.update(changes)
+        new = stream_snapshot(
+            self.spec, stream, flows, old.temperature_c or 0.0, old.pressure_bar or 0.0
+        )
+        return self.with_snapshot(
+            streams=tuple(new if s.name == stream else s for s in self.snapshot.streams)
+        )
+
     def without_stream(self, name: str) -> "Scenario":
         return self.with_snapshot(streams=tuple(s for s in self.snapshot.streams if s.name != name))
 
