@@ -9,7 +9,7 @@ from enum import StrEnum
 from types import MappingProxyType
 from typing import Self
 
-from pydantic import Field, model_validator
+from pydantic import model_validator
 
 from reactor_agent.spec.base import FrozenModel
 from reactor_agent.spec.enums import ReactorType
@@ -71,17 +71,20 @@ NAMED_REACTOR_LABEL = "用户点名的反应器"
 
 
 class Flag(FrozenModel):
-    """一个“是/否”特征。取值为是时，evidence 是原文里的一句原话。"""
+    """一个“是/否”特征。取值为是时，evidence 是原文里的一句原话。
+
+    evidence 没有默认值：LLM 的输出结构要求每个字段都出现，不是“省略”而是写 null。
+    """
 
     value: bool
-    evidence: str | None = None
+    evidence: str | None
 
 
 class NamedReactor(FrozenModel):
     """用户点名的反应器类型，没有点名是 None；点名了要附原文里的原话。"""
 
     reactor_type: ReactorType | None
-    evidence: str | None = None
+    evidence: str | None
 
 
 class Quote(FrozenModel):
@@ -147,11 +150,13 @@ class SelectionDraft(FrozenModel):
 
     features: SelectionFeatures
     recommended_type: ReactorType | None
-    rationale: str = Field(min_length=1)
+    rationale: str
     alternatives: tuple[AlternativeNote, ...]
 
     @model_validator(mode="after")
-    def _yes_features_carry_evidence(self) -> Self:
+    def _answer_is_complete(self) -> Self:
+        if not self.rationale.strip():
+            raise ValueError("rationale 不能为空")
         missing = self.features.missing_evidence()
         if missing:
             raise ValueError(
