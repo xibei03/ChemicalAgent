@@ -1,28 +1,28 @@
-# 示例：要求计算转化率，不是已知条件
+# 示例：反应用文字说清，要求计算转化率
 
 ## 输入
 
-乙苯催化脱氢制苯乙烯 C8H10 ⇌ C8H8 + H2，600 °C、1.2 bar，乙苯与水蒸气摩尔比 1:9，乙苯进料 50 kmol/h。请算出乙苯能达到的最大转化率和出口组成。
+乙苯催化脱氢制苯乙烯，600 °C、1.2 bar，乙苯与水蒸气摩尔比 1:9，乙苯进料 50 kmol/h。有两个反应：乙苯脱氢生成苯乙烯和氢气（这是目标反应）；同时乙苯会脱乙基生成苯和乙烯（这是副反应）。请算出乙苯能达到的最大转化率和出口组成。
 
 ## 输出
 
 ```json
 {
   "features": {
-    "is_reaction_process": {"value": true, "evidence": "乙苯催化脱氢制苯乙烯 C8H10 ⇌ C8H8 + H2"},
+    "is_reaction_process": {"value": true, "evidence": "乙苯催化脱氢制苯乙烯"},
     "named_reactor": {"reactor_type": null, "evidence": null},
     "kinetics_given": {"value": false, "evidence": null},
     "dimensions_given": {"value": false, "evidence": null},
     "equipment_form": "unspecified",
     "conversion_data_given": {"value": false, "evidence": null},
-    "reaction_defined": {"value": true, "evidence": "C8H10 ⇌ C8H8 + H2"},
+    "reaction_defined": {"value": true, "evidence": "有两个反应：乙苯脱氢生成苯乙烯和氢气（这是目标反应）；同时乙苯会脱乙基生成苯和乙烯（这是副反应）"},
     "black_box_system": {"value": false, "evidence": null},
     "equilibrium_constant_given": {"value": false, "evidence": null},
     "phase": "gas",
     "polymerization": {"value": false, "evidence": null}
   },
   "recommended_type": "equilibrium",
-  "rationale": "原文只写了一个明确的可逆反应，没有动力学参数。“最大转化率”是要求算出来的待求量，不是已知条件，所以没有可用的转化率数值。反应明确、受热力学平衡控制，按选择逻辑选 Equilibrium。",
+  "rationale": "原文有两个反应，反应物和产物都用文字说清了（没有写化学方程式也算说清），也没有要求考虑别的反应，所以反应已明确；没有动力学参数。“最大转化率”和“出口组成”是要求算出来的，不是已知条件，也不是产物未知。反应靠催化剂实现、产物种类确定，温度高也不是黑箱。反应明确、受热力学平衡控制，按选择逻辑选 Equilibrium。",
   "alternatives": [
     {"reactor_type": "conversion", "why_not": "要求计算的转化率是待求量，原文没有给出转化率数值"},
     {"reactor_type": "gibbs", "why_not": "能建，但反应已经明确，不是黑箱体系，优先级更低"},
