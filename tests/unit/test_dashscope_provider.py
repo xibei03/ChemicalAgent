@@ -97,6 +97,11 @@ def test_a_request_uses_temperature_zero_and_a_native_json_schema(provider):
     assert response_format["json_schema"]["strict"] is True
 
 
+def test_thinking_is_switched_off_because_it_makes_the_call_far_too_slow(provider):
+    provider.generate("s", "u", {})
+    assert FakeOpenAI.requests[0]["extra_body"] == {"enable_thinking": False}
+
+
 def test_the_reply_text_and_the_usage_are_returned(provider):
     raw = provider.generate("s", "u", {})
     assert (raw.text, raw.prompt_tokens, raw.completion_tokens) == ('{"kind": "a"}', 7, 3)

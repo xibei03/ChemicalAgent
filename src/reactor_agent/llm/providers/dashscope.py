@@ -17,6 +17,9 @@ from reactor_agent.spec.settings import LlmSettings
 # 网络错误和 5xx、429 的重试由 SDK 自己做，次数有限，演示时网络不通也不会卡上几分钟。
 MAX_NETWORK_RETRIES = 2
 TEMPERATURE = 0
+# Qwen3 默认开着思考：同一个选型请求，思考开着 90 秒还没有回完，关掉只要 7 秒（台账 L39）。
+# 选型是读懂原文、按定义抽特征，不需要长链推理，所以关掉。
+EXTRA_BODY: dict[str, object] = {"enable_thinking": False}
 RESPONSE_NAME = "structured_output"
 BODY_CHARS = 300
 
@@ -66,6 +69,7 @@ class DashScopeProvider:
                 messages=[{"role": "system", "content": system}, {"role": "user", "content": user}],
                 temperature=TEMPERATURE,
                 response_format=_response_format(schema),
+                extra_body=EXTRA_BODY,
             )
         except openai.APIError as error:
             raise _failure(error) from error
