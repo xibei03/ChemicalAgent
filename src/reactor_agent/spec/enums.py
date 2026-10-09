@@ -181,6 +181,8 @@ class WorkflowState(StrEnum):
     """任务经过的状态（计划 §7.3）。终态是 TaskStatus，不在这里。"""
 
     INIT = "INIT"
+    SELECT = "SELECT"
+    SPECIFY = "SPECIFY"  # 阶段 2B 的状态，现在还没有处理函数：选型之后任务停在这里
     PLAN = "PLAN"
     PREFLIGHT = "PREFLIGHT"
     BUILD_BASIS = "BUILD_BASIS"
