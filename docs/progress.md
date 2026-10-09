@@ -7,13 +7,13 @@
 - **阶段 0B：已完成**（2026-10-08 12:30 开始，19:25 结束，UTC+8；与 0A 的会话 3 是同一个会话，中间因用量额度中断约 6 小时，实际工作约 1 小时）。**闸门 G0 通过**：`spikes/e7_conversion_chain.py` 从空白 Case 用代码建出四产物分数系数的甲苯歧化转化反应器，连续两次运行出料摩尔分率与解析解偏差 0.00000、质量守恒误差 1.52e-05、出口温度 378.59 °C、两次运行摩尔流量相对偏差 0。**每一步都是第 1 级集成方式（COM 编程）**，没有降级。**分数计量系数可用**，一个转化反应即可。任务 5：同一基准组分的多个转化反应**默认并行**（12/26/12% 三个反应，出口甲苯 0.5000）；反应集排序（Conversion Rankings）COM 成员、XML 写回、BackDoor 都写不了，**0C 发现 `PlayScript` 可以写**（排序 (0,1,2) 出口甲苯 0.5731、(1,1,0) 为 0.5456，与预测一致，H24、H32）；含义：排序值最小的先算、相同的并行、后面的对剩下的基准组分算；按 D13 Recipe 不设排序。台账 H1 至 H26 里 0B 要求的 14 项都有实测证据，"调用序列 → 转化反应器"小节已写成 Backend 的蓝本。
 - **阶段 0C：已完成**（E0 的最后一步 2026-10-09 补做，通过，见台账 L35；2026-10-08 19:26 开始，20:42 结束，UTC+8；与 0A、0B 是同一个会话）。完成标准六条：①`e8` 两个工况在容差内（710 °C 偏差 0.0046、600 °C 偏差 0.0014），`e9` 通过（Gibbs 与平衡反应器偏差 1e-5，多股进料、绝热两个小试验通过），**`e10` 不满足通过条件**：Gibbs 反应器 + 库里的固体碳算出的结果是错的（碳的 Gibbs 函数是气态碳原子的，E10b、E10c），证据已交给用户决定（D14）；两段式（计划 §17.3）的可行性我试了，四条通过条件全满足（E10d），没有采用；②固体碳五个问题的答案在台账 Gibbs 反应器小节；③H1 至 H26 没有“未测试”；④路线对照表有四条路线的对照，每条有证据，LLM 视觉操作如实写未试验（没有桌面屏幕工具）；⑤台账有三种反应器的调用序列、十一个组分规范名、鲁棒性观察和“对工具契约的影响”（R1 至 R12，登记为 D15）；⑥本文件已更新并提交。**另外：`PlayScript` 是个能用的第二级通道**，能写 COM 写不了的内部变量（反应集排序已验证）和建对象；用户答复 D12 批准后台线程、D13 保持默认排序。
 - **阶段 1A：已完成**（2026-10-08 21:10 开始，2026-10-09 00:30 结束，UTC+8；新会话，中间因用量额度中断约 1 小时 55 分，实际工作约 1 小时 25 分）。开始时用户答复了 D14（采用方案 A 两段式）和 D15（R1 至 R12 全部按建议）。**完成标准五条：**①`ruff format --check`、`ruff check`、`mypy src`（29 个源文件）、`pytest`（230 passed，含 `tests/test_code_health.py` 的 13 个）全部通过；②`pytest -m hysys tests/integration`：39 passed（约 73 秒），三个模型都只通过 `ToolExecutor` 建成：转化反应器与解析解偏差 0.00000，平衡反应器 710 °C、600 °C 与参照值最大偏差 0.0046、0.0014，两段式气化 CO 收率 39.96%；另有纯气相 Gibbs 反应器、固定 K 两个测试；幂等、冲突、哨兵数的断言通过；③`src/` 里除 `backends/hysys_com/` 之外没有 COM 相关代码和 `Any`，`test_hysys_backend_isolation.py` 检查 `com_error` 的名字、单位字符串、哨兵数各只出现在一个文件里；④交接报告里有体检输出和独立审查的处理结果；⑤本文件已更新，改动分多次提交并推送。**两个意外：**HYSYS 自己偶发崩溃（访问冲突，集成测试 9 次完整运行里 1 次，台账 L33）；写 `Basis` 会静默重置平衡反应的反应相（读回比对发现，台账 L34）。`src/` 共 1971 行代码，见 D17。
-- **阶段 1C：进行中**（2026-10-09 18:35 开始，UTC+8；新会话）。开始时用户的指示里写“progress.md 当前写明下一步是 phase-0a.md、目录中没有 Git 仓库和台账”，与实际不符（0A 至 1B 都已完成并推送，台账和仓库都在），但最后一句写明“目前进行到 1C（未做）”，所以按进度文件做 1C。远端地址与 `origin` 一致，不需要重新配置。
+- **阶段 1C：已完成，等用户确认完成标准第 5 条**（2026-10-09 18:35 开始，20:55 结束，UTC+8；新会话，时间盒 2 小时，超出约 20 分钟：其中约 1 小时 20 分花在排查旧集成测试的间歇性失败上，见台账 L38）。开始时用户的指示里写“progress.md 当前写明下一步是 phase-0a.md、目录中没有 Git 仓库和台账”，与实际不符（0A 至 1B 都已完成并推送，台账和仓库都在），但最后一句写明“目前进行到 1C（未做）”，所以按进度文件做 1C。远端地址与 `origin` 一致，不需要重新配置。**闸门 G1 的八条：**①`ruff format --check`、`ruff check`、`mypy src`（59 个源文件）、`pytest`（837 passed，含 `tests/test_code_health.py`）全部通过；②`pytest -m hysys tests/integration`：54 passed（约 170 秒，连跑 3 次都通过）——三份规格各自完成，V1 至 V8 全部通过，结果在容差内；每份规格连续运行 3 次，出料摩尔分率和摩尔流量相对偏差不超过 1e-4；每次运行后 Case 里的物流、能流、反应、反应集、反应器的名字与计划完全一致；重新打开每个工况另存的 `.hsc`，已求解且出口温度是该工况的；干净重建的测试里 Trace 恰好一条恢复事件（`E_CONFLICT`，重建），Case 文件名与之前不同，终态完成；第二个工况求解失败时，第一个工况的 `.hsc` 没被覆盖，现场另存在 `work/failed.hsc`；③每次运行的目录里有 `state.json`、`trace.jsonl`、`artifacts/` 下三个文件、每个工况一份 `.hsc`（另有 `work/`）；④`reactor-agent trace <task_id>` 打印出时间线；⑤**未验证：等用户在 HYSYS 界面里打开一份 `.hsc`**（建议 `runs/20261009-125257-f1/T710.hsc` 和 `T600.hsc`，平衡反应器的两个工况，重新生成：`.venv\Scripts\reactor-agent.exe run --spec evals\golden_specs\smr_equilibrium.yaml`）；⑥`harness/` 352 行代码（目标约 400）；⑦交接报告里有体检输出和独立审查的处理结果；⑧本文件已更新，改动分多次提交并推送。**三个意外：**旧的集成测试（1A、1B 的）在加入执行器的集成测试之后间歇性失败，根因没有查明，对策是每个测试文件用一个新的 HYSYS 实例（台账 L38，D20）；独立审查（子代理）指出 20 条，其中 7 条确定的缺陷都已修复（最重要的一条：中止时原地保存会覆盖上一个已验证工况的 `.hsc`）；会话失效的试验（E17）通过，不到 1 秒以 `FAILED` 结束并给出重跑命令，重跑通过（台账 L37）。`src/` 共 4630 行代码，超过 D17 约定的 4500 行触发点，见 D17。
 - **D1：已完成**（2026-10-09 10:08，UTC+8）。用户在自己的终端里运行 `./.venv/Scripts/python.exe spikes/e0_llm_connectivity.py --ask-key --tag run1 --capabilities` 并输入密钥（助手的进程读不到环境变量里的密钥，探针的 `--ask-key` 用 `getpass` 不回显，密钥只留在探针进程的内存里）。结果见 `spikes/out/e0_llm_connectivity_run1.txt` 和台账 L35：国内站 `https://dashscope.aliyuncs.com/compatible-mode/v1` 通；主模型 `qwen3.8-max`、快速模型 `qwen3.8-flash`、备用模型 `qwen3.7-plus` 都返回 200；主模型的 `response_format=json_object` 和 `tools` 函数调用通过。没有测的（`json_schema`、流式、关闭思考、限流、超时）留给 2A。
 - **阶段 1B：已完成**（2026-10-09 09:20 开始，10:45 主体结束，18:30 补做 D18、D19 后收尾，UTC+8；与 1A 同一个会话）。用户 2026-10-09 的指示：“D17继续做；完成后继续测试 D1；如果 A1 的任务已经完成则开始做 A2；需要 APIKEY 就从环境变量读，读不到就给我一条命令我在终端里输入”。我的理解：D17 按默认继续；D1 的测试等用户运行 `--ask-key` 命令（已通过）；“A2”是按项目顺序的下一阶段 1B——2A 的“开始前先读”要读 `harness/engine.py`、`state/models.py`、`cli.py`，它们是 1C 才产生的，所以 2A 不能越过 1B、1C。阶段边界的约定（一个会话一个阶段）由用户的这条指示暂时放宽。**完成标准六条：**①`ruff format --check`、`ruff check`、`mypy src`（46 个源文件）、`pytest`（651 passed，含 `tests/test_code_health.py`）全部通过；另有 49 个 `-m hysys` 的集成测试（1A 的 39 个加 D19 新增的 10 个），D19 时运行，全部通过（94 秒）；②三份黄金规格加载、过 Recipe 的规则、编译，计划与计划 §17 的构建表一致（去掉头两步；场景 3 按 D14 是转化反应器加 Gibbs 反应器的两段式，14 步），并在 HYSYS 里原样执行；③V1 至 V8 每项有通过和失败的用例，“破坏 → 应当失败的检查集合”表 36 项逐项与预期一致，三份规格的真实快照全部通过（E16）；④转化率、收率（不乘计量系数）、比值和干基组成用手算值验证；⑤交接报告里有 `test_code_health.py` 的输出和独立审查（子代理）的处理结果；⑥本文件已更新，改动分 14 次提交并推送。**三个意外：**对三个场景的正确快照逐字段破坏（改 5% 或设为 None）来探查检查的漏洞，210 处没有任何检查发现，补上 V6 的物流内部一致性之后剩 101 处（都是有意不查的量，见“设计决定”第 16 条）；独立审查发现 V4、V2 的期望值取自计划而不是规格、结局判定不核对检查是否齐全，都已修复；用户同意后在 1B 里运行 HYSYS（D19，E16 探针和 10 个集成测试）：验证层在真实快照上没有误报，空相出料读回的是 0.0（台账 L36）。D18 按用户的答复修改了隔离测试的规则。`src/` 共 3716 行代码（见 D17）。
 - 阶段 0A：**已完成**（主体 2026-10-08 10:55 结束，UTC+8；用户答复后补做 D11，12:00 结束）。首次开始于 2026-10-03 09:50，共 3 个会话（见"已完成"的时间表）。任务 1 至 3、5 至 11 都完成，完成标准的 6 条都有实际运行的验证。**任务 4（E0，LLM 连通性）挂起**，等用户给出供应商、模型和密钥所在的环境变量（D1）（2026-10-08 用户已给出；2026-10-09 用户运行探针，通过，见台账 L35）。**D11（参考 Case）已由助手用代码建成并补跑了 E3，不再等用户。**当前没有残留的 HYSYS 进程。
 - **用户 2026-10-08 的答复（0A 交接之后）：D11 由助手自行创建参考 Case，建好后补跑 E3；D9 之后的提交署名改为 `xibei03 <jsl_03@163.com>`；"完成后续跑"。** 我的理解和假设：自行创建用 COM 代码做（没有别的手段），所以这部分工作等于提前做了 0B/0C 的一部分探针（E4 至 E9），台账里按探针记录；"完成后续跑"理解为做完这些之后补跑 E3，**不进入阶段 0B**（阶段边界不变，0B 仍在新会话里做，可以直接用这里的结论）。如果用户的意思是连续做 0B，请在回复里明说。（用户随后回复“继续 0B”，0B 在同一个会话里做了。）
 - 最近通过的闸门：**G0（2026-10-08，阶段 0B）**；0C、1A 没有闸门。1A 结束时质量工具全绿：`ruff format --check`、`ruff check`、`mypy src`、`pytest`（230 passed）、`pytest -m hysys tests/integration`（39 passed）；`python tests/test_code_health.py` 输出 `src/` 1971 行代码（`backends` 1280、`spec` 548、`tools` 83、`errors` 60），最长函数 27 行，最深嵌套 3 层，没有忽略检查的注释。
-- 最近一次更新：2026-10-09 18:30
+- 最近一次更新：2026-10-09 20:55
 - 时间记法：本机时钟是 UTC，进度文件里的时间一律换算成 UTC+8（加 8 小时）。
 - 推送状态：本阶段每个任务的提交都已推送到 `origin/main`，没有强制推送；推送方式见"环境事实"的"GitHub 凭据"。
 
@@ -48,6 +48,7 @@
 | 0C | 2026-10-08 19:26 开始，20:42 结束（UTC+8）；与 0A、0B 同一个会话。实际工作约 76 分钟（含等待探针运行） | 0（接着 0A 的会话 3 做） |
 | 1A | 2026-10-08 21:10 开始，2026-10-09 00:30 结束（UTC+8）。21:10 至 21:57 做契约、E14、Backend 和集成测试；因用量额度用尽中断约 1 小时 55 分；23:52 起处理台账、独立审查、E15 和审查修复。实际工作约 1 小时 25 分 | 1 |
 | 1B | 2026-10-09 09:20 开始，10:45 主体结束，18:30 补做 D18、D19 后收尾（UTC+8）；与 1A 同一个会话，中间等用户运行 D1 的连通性命令、等子代理审查（约 21 分钟）、因用量额度用尽中断约 7 小时 40 分。实际工作约 2 小时 | 0（接着 1A 的会话做） |
+| 1C | 2026-10-09 18:35 开始，20:55 结束（UTC+8）。18:35 至 19:40 做第一段（执行器，不需要 HYSYS）；19:40 至 20:05 第二段（真实 HYSYS 的集成测试、E17）；20:05 至 20:55 先后排查旧集成测试的间歇性失败（L38，约 1 小时 20 分，与审查同时进行）、处理 20 条审查意见、写文档。时间盒 2 小时，超出约 20 分钟 | 1（新会话）；子代理审查 1 次 |
 
 | 阶段 | 任务 | 提交 | 验证方式 |
 |---|---|---|---|
@@ -92,6 +93,10 @@
 | 1B | D19：验证层在真实 HYSYS 快照上验证（E16） | 5524b22 | 用户答复“现在就跑 D19”。`spikes/e16_validation_real_snapshots.py` 把 Recipe 编译的三份计划原样在 HYSYS 里执行（每步 created，无弹窗），真实快照交给 V1 至 V8：全部通过，结局都是 complete；空相出料读回 0.0；质量÷（摩尔×分子量）最大偏差 5.1e-05（容差 1e-3）；V7 最大相对误差 2.1e-05；与参照值偏差 0.0000 至 0.0046；气化 CO 收率 39.98%。新增 `tests/integration/test_validation_real.py`（10 个）和 `plan_runner.py`；49 个集成测试 94 秒全部通过。台账 L36 |
 | 1B | D18：隔离测试的单位规则改成看调用 | 509ee02 | 用户答复“D18修改”。`GetValue`、`SetValue`、`GetValues`、`SetValues` 只能在 `variables.py` 里调用，也不能在别处直接传单位字符串；删除 `NOT_A_UNIT` 例外；新增检测器自检的测试。`pytest` 651 passed |
 | 1C | 第一段：执行器（任务 1 至 6，不需要 HYSYS） | 39dce26、efa80f3、d9a6d6d、03cd706、5a2675b、544f3b2 | `ruff format --check`、`ruff check`、`mypy src`（57 个源文件）、`pytest` 791 passed（1B 结束时 651）。执行器用 `tests/fake_tools.py` 的 ToolExecutor 桩和 1B 的手算快照测：三个场景正常路径的工具调用顺序与计划一致、状态依次经过 PLAN 至 REPORT；两个工况各一次改规定值/求解/读取/保存并各有结果；可重试错误重试一次后完成；重试用完后重建一次（Case 文件名 working-1.hsc 变 working-2.hsc，计划从头执行）；持续失败时 FAILED 且调用总数有上界；不可恢复错误（组分不存在、会话失效）立即中止、不重试；快照里有致命错误时终态不可能是完成；无 Recipe 是 UNSUPPORTED 且没有任何工具调用；规则失败是 E_RULE 中止；多工况在第二个工况上重建后两个工况重算；停在指定状态后可从保存的状态文件接着跑；篡改冻结的规格被拒绝。恢复策略对每个错误码走完策略链，与 `RETRYABLE_ERROR_CODES` 一致；状态存储保存再读回相同、没有残留临时文件、写入失败不破坏旧文件；命令行对不存在和非法的规格返回非 0、有可读的原因、没有 traceback。`harness/` 332 行代码 |
+| 1C | 第二段：真实 HYSYS 上的验收（任务 7） | a97b2df、499ef30 | `pytest -m hysys tests/integration`：三份规格各跑 3 次都完成，V1 至 V8 全过，与参照值偏差在容差内（转化 0.0000、平衡 0.0046 和 0.0014、气化 CO 收率 39.98%）；3 次之间出料摩尔分率和摩尔流量相对偏差不超过 1e-4；每次运行后物流、能流、反应、反应集、反应器的名字与计划完全一致；重新打开每个工况的 `.hsc`，已求解且出口温度是该工况的；干净重建测试里 Trace 恰好一条恢复事件（`E_CONFLICT`、重建），Case 文件名不同，终态完成。命令行三份规格都跑到 complete，退出码 0，`trace` 打印出时间线 |
+| 1C | 任务 9：会话失效的试验（E17） | a8c909d | `spikes/e17_session_loss.py`：第 9 次调用之后 `taskkill`，下一次调用得到 `E_COM_DISCONNECTED`，执行器不到 1 秒以 `FAILED` 结束，诊断里有停在的状态、出错的步骤、错误码和重跑命令，照命令重跑退出码 0、终态 complete；命令行收尾对已不存在的进程没有出错，没有残留进程。台账 L37 |
+| 1C | 旧集成测试的间歇性失败（台账 L38，D20） | 499ef30 | 11 次全量运行里 7 次出现 2 至 3 个旧测试失败，根因没有查明；对策是每个测试文件一个新的 HYSYS 实例，之后连续通过 |
+| 1C | 独立审查（子代理，不带本阶段上下文）和修复 | fb92a8c、d68863a | 20 条，逐条对照代码核实；采纳 7 条确定的缺陷、清单违反里的大部分和测试缺口，没有采纳的写在 1C 设计决定第 11 条；修复后 `pytest` 837 passed，集成测试 54 passed |
 | 0A | 4（补）LLM 连通性（E0） | d4bb9c0（`--ask-key`）、本次提交（输出） | `spikes/e0_llm_connectivity.py --ask-key --tag run1 --capabilities` 由用户在自己的终端里运行，密钥 `getpass` 输入；三个模型都是 HTTP 200（`qwen3.8-max` 2.46 秒、`qwen3.8-flash` 1.36 秒、`qwen3.7-plus` 1.14 秒），`response_format=json_object` 返回可解析的 JSON，`tools` 返回 `tool_calls`；输出文件里只有密钥的长度。台账 L35，**D1 完成** |
 | 0A | 只读勘查（计划模式下完成，无脚本） | 2427c43 | 注册表 ProgID、`hysys.tlb` 的接口名与集合的 `Add` 签名、安装目录里的 `hysys.hh`、定义文件、帮助文件，写入台账 L0 和"创建反应的线索"初稿（均未运行验证） |
 
@@ -153,9 +158,32 @@
 集成测试：`tests/integration/plan_runner.py`（按 Recipe 的计划执行：基础和流程图一次，每个工况改规定值、求解、读快照，1C 执行器主流程的前身）、
 `test_validation_real.py`（真实快照上的验证，10 个）。探针 `spikes/e16_validation_real_snapshots.py`。
 
+### 阶段 1C 新增（`src/` 合计 4630 行代码，1B 之后是 3716 行）
+
+| 文件 | 职责 | 行 |
+|---|---|---|
+| `state/models.py` | `TaskState` 和修改它的方法（`enter`、`finish`、`complete_step`、`count_retry`、`reset_for_rebuild`、`record_case`、`record_error` 等）、`failure_report()`；`StepRecord`、`Position`、`SessionInfo`、`CaseSummary`、`TaskError` | 133 |
+| `state/store.py` | `StateStore`（`state.json` 和 `artifacts/` 的原子读写，`new_run` 分配不撞号的任务标识并建 `artifacts/`、`work/`）、`ArtifactName`、`new_task_id` | 71 |
+| `observability/trace.py` | `EventBody`、`TraceEvent`、`TraceWriter`（追加写 `trace.jsonl`）、`read_events`（忽略被中断的最后一行） | 83 |
+| `observability/render.py` | `render_timeline`、`render_failure`、`render_summary` | 110 |
+| `harness/engine.py` | `Dependencies`、`Engine`（`create_task`、`step`、`run`，八个状态的处理函数，`_call`/`_try_call`，`_recover`/`_rebuild`/`_preserve_case`） | 281 |
+| `harness/failures.py` | `ToolStepError`（工具调用失败，带工具名和入参）、`rule_error`（规则问题 → `E_RULE` 或 `E_UNSUPPORTED`） | 18 |
+| `harness/results.py` | `result.json` 的读、写、同名覆盖 | 15 |
+| `harness/recovery.py` | 策略表 `POLICIES` 和 `decide` | 36 |
+| `harness/budgets.py` | `SOLVE_TIMEOUT_S`、`MAX_REBUILDS` | 2 |
+| `cli.py` | `main`、`run_spec`（可注入 `ToolExecutor`，测试用）、`run`/`trace` 两个命令，唯一的装配点 | 113 |
+| `spec/enums.py`、`spec/results.py`、`spec/tool_results.py` | 新增 `WorkflowState`、`RecoveryAction`、`EventType`、`Checkpoint`；`RunResult`、`FailureReport`、`issue_details`；`ToolResult.data_as` | +32、+26、+7 |
+
+运行目录：`runs/<task_id>/` 下是 `state.json`、`trace.jsonl`、`artifacts/`（`model_spec.json`、`plan.json`、`result.json`）、每个工况的 `<工况名>.hsc`，
+以及 `work/`（建模用的 `working-<n>.hsc`，中止时的 `failed.hsc`）。
+
+测试：`tests/unit/test_engine.py`（47 个）、`test_state.py`（15）、`test_recovery.py`（83，参数化）、`test_trace_render.py`（17）、`test_cli.py`（14）、`test_failures.py`（5）；
+`tests/fake_tools.py` 是 `ToolExecutor` 的桩；`tests/integration/test_engine_real.py`（5 个，`-m hysys`）和 `references.py`（三份规格的参照值，与 `test_validation_real.py` 共用）。
+探针 `spikes/e17_session_loss.py`。
+
 ## 进行中
 
-阶段 1C（执行器、状态、Trace、命令行）进行中。1B 的设计决定留在下面，后面的阶段按它们理解 1B 的代码。
+没有进行中的阶段。1C 已完成（只等用户确认第 5 条），下一个会话做 2A（见“下一步”）。1C 的设计决定留在下面，后面的阶段按它们理解执行器；1B 的设计决定在其后。
 
 ### 阶段 1C 的设计草图（2026-10-09 18:40）
 
@@ -182,6 +210,38 @@ VERIFY 的致命检查失败（`E_VALIDATION_FATAL`）也是抛 `ReactorAgentErr
 
 **运行目录**：`working-<n>.hsc` 是建模用的 Case（n 随重建加一），每个工况求解后另存 `<工况名>.hsc`；
 `artifacts/result.json` 在每个工况验证后增量写入，REPORT 或中止时补上终态。
+
+### 阶段 1C 的设计决定（已实现）
+
+1. **加一个状态要改三处**：`spec/enums.py` 的 `WorkflowState` 加一个枚举值；`harness/engine.py` 里写它的处理函数 `(TaskState) -> WorkflowState | TaskStatus`；
+   `Engine.__init__` 里的 `_handlers` 表加一行。前一个状态的处理函数返回新状态即可接上。需要在新状态里逐工况的话，把它加进 `state/models.py` 的 `PER_CASE_STATES`。
+2. **失败只有一条路**：`_call` 把失败的信封还原成 `ToolStepError`（`harness/failures.py`，`ReactorAgentError` 的子类，多带工具名和入参）抛出；PLAN 的规则失败
+   （`rule_error`：只要有一条是 `E_UNSUPPORTED` 整体就是 `E_UNSUPPORTED`，否则 `E_RULE`，细节是 `{字段路径: 说明}`，同一字段的几条合并）、没有 Recipe（`E_UNSUPPORTED`）、
+   INIT 的哈希不一致、VERIFY 的致命检查失败（`E_VALIDATION_FATAL`，细节是 `{检查编号: 说明}`）也抛 `ReactorAgentError`；`step()` 里唯一的 `except` 交给 `_recover`，
+   `_recover` 用 `decide`（纯函数查表）得到 重试 / 重建 / 中止，并返回下一个状态；中止时终态按错误码选：`E_UNSUPPORTED` 是 `UNSUPPORTED`（退出码 3），其余是 `FAILED`。处理函数里没有 `try/except` 和计数。
+3. **重试 = 留在当前状态**：处理函数每次从 `TaskState.cursor`（最后完成的计划步骤的编号）继续，所以重做的正好是失败的那一步，没有单独的重试循环。
+   **计数按“位置”（`Position`：状态、工况序号、游标）算**，同一位置的所有失败共用次数，位置变了清零；VERIFY 里“读快照成功、检查失败”的循环因此不会被读快照的成功清掉计数。
+   一个状态的处理函数里最多有两个工具调用（PREFLIGHT 的连接和新建 Case，VERIFY 的读快照和另存），重试时都要重做。
+   工具调用总数的上界：（正常路径的调用数 + 重试上限 × 2）×（1 + 重建上限）+ 2，测试里对正常路径上的每个工具持续失败都断言了这个上界。
+4. **重建**：`case.close(save=False)`（尽力，失败不拦着）→ `reset_for_rebuild`（游标、工况序号、已算完的工况、重试计数全部回到起点，会话保留，`rebuilds` 加一）→ `result.json` 清空 → 回到 PREFLIGHT。
+   建模用的 Case 文件放在 `work/` 下，叫 `working-<重建次数+1>.hsc`，所以每次重建都是新文件名，也不会和工况名撞名（工况名不区分大小写地唯一，因为 Windows 文件名不区分）。
+   每个工况求解后另存 `<工况名>.hsc`（读完快照之后、检查之前，所以致命检查失败的工况也有文件可看）。重建后旧的工况文件会被 `SaveAs` 静默覆盖，HYSYS 在旁边留下 `.bk0` 备份（台账 H4）。
+5. **Trace 的事件由执行器的 `_call`/`_try_call` 自己发**，不接 `ToolExecutor.on_event`：当前状态、尝试次数、耗时执行器本来就有；用回调要让回调知道状态，
+   就得有一份被执行器改、被回调读的共享可变量。`ToolExecutor` 的回调保留不动（`test_tool_executor.py` 在用），生产代码里没有人传它。收尾调用（关 Case、存现场）不编“第几次”。
+   事件的状态是 `WorkflowState | TaskStatus`，验证事件有类型化的 `verdict`（检查编号 → 是否通过），检查点的名字是 `Checkpoint` 枚举。
+6. **`result.json` 增量写**（`harness/results.py`）：每个工况验证后写入（同名覆盖，位置不变），重建时清空，`_finish` 补上终态。REPORT 只读它、调用 `decide_outcome`。失败的终态也写它，里面是已有的工况记录。
+7. **中止时留下现场**：只在已经有 Case 的情况下做（`session.case_file` 非空，规则失败这类没碰过 HYSYS 的中止不调用任何工具），**另存到 `work/failed.hsc`**，不原地保存——
+   原地保存会用失败工况的状态覆盖上一个已经验证过的工况的 `.hsc`（独立审查发现，有真实 HYSYS 上的测试）。另存失败了就算了，不盖住原来的错误。
+8. **`FailureReport`（`spec/results.py`）是诊断的入参模型**，`TaskState.failure_report(trace_path, spec_path)` 从最后一条错误记录填它；`render_failure` 只认这个模型。
+   会话失效（`E_COM_*`）时多打印一行“用同一份冻结的规格重跑”的命令。
+9. **命令行**：`run_spec(tools, spec, spec_path, runs_dir)` 是不含 Backend 的主体，测试传桩；`run` 先校验规格，再在 `with _hysys()` 里创建 Backend 并在离开时 `shutdown()`（结束自己启动的 HYSYS，
+   Case 里的内容都已经另存）。退出码：完成和带警告完成 0；失败和领域错误 1；不支持 3；需要补充 4。
+10. **`Provenance.case_path` 是工况另存的文件**（`SaveData.path`），不是快照里的 `case_path`（读快照时活动 Case 还是上一个文件）。
+11. **没有采纳的审查意见**：①`step()` 之外的 `E_IO`（`store.save`、`_finish`、`_recover` 内部写文件）会直接逃出 `run()`，状态文件停在上一步——运行目录写不了的时候没有地方可以记录失败，
+    命令行已经打印领域错误并返回 1；加重试会掩盖磁盘问题，Windows 上文件被占用的瞬时失败概率很低，留给阶段 4 一起处理。②`StateStore.load`、`Engine.run(stop_at=…)`、`Engine.step` 公开但生产代码里只有
+    测试和 `run()` 在用：提示词要求有这三样（读回状态、反复推进直到指定状态、推进一步），阶段 2 的 `--dry-run` 和阶段 4 的续跑要用。③`steps`、`cases`、`spec_file`、`process_id`、`warning_failures`
+    写了没人读：提示词要求状态文件有这些摘要，给人读 `state.json` 和续跑用。④`TaskState` 是可变的，“只通过方法修改”没有机制保证：可变是有意的（它是全系统唯一不断更新的数据），约定写在类的文档里。
+    ⑤时间线的标签宽度按字符数而不是显示宽度，中文工况名会错位，但标签和正文之间一定留出间隔。⑥两段式 Gibbs 的措辞“气化”、反应式写死（`recipes/gibbs.py`，1B 的代码，D14 已批准）不在本阶段范围。
 
 ### 阶段 1B 的设计决定（已实现）
 
@@ -231,24 +291,21 @@ VERIFY 的致命检查失败（`E_VALIDATION_FATAL`）也是抛 `ReactorAgentErr
 
 ## 下一步
 
-阶段 1B 已完成。下一个会话做**阶段 1C**（`docs/prompts/phase-1c.md`：执行器、状态、Trace、命令行）。开始前：
+阶段 1C 已完成（第 5 条等用户确认）。下一个会话做**阶段 2A**（`docs/prompts/phase-2a.md`：给一段描述，系统判断反应器类型并说明理由）。开始前：
 
-1. **用户要看的**：没有待答复的事项。D16、D17 已按默认；D1（台账 L35）、D18、D19（台账 L36）已完成。
-2. **1C 要调用的 1B 函数**（签名见交接报告）：`load_model_spec(path)`、`load_component_table(path)`、
-   `recipe_for(reactor_type)`（从 `reactor_agent.recipes` 导入，不是 `recipes.base`；`None` 时按 `E_UNSUPPORTED` 处理）、
-   `recipe.rules(spec, table)`、`recipe.compile(spec, table)`、`CheckContext(...)`、`run_common_checks(context)`、`recipe.checks(context)`、
-   `assemble_result(context, checks, provenance)`（`checks` 必须是 V1 至 V7 加 Recipe 的专有检查，漏的按失败记）、
-   `decide_outcome(case_names, records)`、`spec_hash(spec)`。
-3. **计划里没有**连接、新建 Case、求解、读快照、保存：执行器每个工况做“改规定值（`plan.case_steps(case.name)`）→
-   `solver.solve` → `model.read_snapshot` → 检查 → 保存该工况的 `.hsc`”；Basis 和流程图阶段的步骤只执行一次。检查拿的是规格里的工况值，
-   不是计划里的步骤：计划漏了某个工况的步骤，V4 会失败。
-4. **测试复用**：`tests/builders.py` 的 `Scenario` 和 `tests/conftest.py` 的 fixture 给出三个场景的正确快照和
-   计划；用假的 Backend 返回它们就能测执行器的主流程。
-5. **D19 已完成（台账 L36）**：`tests/integration/plan_runner.py` 是按 Recipe 的计划执行的雏形（基础和流程图一次，每个工况改规定值、求解、读快照），
-   `test_validation_real.py` 在真实快照上验证 V1 至 V8，没有误报。1C 的执行器可以照它的主流程写，集成测试可以复用。
-6. **提醒**（来自 1A）：HYSYS 偶发崩溃，恢复策略 R1 要处理 `E_COM_DISCONNECTED`；弹窗文字在失败错误的
-   `details["dialogs"]` 里；`solver.solve` 的 `timeout_s` 不覆盖 COM 调用本身卡死（D16）；创建类工具失败可能留下
-   半成品，下一次 `ensure` 会报 `E_CONFLICT`，由 R2 丢弃整个 Case 重建。
+1. **用户要做、要看的**：①完成标准第 5 条：在 HYSYS 界面里打开一份生成的 `.hsc`，确认反应器、物流、反应都在并且已求解（`runs/20261009-125257-f1/T710.hsc` 和 `T600.hsc`，`runs/` 不入库，
+   丢了就重新生成：`.venv\Scripts
+eactor-agent.exe run --spec evals\golden_specs\smr_equilibrium.yaml`，窗口是可见的，跑完会关掉，所以从文件菜单打开 `.hsc`）；
+   ②D20（集成测试夹具改成文件级，和 `E_NOT_SOLVED` 要不要给一次重建）；③D17（`src/` 4630 行，超过约定的 4500 行触发点，要不要在 2A 之前合并或删减）。
+2. **2A 要读的**：`harness/engine.py`（状态表和处理函数，加一个状态要改哪三处见 1C 设计决定第 1 条）、`state/models.py`、`cli.py`；LLM 的供应商和模型见"环境事实"，连通性见台账 L35，
+   没测过的能力（`json_schema`、流式、关闭思考、限流、超时）由 2A 测。
+3. **要接上的地方**：①`Engine.create_task(spec, spec_file)` 现在要一份已经加载好的规格和它的文件路径，`TaskState.spec_file` 是必填的 `Path`；2B 之后规格来自 LLM，
+   没有文件，要把它改成可空或者记输入文本（计划 §10.2 的 `input`）。②`Engine.run(task, stop_at=…)` 已经有，`--dry-run` 可以用它停在 PREFLIGHT 之前。
+   ③`WorkflowState` 里还没有 SELECT、SPECIFY、VALIDATE；`TaskStatus` 里有 `NEEDS_INPUT`，命令行的退出码表里也有，但没有状态会产生它。
+   ④`ToolExecutor` 的 `on_event` 回调在生产代码里没人用（Trace 由执行器自己发）。
+4. **提醒**：①HYSYS 在同一个实例里建了几十个 Case 之后偶尔出现不求解或不反应的模型（台账 L38），命令行每次运行起新实例所以不受影响，评测批量运行要定期换实例；
+   ②一个状态的处理函数里有多个工具调用时，重试会把前面的调用也重做一遍（工具是幂等的，所以安全，但调用数要算上）；
+   ③在命令行工具里用 heredoc 写 Python 脚本改文件时，双反斜杠会被合并成一个，字符串里的换行转义会变成真正的换行；改含反斜杠的行用编辑工具。
 
 ## 待决策
 
@@ -274,7 +331,8 @@ VERIFY 的致命检查失败（`E_VALIDATION_FATAL`）也是抛 `ReactorAgentErr
 | D19 | **1B 的验证层（V1 至 V8、指标、结局判定）只在手算的快照上试过，没有在真实 HYSYS 快照上试过**（1B 提示词写了不运行 HYSYS）。独立审查指出这是风险最大的一处：空相出料读回的是 0.0 还是 `None`（1A 的集成测试两种都接受，台账 L32 写“0 或 None”，我在 1B 开始时看过的快照是已知的 0.0 但没有记录）、V6 新增的分子量容差 1e-3 和物流内部一致性会不会对重液相里的固体碳误报、V4 读出口温度的方式 | 建议：1C 的第一个任务写一个 `@pytest.mark.hysys` 的测试，用 Recipe 编译三份黄金规格→执行→读真实快照→喂给检查（见“下一步”第 5 条）；或者现在由我写好并运行一次（约 2 分钟，不改 `src/`，只读），这需要你同意，因为 1B 提示词写了不运行 HYSYS | **已解决（用户 2026-10-09：“现在就跑 D19”）**：E16 探针和 10 个集成测试在真实快照上验证，三份规格全部通过 V1 至 V8，结局 complete，没有误报；空相出料读回的是 0.0，温度、压力有值；V6 的分子量容差余量约 20 倍（台账 L36，提交 5524b22） |
 | D10 | GitHub 登录：这台机器原本没有存储的凭据 | 用户登录后，助手补推全部提交 | 已解决（用户 `gh auth login` 登录为 `xibei03`，首次推送 2026-10-08 成功）。可选：用户若想让以后的 `git push` 不再需要一次性助手，自行运行 `gh auth setup-git` |
 | D16 | **1A 里有两处与已确认的 R6、R8 措辞不完全一致的实现**：①R6 说 `solver.solve` 的 `timeout_s` 由看门狗线程实现（超时后按进程号结束）；实现只做了轮询 `IsSolving` 的超时，没有强制结束进程；②R8 说“文字白名单见 H23”；实现对任何对话框都点“确定”，已知文字只用来区分日志级别 | 按实现：①强制结束放进阶段 4 的执行器恢复策略（R1），②保持“都点”（不点会让 COM 调用永远卡住）。如果想改成只点已知文字，改 `dialogs.py` 的 `_handle` 一处即可 | **按默认**，用户若不同意请指出 |
-| D17 | **`src/` 的行数预算**：阶段 1A 结束时 `src/` 有 1971 行代码（`backends` 1280、`spec` 548、`tools` 83、`errors` 60），已经占 `CLAUDE.md` 说的全系统约 3000 行的三分之二。后面还有 `recipes`、`validation`、`state`、`observability`、`llm`、`skill_loader`、`report`、`harness`（上限 600）和 `cli`，粗估总量会到 4000 行以上。1A 的代码都有用处（Backend 要处理 HYSYS 的各种怪癖），没有发现能直接砍掉的部分 | 继续做，不在 1B 之前砍；每个阶段结束报行数，2C 结束时如果超过 4500 行再决定合并或删除哪些。预算数字只是估计，除了 `harness` 的上限没有测试强制 | **已定（用户 2026-10-09：“D17继续做”）**：按建议继续，不砍；每个阶段结束报行数，2C 结束时超过 4500 行再决定 |
+| D17 | **`src/` 的行数预算**：阶段 1A 结束时 `src/` 有 1971 行代码（`backends` 1280、`spec` 548、`tools` 83、`errors` 60），已经占 `CLAUDE.md` 说的全系统约 3000 行的三分之二。后面还有 `recipes`、`validation`、`state`、`observability`、`llm`、`skill_loader`、`report`、`harness`（上限 600）和 `cli`，粗估总量会到 4000 行以上。1A 的代码都有用处（Backend 要处理 HYSYS 的各种怪癖），没有发现能直接砍掉的部分 | 继续做，不在 1B 之前砍；每个阶段结束报行数，2C 结束时如果超过 4500 行再决定合并或删除哪些。预算数字只是估计，除了 `harness` 的上限没有测试强制 | **已定（用户 2026-10-09：“D17继续做”）**：按建议继续，不砍；每个阶段结束报行数，2C 结束时超过 4500 行再决定。**1C 结束时 4630 行**（`backends` 1280、`spec` 1199、`recipes` 588、`validation` 558、`harness` 352、`state` 204、`observability` 193、`cli` 113、`tools` 83、`errors` 60），已经超过 4500 行触发点，但 2A 至 2C 还要加 `llm`、`skill_loader`、`report` 和执行器的几个状态。1C 自己的新增（state、observability、harness、cli）共 862 行，没有发现能直接砍的；计划 §22.1 的参考值（Backend 约 500、规格层约 700、Recipe 约 300、验证层约 300）早在 1A、1B 就超了一倍。需要用户决定：继续，还是在 2A 之前花时间合并 spec/ 和 validation/ 里的小模块 |
+| D20 | **旧的集成测试在长会话里间歇性失败**（台账 L38）：整个测试会话共用一个 HYSYS 实例时，全量集成测试（53 个测试、约 60 个 Case）11 次运行里 7 次出现 2 至 3 个失败——新建的模型不求解（`E_NOT_SOLVED`）或转化反应器不反应，结构全部正确，把求解器关掉再放开也不解。根因没有查明，排除了 CPU、并发、内存、句柄、GDI、时间、单纯的 Case 数量。**我的做法（已做）**：把集成测试的 `backend`、`executor` 夹具从会话级改成文件级，每个测试文件一个新的 HYSYS 实例（多花约 45 秒），之后全量运行连续通过；与 1C 提示词“整个测试会话共用一个 HYSYS 连接”不同。**建议**：①保持文件级；②给 `E_NOT_SOLVED` 一次重建的机会（现在按提示词的策略表直接中止；重建只要几秒，能吃掉这类偶发的“不求解”，代价是真正欠规定的模型多重建一次才中止），改 `harness/recovery.py` 的策略表一行加一个测试 | ①已做；②等用户决定 |
 
 ## 决策日志
 
@@ -316,6 +374,9 @@ VERIFY 的致命检查失败（`E_VALIDATION_FATAL`）也是抛 `ReactorAgentErr
 | 2026-10-09 | 用户要求“继续完成 1B 收尾”后，没有擅自在真实 HYSYS 上验证验证层，登记 D19 等用户决定；用户答复“现在就跑 D19”后，在 1B 里运行了 HYSYS（E16） | 1B 提示词写明“不运行 HYSYS”，这是用户的明确范围规定，所以先问；得到同意后才运行，结果见台账 L36 |
 | 2026-10-09 | D18 按用户的答复修改：隔离测试看对 `GetValue`/`SetValue`/`GetValues`/`SetValues` 的调用，而不是逐个比字符串常量 | 用户答复“D18修改”；看调用比看字符串更准，不会把碳的分子式当成摄氏度，也不需要例外 |
 | 2026-10-09 | 子代理审查和收尾体检放在三块都提交之后 | `CLAUDE.md`：每个阶段结束前做；审查对象是 `git diff` 的整体 |
+| 2026-10-09 | 1C 的执行器：处理函数返回下一个状态或终态；失败统一抛 `ReactorAgentError`，`step()` 里唯一的 `except` 交给 `_recover` 查表；重试 = 留在当前状态从游标处继续；重试计数按位置算 | 三种恢复动作走同一条路，处理函数里没有 `try/except` 和计数；游标本来就要保存，续跑（阶段 4）几乎免费 |
+| 2026-10-09 | 子代理的审查报告当作数据，逐条对照代码核实后再改；没有采纳的写明理由（1C 设计决定第 11 条） | `CLAUDE.md`：审查的发现逐条处理；报告里的断言（比如“覆盖上一个工况的文件”）自己读代码和写测试确认过，不是照做 |
+| 2026-10-09 | 旧集成测试间歇性失败：先查原因（花了约 1 小时 20 分），查不出来就用文件级夹具规避，并登记 D20，不改旧测试的内容、不放宽容差 | 失败的是 HYSYS 的偶发行为，不是断言太严；放宽容差或重试测试会掩盖它 |
 
 ## 问题与解决
 
@@ -358,6 +419,11 @@ VERIFY 的致命检查失败（`E_VALIDATION_FATAL`）也是抛 `ReactorAgentErr
 | 2026-10-09 | 独立审查（子代理）报告：V4、V2、专有检查的期望取自计划，`decide_outcome` 不核对检查是否齐全，空相出料的约定没有用真实快照验证 | 逐条对照代码，用临时脚本复现（工况 800 °C 而计划和快照 710 °C，V4 通过；`checks=()` 的结果判 COMPLETE；`decide_outcome([], [])` 判 COMPLETE） | 复现属实的都修复了（提交 bcbae41、66e9b57）；空相约定先登记 D19，用户同意后在真实快照上验证，没有误报（台账 L36）。审查提的另一类问题——不确定的两条（空相约定、固体的 Gibbs 自由能平衡常数）里，后一条按台账 L25 的证据加了规则，但只在 Gibbs 反应器上验证过 |
 | 2026-10-09 | 验证层只在手算的快照上试过，不知道真实 HYSYS 快照会不会误报（D19） | 用户同意后写 `spikes/e16_validation_real_snapshots.py`，用生产的 Backend 和 `ToolExecutor` 执行 Recipe 的计划，把真实快照喂给 V1 至 V8；运行 1 次 | 一次通过，没有需要改验证层的地方：空相出料读回 0.0，V6 的分子量偏差最大 5.1e-05（容差 1e-3），V7 最大相对误差 2.1e-05。没有踩到任何坑，说明 1A 的 Backend、1B 的 Recipe 和验证层之间的约定是一致的。台账 L36 |
 | 2026-10-09 | D1 的连通性测试要用户在自己的终端里输入密钥（助手的进程读不到环境变量） | 探针加 `--ask-key`（`getpass` 不回显，没有控制台时不等待，密钥只留在进程内存里）；助手在每个提交点看输出文件的修改时间，等用户运行 | 已解决：用户 2026-10-09 10:08 运行，三个模型都返回 200，`json_object` 和 `tools` 通过（台账 L35）；旧的无密钥输出不提交，提交的是这次的输出 |
+| 2026-10-09 | 用户的交接说明与仓库现状不符（1C 开始时）：说“progress.md 写明下一步是 phase-0a.md、没有 Git 仓库和台账”，同一条消息最后又说“目前进行到 1C（未做）” | 核对 `git log`（0A 至 1B 的 60 多个提交都在）、`git remote`（`origin` 已配置、与用户给的地址一致）、进度文件和台账 | 以进度文件和仓库为准，做 1C，不重做 0A；记在“当前状态”里 |
+| 2026-10-09 | 执行器测试里平衡反应器的场景失败（V4：出口温度应为 600 °C，实测 710 °C） | 规格有两个工况，桩只给了第一个工况的快照；检查正确地发现读到的状态和规格不符 | 测试的问题，不是执行器的：桩按“第 n 次求解之后读第 n 份快照”，场景给出每个工况各一份 |
+| 2026-10-09 | 全量集成测试间歇性失败（旧的 1A、1B 测试，执行器自己的测试从不失败） | 逐项排除 CPU 满载、并发 pytest、内存句柄 GDI、单纯的 Case 数量、时间、重新打开 `.hsc` 的步骤、契约测试的类别；失败时转储 HYSYS 的状态，结构全对但反应器没有算；写了会话草稿里的转储和统计插件（没有提交）| 根因没有查明；每个测试文件一个新的 HYSYS 实例之后连续通过。台账 L38，D20 |
+| 2026-10-09 | 独立审查发现：中止时 `case.save()` 不带路径是原地保存，会用失败工况的状态覆盖上一个已验证工况的 `.hsc`（`FailureReport.case_path` 还把这个被覆盖的文件标成“供检查”） | 读 `cases.save_case` 确认 `SaveAs` 之后 `FullName` 变成新路径、不带路径的保存写回当前路径；原来的测试只断言最后一个调用是 `case.save`，不看入参 | 另存到 `work/failed.hsc`；单元测试断言保存的路径，真实 HYSYS 上的测试重新打开两个文件核对温度（710 和 600） |
+| 2026-10-09 | 用命令行工具的 heredoc 写 Python 脚本改文件，字符串里的双反斜杠被合并成一个，换行转义变成了真正的换行：把 `observability/render.py` 里的一个字符串字面量弄断（语法错误），后来又弄坏进度文件里的一行 | 读字节确认文件里是真换行；用正则和按偏移替换重写，因为同一个原因没有生效；用编辑工具一次修好 | 改含反斜杠的行一律用编辑工具；ruff 和 mypy 立刻就能发现这类语法错误，没有进入提交 |
 
 ## 与计划的偏差
 
@@ -389,3 +455,13 @@ VERIFY 的致命检查失败（`E_VALIDATION_FATAL`）也是抛 `ReactorAgentErr
 | 2026-10-09 | §7.5 完成判定 | `decide_outcome` 另外要求每个结果含 V1 至 V8、结果属于这个工况、至少有一个工况 | 否则执行器漏跑一项检查任务也“完成”；独立审查指出 |
 | 2026-10-09 | 1B 提示词：指标请求的名字没有规定 | 收率的名字带基准，如“CO 收率（以 Carbon 计）” | 同一产物、不同基准的两个收率不会重名 |
 | 2026-10-09 | 1B 提示词：“本阶段不做：不运行 HYSYS” | 用户 2026-10-09 答复“现在就跑 D19”之后运行了 HYSYS：E16 探针和 10 个集成测试，并重跑了 1A 的 39 个集成测试 | 验证层只在手算的快照上试过是独立审查指出的最大风险；先问了用户，得到同意后才运行 |
+| 2026-10-09 | §10.2 TaskState：`run_id`、`selection`、`task_spec`、`plan`（含步骤列表）、`hysys.resources`、`budget`、`validation` | 只有 1C 有来源的字段：任务标识、规格文件、规格哈希、工况名、状态、终态、已完成步骤的记录、游标、会话（版本、进程号、当前 Case 文件）、工况序号、重试和重建计数、各工况摘要、错误记录；完整的规格、计划、结果在 `artifacts/` | 提示词：状态文件只存摘要，续跑和 LLM 产物的字段用到时再加 |
+| 2026-10-09 | §14.1 事件：`run_id`、`skill` | 去掉；加 `case`（SOLVE/VERIFY 里的工况名，时间线用它写成 `SOLVE[T710]`） | 提示词：去掉现在没有来源的；时间线要按工况分组 |
+| 2026-10-09 | §7.3 RECOVER 是一个状态；提示词：“工具调用事件通过 1A 在 ToolExecutor 上留的回调接入” | RECOVER 是 `_recover` 一次函数调用加两个 Trace 事件（错误、恢复决定）；工具调用事件由执行器自己发，不用回调 | 见设计决定第 5 条 |
+| 2026-10-09 | 提示词：REPORT“写 result.json”，VERIFY“组装这个工况的结果” | `result.json` 在每个工况验证后增量写，REPORT 只补终态 | 工况的结果要在 VERIFY 和 REPORT 之间保存下来，状态文件不存完整结果；中止时也要留下已有的结果 |
+| 2026-10-09 | 提示词：1C 的 `--spec` 读 YAML 或 `artifacts/model_spec.json` | 一致；`load_model_spec` 按扩展名读 JSON 或 YAML，已用测试和 E17 的重跑验证 | — |
+| 2026-10-09 | 1C 提示词：每一步的执行记录有“状态” | `StepRecord` 没有状态字段，只记做完了的步骤 | 状态永远是“完成”，没有信息；失败的那一步（工具名和入参）记在错误记录里 |
+| 2026-10-09 | 1C 提示词：没有 Recipe 直接进入 `UNSUPPORTED`，不经过策略表；规则不通过以 `E_RULE` 中止 | 没有 Recipe 也抛 `E_UNSUPPORTED` 由 `_recover` 处理（不在表里，结果相同）；规则里只要有一条是 `E_UNSUPPORTED` 就是 `UNSUPPORTED`，Backend 抛 `E_UNSUPPORTED` 也是；退出码 3 | 计划 §7.3“PLAN --unsupported--> UNSUPPORTED”；原来 Recipe 里的“不支持”被压成 `E_RULE`，终态是 `FAILED`（独立审查指出） |
+| 2026-10-09 | 1C 提示词的运行目录：`*.hsc` 每个工况求解后的 Case | 多了 `work/`：建模用的 `working-<n>.hsc` 和中止时的 `failed.hsc` | 不和工况名撞名；中止时原地保存会覆盖已验证工况的文件 |
+| 2026-10-09 | 1C 提示词：整个测试会话共用一个 HYSYS 连接，不要每个测试启动一次 | 每个测试文件一个实例 | 长会话里偶发不求解或不反应的模型（台账 L38），D20 |
+| 2026-10-09 | 1C 提示词：不在计划里的调用（连接、求解、读快照、保存）也是执行器的步骤 | 这些调用只在 Trace 里，状态文件的步骤记录只有计划里的步骤 | 计划里没有它们；它们不影响游标 |
