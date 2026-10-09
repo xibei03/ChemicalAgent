@@ -12,12 +12,15 @@
 
 只用标准库的 urllib，不引入 openai 之类的新依赖（CLAUDE.md 不变量 7）。
 
-用法：python spikes/e0_llm_connectivity.py [--tag 名字] [--capabilities]
+用法：python spikes/e0_llm_connectivity.py [--tag 名字] [--capabilities] [--ask-key]
+  --ask-key：环境变量里没有密钥时，在终端里提示输入（不回显，只留在这个进程的内存里，
+             不写文件、不进日志）。系统本身只从环境变量读密钥，这个选项只给探针用。
 可选环境变量：DASHSCOPE_BASE_URL（覆盖默认的国内站地址）
 输出：spikes/out/e0_llm_connectivity_<tag>.txt
 """
 
 import argparse
+import getpass
 import json
 import os
 import time
@@ -38,6 +41,18 @@ MODELS = (("主模型", "qwen3.8-max"), ("快速模型", "qwen3.8-flash"), ("备
 TIMEOUT_S = 90.0
 ERROR_TEXT_LIMIT = 600
 PING = [{"role": "user", "content": "请只回复两个字母：OK"}]
+
+
+def ask_for_key() -> str:
+    """环境变量里没有密钥时在终端里提示输入；不回显。没有可交互的终端时返回空串，不等待。"""
+    try:
+        os.get_terminal_size()  # Windows 上 NUL 的 isatty() 也是真，这个调用只在真控制台上成功
+    except OSError:
+        return ""
+    try:
+        return getpass.getpass(f"请输入 {API_KEY_VARIABLE}（输入时不显示）：").strip()
+    except (EOFError, KeyboardInterrupt):
+        return ""
 
 
 def scrub(text: str, api_key: str) -> str:
@@ -161,14 +176,18 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--tag", default="run1")
     parser.add_argument("--capabilities", action="store_true")
+    parser.add_argument("--ask-key", action="store_true")
     args = parser.parse_args()
     log = Log(f"e0_llm_connectivity_{args.tag}")
     api_key = os.environ.get(API_KEY_VARIABLE, "")
-    log.say("== Q1 环境变量 ==")
+    source = "环境变量"
+    if not api_key and args.ask_key:
+        api_key, source = ask_for_key(), "终端输入"
+    log.say("== Q1 密钥 ==")
     if not api_key:
         log.say(f"  {API_KEY_VARIABLE} 未设置：这个进程的环境里没有密钥，没有发出任何请求")
         return 2
-    log.say(f"  {API_KEY_VARIABLE} 已设置，长度 {len(api_key)}（不打印内容）")
+    log.say(f"  {API_KEY_VARIABLE} 来自{source}，长度 {len(api_key)}（不打印内容）")
     base_url = find_working_base_url(log, api_key)
     if base_url is None:
         log.say("== E0 未通过：国内站和国际站都没有返回 200 ==")
