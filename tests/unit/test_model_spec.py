@@ -151,6 +151,12 @@ class TestCasesAgainstTheHeatMode:
         data["cases"][1]["name"] = data["cases"][0]["name"]
         rejected(data, "工况名")
 
+    def test_case_names_that_differ_only_in_case_are_duplicates_because_windows_files_are(self):
+        data = changed("smr_equilibrium")
+        data["cases"][0]["name"] = "T710"
+        data["cases"][1]["name"] = "t710"
+        rejected(data, "工况名")
+
     def test_outlet_temperature_mode_needs_a_temperature_in_every_case(self):
         data = changed("smr_equilibrium")
         del data["cases"][1]["outlet_temperature_c"]

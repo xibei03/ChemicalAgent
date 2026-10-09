@@ -214,6 +214,12 @@ class TestEnvelopeInvariants:
         with pytest.raises(ValidationError, match="错误码"):
             ToolError(code=ErrorCode.IO, message="x", retryable=False)
 
+    def test_data_as_gives_the_data_of_the_expected_type_and_refuses_another(self):
+        result = ToolResult.success(Outcome(ResultStatus.CREATED, ANSWERS["connect"]))
+        assert result.data_as(ConnectData).process_id == 4242
+        with pytest.raises(TypeError, match="CaseData"):
+            result.data_as(CaseData)
+
     def test_failure_envelope_serializes_the_retryable_flag(self):
         result = ToolResult.failure(ErrorCode.TIMEOUT, "超时", {"a": "b"})
         error = result.model_dump(mode="json")["error"]

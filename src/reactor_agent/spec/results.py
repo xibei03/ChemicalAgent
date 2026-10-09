@@ -64,6 +64,14 @@ def make_issue(
     return Issue(code=code, field_path=field_path, message=message, user_fixable=user_fixable)
 
 
+def issue_details(issues: Sequence[Issue]) -> dict[str, str]:
+    """问题清单变成 {字段路径: 说明}。同一个字段上的几条说明合在一起，不互相覆盖。"""
+    grouped: dict[str, list[str]] = {}
+    for issue in issues:
+        grouped.setdefault(issue.field_path, []).append(issue.message)
+    return {path: "；".join(messages) for path, messages in grouped.items()}
+
+
 class CheckResult(FrozenModel):
     """一项结果检查的结论。期望值和实测值是代码格式化好的文字，不同的检查单位各不相同。"""
 

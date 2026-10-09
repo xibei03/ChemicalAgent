@@ -12,6 +12,7 @@ from reactor_agent.spec.enums import EventType, MetricUnit
 from reactor_agent.spec.results import FailureReport, NormalizedResult, RunResult, StreamResult
 
 LABEL_WIDTH = 18
+LABEL_GAP = 2
 INDENT = "  "
 SESSION_CODES = frozenset({ErrorCode.COM_UNAVAILABLE, ErrorCode.COM_DISCONNECTED})
 DETAIL_HEADINGS: Mapping[ErrorCode, str] = {
@@ -25,7 +26,8 @@ SHOWN_FRACTION = 1e-4
 
 
 def _group_label(event: TraceEvent) -> str:
-    return event.state if event.case is None else f"{event.state}[{event.case}]"
+    state = event.state.value
+    return state if event.case is None else f"{state}[{event.case}]"
 
 
 def _code_of(event: TraceEvent) -> str:
@@ -49,11 +51,12 @@ def _event_text(event: TraceEvent) -> str | None:
 
 
 def _validation_text(event: TraceEvent) -> str:
-    verdict = event.output if isinstance(event.output, dict) else {}
-    failed = [check for check, passed in verdict.items() if passed is not True]
+    if not event.verdict:
+        return "（没有检查结果）"
+    failed = [check.value for check, passed in event.verdict.items() if not passed]
     if failed:
         return f"检查未通过：{', '.join(failed)}"
-    return f"检查 {len(verdict)} 项全部通过"
+    return f"检查 {len(event.verdict)} 项全部通过"
 
 
 def _merged(texts: Sequence[str]) -> str:
@@ -69,10 +72,12 @@ def render_timeline(events: Sequence[TraceEvent]) -> str:
     """任务的时间线：每个状态一行，同一个状态里连续调用同一个工具合并成一行。"""
     if not events:
         return "（没有事件）"
+    groups = [(label, list(group)) for label, group in groupby(events, key=_group_label)]
+    width = max(LABEL_WIDTH, max(len(label) for label, _ in groups) + LABEL_GAP)
     lines = [f"Task {events[0].task_id}   规格哈希 {events[0].spec_hash[:12]}"]
-    for label, group in groupby(events, key=_group_label):
+    for label, group in groups:
         texts = [text for text in map(_event_text, group) if text is not None]
-        lines.append(f"{INDENT}{label:<{LABEL_WIDTH}}{_merged(texts)}".rstrip())
+        lines.append(f"{INDENT}{label:<{width}}{_merged(texts)}".rstrip())
     return "\n".join(lines)
 
 

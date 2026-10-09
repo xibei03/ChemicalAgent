@@ -2,8 +2,16 @@
 
 import pytest
 
+from reactor_agent.errors import ErrorCode
 from reactor_agent.spec.enums import CheckId, CheckSeverity
-from reactor_agent.spec.results import CHECK_TITLES, MAX_PROBLEMS_SHOWN, check_result, describe
+from reactor_agent.spec.results import (
+    CHECK_TITLES,
+    MAX_PROBLEMS_SHOWN,
+    check_result,
+    describe,
+    issue_details,
+    make_issue,
+)
 
 
 class TestDescribe:
@@ -14,6 +22,26 @@ class TestDescribe:
         assert describe(1234.56789) == "1234.57"
         assert describe(0.000123456789) == "0.000123457"
         assert describe(0.0) == "0"
+
+
+class TestIssueDetails:
+    def test_issues_about_different_fields_are_listed_by_field(self):
+        issues = [
+            make_issue(ErrorCode.RULE, "feeds", "a"),
+            make_issue(ErrorCode.RULE, "cases", "b"),
+        ]
+        assert issue_details(issues) == {"feeds": "a", "cases": "b"}
+
+    def test_several_issues_about_one_field_are_joined_not_overwritten(self):
+        issues = [
+            make_issue(ErrorCode.RULE, "components", "缺 CO"),
+            make_issue(ErrorCode.RULE, "feeds", "没有水"),
+            make_issue(ErrorCode.RULE, "components", "缺氢气"),
+        ]
+        assert issue_details(issues) == {"components": "缺 CO；缺氢气", "feeds": "没有水"}
+
+    def test_no_issues_give_no_details(self):
+        assert issue_details([]) == {}
 
 
 class TestCheckResult:

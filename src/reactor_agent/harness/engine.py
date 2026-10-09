@@ -5,7 +5,7 @@
 由 step() 交给 _recover 按错误码决定重试、重建还是中止。
 
 重试就是留在当前状态：处理函数每次从游标处继续，所以重做的正好是失败的那一步。
-终态只由 decide_outcome 给出，这里没有任何直接写入“完成”的路径。
+终态只由 decide_outcome 和 _recover 给出，这里没有任何直接写入“完成”的路径。
 """
 
 import time
@@ -13,18 +13,20 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import TypeVar
 
-from pydantic import BaseModel, JsonValue
+from pydantic import BaseModel
 
 from reactor_agent.errors import ErrorCode, ReactorAgentError
 from reactor_agent.harness.budgets import SOLVE_TIMEOUT_S
+from reactor_agent.harness.failures import ToolStepError, rule_error
 from reactor_agent.harness.recovery import decide
+from reactor_agent.harness.results import read_records, with_record, write_result
 from reactor_agent.observability.trace import EventBody, TraceWriter
 from reactor_agent.recipes.base import ReactorRecipe
 from reactor_agent.spec.components import ComponentTable
 from reactor_agent.spec.enums import (
     CaseMode,
+    Checkpoint,
     CheckSeverity,
     EventType,
     ReactorType,
@@ -39,9 +41,9 @@ from reactor_agent.spec.plan import BuildPlan
 from reactor_agent.spec.results import (
     CaseRecord,
     CheckContext,
+    CheckResult,
     NormalizedResult,
     Provenance,
-    RunResult,
 )
 from reactor_agent.spec.snapshot import ModelSnapshot
 from reactor_agent.spec.tool_args import (
@@ -52,16 +54,16 @@ from reactor_agent.spec.tool_args import (
     SaveCaseArgs,
     SolveArgs,
 )
-from reactor_agent.spec.tool_results import CaseData, ConnectData, SaveData, ToolError, ToolResult
+from reactor_agent.spec.tool_results import CaseData, ConnectData, SaveData, ToolResult
 from reactor_agent.state.models import CaseSummary, TaskError, TaskState
-from reactor_agent.state.store import ArtifactName, StateStore, new_task_id
+from reactor_agent.state.store import ArtifactName, StateStore
 from reactor_agent.tools.registry import ToolExecutor
 from reactor_agent.validation.checks import run_common_checks
 from reactor_agent.validation.normalized import assemble_result, decide_outcome
 
-DataT = TypeVar("DataT", bound=BaseModel)
 Handler = Callable[[TaskState], WorkflowState | TaskStatus]
-MAX_ARGUMENTS_CHARS = 400
+# 中止时留下的现场。另存到专用的文件：原地保存会覆盖上一个工况已经验证过的 .hsc。
+FAILED_CASE_FILE = "failed.hsc"
 
 
 @dataclass(frozen=True)
@@ -73,22 +75,6 @@ class Dependencies:
     trace: TraceWriter
     recipes: Mapping[ReactorType, ReactorRecipe]
     components: ComponentTable
-
-
-class ToolStepError(ReactorAgentError):
-    """一次工具调用失败。比领域错误多带工具名和入参，诊断要用。"""
-
-    def __init__(self, tool: ToolName, args: BaseModel, error: ToolError) -> None:
-        super().__init__(error.code, error.message, error.details)
-        self.tool = tool.value
-        self.arguments = args.model_dump_json()[:MAX_ARGUMENTS_CHARS]
-
-
-def _data(result: ToolResult, expected: type[DataT]) -> DataT:
-    """成功的信封里这个工具自己的数据。类型不对是程序缺陷。"""
-    if not isinstance(result.data, expected):
-        raise TypeError(f"工具返回的数据应当是 {expected.__name__}，实际是 {result.data!r}")
-    return result.data
 
 
 class Engine:
@@ -115,17 +101,17 @@ class Engine:
 
     def create_task(self, spec: ModelSpec, spec_file: Path) -> TaskState:
         """生成任务标识，建运行目录，冻结规格，写下第一份状态。"""
+        task_id = self._store.new_run(datetime.now().astimezone())
         task = TaskState(
-            task_id=new_task_id(datetime.now().astimezone()),
+            task_id=task_id,
             spec_file=spec_file,
             spec_hash=spec_hash(spec),
             case_names=tuple(case.name for case in spec.cases),
         )
-        self._store.create_run_dir(task.task_id)
-        self._store.write_artifact(task.task_id, ArtifactName.MODEL_SPEC, spec)
-        self._write_result(task, ())
+        self._store.write_artifact(task_id, ArtifactName.MODEL_SPEC, spec)
+        write_result(self._store, task_id, None, ())
         self._store.save(task)
-        self._emit(task, EventBody(type=EventType.CHECKPOINT, name="spec_frozen"))
+        self._emit(task, EventBody(type=EventType.CHECKPOINT, name=Checkpoint.SPEC_FROZEN.value))
         return task
 
     def step(self, task: TaskState) -> None:
@@ -137,11 +123,10 @@ class Engine:
         self._move(task, target)
         self._store.save(task)
 
-    def run(self, task: TaskState, stop_at: WorkflowState | None = None) -> TaskState:
+    def run(self, task: TaskState, stop_at: WorkflowState | None = None) -> None:
         """反复推进，直到终态，或者到达 stop_at（到达时还没有执行那个状态）。"""
         while task.status is None and task.current_state is not stop_at:
             self.step(task)
-        return task
 
     # ---- 状态的处理函数：返回下一个状态，或者终态 ----
 
@@ -150,30 +135,26 @@ class Engine:
             raise ReactorAgentError(ErrorCode.SCHEMA, "运行目录里冻结的规格与记录的哈希不一致")
         return WorkflowState.PLAN
 
-    def _plan(self, task: TaskState) -> WorkflowState | TaskStatus:
+    def _plan(self, task: TaskState) -> WorkflowState:
         spec = self._spec(task)
         recipe = self._recipes.get(spec.reactor_type)
         if recipe is None:
-            unsupported = ReactorAgentError(
-                ErrorCode.UNSUPPORTED, f"还不支持 {spec.reactor_type.value} 反应器"
-            )
-            self._record_error(task, unsupported, RecoveryAction.ABORT)
-            return TaskStatus.UNSUPPORTED
+            message = f"还不支持 {spec.reactor_type.value} 反应器"
+            raise ReactorAgentError(ErrorCode.UNSUPPORTED, message)
         issues = recipe.rules(spec, self._components)
         if issues:
-            details = {issue.field_path: issue.message for issue in issues}
-            raise ReactorAgentError(ErrorCode.RULE, f"规格有 {len(issues)} 处不合规", details)
+            raise rule_error(issues)
         plan = recipe.compile(spec, self._components)
         self._store.write_artifact(task.task_id, ArtifactName.PLAN, plan)
-        self._emit(task, EventBody(type=EventType.CHECKPOINT, name="plan_saved"))
+        self._emit(task, EventBody(type=EventType.CHECKPOINT, name=Checkpoint.PLAN_SAVED.value))
         return WorkflowState.PREFLIGHT
 
     def _preflight(self, task: TaskState) -> WorkflowState:
-        connected = _data(self._call(task, ToolName.SESSION_CONNECT, ConnectArgs()), ConnectData)
+        connected = self._call(task, ToolName.SESSION_CONNECT, ConnectArgs()).data_as(ConnectData)
         task.set_session(connected.version, connected.process_id)
-        working_file = self._store.run_dir(task.task_id) / f"working-{task.rebuilds + 1}.hsc"
+        working_file = self._store.work_dir(task.task_id) / f"working-{task.rebuilds + 1}.hsc"
         args = EnsureCaseArgs(path=working_file, mode=CaseMode.NEW)
-        task.set_case_file(_data(self._call(task, ToolName.CASE_ENSURE, args), CaseData).path)
+        task.set_case_file(self._call(task, ToolName.CASE_ENSURE, args).data_as(CaseData).path)
         return WorkflowState.BUILD_BASIS
 
     def _build_basis(self, task: TaskState) -> WorkflowState:
@@ -193,13 +174,11 @@ class Engine:
         spec = self._spec(task)
         case = spec.cases[task.case_index]
         read = self._call(task, ToolName.MODEL_READ_SNAPSHOT, ReadSnapshotArgs())
-        snapshot = _data(read, ModelSnapshot)
+        snapshot = read.data_as(ModelSnapshot)
         case_file = self._store.run_dir(task.task_id) / f"{case.name}.hsc"
-        saved = _data(self._call(task, ToolName.CASE_SAVE, SaveCaseArgs(path=case_file)), SaveData)
+        saved = self._call(task, ToolName.CASE_SAVE, SaveCaseArgs(path=case_file)).data_as(SaveData)
         task.set_case_file(saved.path)
-        result = self._assess(task, spec, case, snapshot, saved.path)
-        self._record_case(task, result)
-        fatal = result.failed(CheckSeverity.FATAL)
+        fatal = self._record_case(task, self._assess(task, spec, case, snapshot, saved.path))
         if fatal:
             details = {check.check_id.value: check.message for check in fatal}
             message = f"{case.name}：{len(fatal)} 项致命检查未通过"
@@ -235,27 +214,28 @@ class Engine:
         return assemble_result(context, checks, provenance)
 
     def _report(self, task: TaskState) -> TaskStatus:
-        cases = self._store.read_artifact(task.task_id, ArtifactName.RESULT, RunResult).cases
-        return decide_outcome(task.case_names, cases)
+        return decide_outcome(task.case_names, read_records(self._store, task.task_id))
 
     # ---- 调用工具的唯一入口 ----
 
     def _call(self, task: TaskState, tool: ToolName, args: BaseModel) -> ToolResult:
         """调用工具并记 Trace。失败时抛 ToolStepError，由 step() 交给 _recover。"""
-        result = self._try_call(task, tool, args)
+        result = self._try_call(task, tool, args, attempt=task.retries_here() + 1)
         if result.error is not None:
             raise ToolStepError(tool, args, result.error)
         return result
 
-    def _try_call(self, task: TaskState, tool: ToolName, args: BaseModel) -> ToolResult:
-        """调用工具并记 Trace，失败了也只是返回。收尾动作（关 Case、存 Case）用它。"""
+    def _try_call(
+        self, task: TaskState, tool: ToolName, args: BaseModel, attempt: int | None
+    ) -> ToolResult:
+        """调用工具并记 Trace，失败了也只是返回。收尾动作（关 Case、存现场）用它，没有“第几次”。"""
         started = time.monotonic()
         result = self._tools.call(tool, args)
         failure = result.error
         body = EventBody(
             type=EventType.TOOL_CALL,
             name=tool.value,
-            attempt=task.retries_here() + 1,
+            attempt=attempt,
             input=args.model_dump(mode="json"),
             output={"ok": result.ok, "status": result.status},
             duration_ms=round((time.monotonic() - started) * 1000),
@@ -284,15 +264,24 @@ class Engine:
         if action is RecoveryAction.REBUILD:
             self._rebuild(task)
             return WorkflowState.PREFLIGHT
-        if task.session is not None and task.session.case_file is not None:
-            self._try_call(task, ToolName.CASE_SAVE, SaveCaseArgs())  # 留下现场，存不了就算了
-        return TaskStatus.FAILED
+        self._preserve_case(task)
+        unsupported = error.code is ErrorCode.UNSUPPORTED
+        return TaskStatus.UNSUPPORTED if unsupported else TaskStatus.FAILED
 
     def _rebuild(self, task: TaskState) -> None:
         """丢弃当前的 Case，计划从头来。关闭失败不拦着：PREFLIGHT 会面对会话的真实状态。"""
-        self._try_call(task, ToolName.CASE_CLOSE, CloseCaseArgs(save=False))
+        self._try_call(task, ToolName.CASE_CLOSE, CloseCaseArgs(save=False), attempt=None)
         task.reset_for_rebuild()
-        self._write_result(task, ())
+        write_result(self._store, task.task_id, None, ())
+
+    def _preserve_case(self, task: TaskState) -> None:
+        """中止时把现场另存到 work/ 下供检查。存不了就算了，不让它盖住原来的错误。"""
+        if task.session is None or task.session.case_file is None:
+            return  # 还没有碰过 HYSYS 里的 Case
+        path = self._store.work_dir(task.task_id) / FAILED_CASE_FILE
+        result = self._try_call(task, ToolName.CASE_SAVE, SaveCaseArgs(path=path), attempt=None)
+        if result.ok:
+            task.set_case_file(result.data_as(SaveData).path)
 
     # ---- 状态迁移、产物和 Trace ----
 
@@ -304,13 +293,8 @@ class Engine:
             self._emit(task, EventBody(type=EventType.STATE_TRANSITION, name=target.value))
 
     def _finish(self, task: TaskState, status: TaskStatus) -> None:
-        records = self._store.read_artifact(task.task_id, ArtifactName.RESULT, RunResult).cases
-        self._store.write_artifact(
-            task.task_id,
-            ArtifactName.RESULT,
-            RunResult(task_id=task.task_id, status=status, cases=records),
-        )
-        self._emit(task, EventBody(type=EventType.CHECKPOINT, name="result_saved"))
+        write_result(self._store, task.task_id, status, read_records(self._store, task.task_id))
+        self._emit(task, EventBody(type=EventType.CHECKPOINT, name=Checkpoint.RESULT_SAVED.value))
         task.finish(status)
         self._emit(task, EventBody(type=EventType.STATE_TRANSITION, name=status.value))
 
@@ -333,7 +317,8 @@ class Engine:
         self._emit(task, EventBody(type=EventType.ERROR, name=error.code.value, error=failure))
         self._emit(task, EventBody(type=EventType.RECOVERY, name=action.value, error=failure))
 
-    def _record_case(self, task: TaskState, result: NormalizedResult) -> None:
+    def _record_case(self, task: TaskState, result: NormalizedResult) -> tuple[CheckResult, ...]:
+        """记下一个工况的验证结果，返回没有通过的致命检查。"""
         fatal = result.failed(CheckSeverity.FATAL)
         warnings = result.failed(CheckSeverity.WARNING)
         task.record_case(
@@ -344,22 +329,18 @@ class Engine:
                 case_file=result.provenance.case_path,
             )
         )
-        records = self._store.read_artifact(task.task_id, ArtifactName.RESULT, RunResult).cases
         record = CaseRecord(case_name=result.case_name, result=result, case_file_saved=True)
-        kept = tuple(r for r in records if r.case_name != result.case_name)
-        self._write_result(task, (*kept, record))
-        verdict: dict[str, JsonValue] = {c.check_id.value: c.passed for c in result.checks}
+        records = with_record(read_records(self._store, task.task_id), record)
+        write_result(self._store, task.task_id, None, records)
+        verdict = {check.check_id: check.passed for check in result.checks}
         self._emit(
-            task, EventBody(type=EventType.VALIDATION, name=result.case_name, output=verdict)
+            task, EventBody(type=EventType.VALIDATION, name=result.case_name, verdict=verdict)
         )
-        self._emit(task, EventBody(type=EventType.CHECKPOINT, name="case_saved"))
-
-    def _write_result(self, task: TaskState, cases: tuple[CaseRecord, ...]) -> None:
-        run = RunResult(task_id=task.task_id, status=None, cases=cases)
-        self._store.write_artifact(task.task_id, ArtifactName.RESULT, run)
+        self._emit(task, EventBody(type=EventType.CHECKPOINT, name=Checkpoint.CASE_SAVED.value))
+        return fatal
 
     def _emit(self, task: TaskState, body: EventBody) -> None:
-        state = task.status.value if task.status else task.current_state.value
+        state = task.current_state if task.status is None else task.status
         self._trace.append(task.task_id, task.spec_hash, state, task.current_case_name, body)
 
     def _spec(self, task: TaskState) -> ModelSpec:

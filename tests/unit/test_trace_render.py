@@ -52,9 +52,8 @@ def test_events_are_appended_in_order_as_one_json_object_per_line(tmp_path):
     (tmp_path / TASK_ID).mkdir()
     writer = TraceWriter(tmp_path)
     for name in ("spec_frozen", "plan_saved", "case_saved"):
-        writer.append(
-            TASK_ID, SPEC_HASH, "INIT", None, EventBody(type=EventType.CHECKPOINT, name=name)
-        )
+        body = EventBody(type=EventType.CHECKPOINT, name=name)
+        writer.append(TASK_ID, SPEC_HASH, WorkflowState.INIT, None, body)
     lines = (tmp_path / TASK_ID / TRACE_FILE).read_text(encoding="utf-8").splitlines()
     parsed = [json.loads(line) for line in lines]
     assert [item["seq"] for item in parsed] == [0, 1, 2]
@@ -65,19 +64,43 @@ def test_events_are_appended_in_order_as_one_json_object_per_line(tmp_path):
 def test_a_new_writer_continues_the_numbering_of_an_existing_trace(tmp_path):
     (tmp_path / TASK_ID).mkdir()
     body = EventBody(type=EventType.CHECKPOINT, name="x")
-    TraceWriter(tmp_path).append(TASK_ID, SPEC_HASH, "INIT", None, body)
-    TraceWriter(tmp_path).append(TASK_ID, SPEC_HASH, "PLAN", None, body)
+    TraceWriter(tmp_path).append(TASK_ID, SPEC_HASH, WorkflowState.INIT, None, body)
+    TraceWriter(tmp_path).append(TASK_ID, SPEC_HASH, WorkflowState.PLAN, None, body)
     events = read_events(tmp_path / TASK_ID / TRACE_FILE)
-    assert [(e.seq, e.state) for e in events] == [(0, "INIT"), (1, "PLAN")]
+    assert [(e.seq, e.state) for e in events] == [(0, WorkflowState.INIT), (1, WorkflowState.PLAN)]
 
 
-def test_reading_a_missing_trace_gives_no_events_and_a_broken_line_is_a_domain_error(tmp_path):
-    path = tmp_path / TRACE_FILE
-    assert read_events(path) == []
-    path.write_text("not json\n", encoding="utf-8")
+def written_events(path: Path, count: int) -> None:
+    """用 TraceWriter 写 count 个事件到 path 所在的任务目录。"""
+    path.parent.mkdir(exist_ok=True)
+    writer = TraceWriter(path.parent.parent)
+    for number in range(count):
+        body = EventBody(type=EventType.CHECKPOINT, name=f"e{number}")
+        writer.append(path.parent.name, SPEC_HASH, WorkflowState.INIT, None, body)
+
+
+def test_reading_a_missing_trace_gives_no_events(tmp_path):
+    assert read_events(tmp_path / TRACE_FILE) == []
+
+
+def test_a_last_line_cut_short_by_an_interrupted_process_is_ignored(tmp_path):
+    path = tmp_path / TASK_ID / TRACE_FILE
+    written_events(path, 3)
+    with path.open("a", encoding="utf-8") as stream:
+        stream.write('{"ts": "2026-10-09T12:00:00+08:00", "task_id": "20261009')
+    assert [e.name for e in read_events(path)] == ["e0", "e1", "e2"]
+
+
+def test_a_broken_line_in_the_middle_is_a_domain_error_that_names_the_line(tmp_path):
+    path = tmp_path / TASK_ID / TRACE_FILE
+    written_events(path, 3)
+    lines = path.read_text(encoding="utf-8").splitlines()
+    damaged = [lines[0], "not json", lines[2]]
+    path.write_text("\n".join(damaged) + "\n", encoding="utf-8")
     with pytest.raises(ReactorAgentError) as caught:
         read_events(path)
     assert caught.value.code is ErrorCode.SCHEMA
+    assert "第 2 行" in caught.value.message
 
 
 def test_the_timeline_has_one_line_per_state_and_merges_repeated_calls():
@@ -96,7 +119,12 @@ def test_the_timeline_has_one_line_per_state_and_merges_repeated_calls():
         tool(11, "SOLVE", "solver.solve", case="T710"),
         transition(12, "VERIFY", "T710"),
         event(
-            13, "VERIFY", EventType.VALIDATION, "T710", case="T710", output={"V1": True, "V2": True}
+            13,
+            "VERIFY",
+            EventType.VALIDATION,
+            "T710",
+            case="T710",
+            verdict={"V1": True, "V2": True},
         ),
         transition(14, "complete"),
     ]
@@ -122,7 +150,7 @@ def test_the_timeline_shows_retries_failures_and_the_rebuild():
         transition(4, "PREFLIGHT"),
         tool(5, "PREFLIGHT", "case.ensure", attempt=2),
         transition(6, "VERIFY"),
-        event(7, "VERIFY", EventType.VALIDATION, "T710", output={"V1": True, "V5": False}),
+        event(7, "VERIFY", EventType.VALIDATION, "T710", verdict={"V1": True, "V5": False}),
     ]
     lines = render_timeline(events).splitlines()
     assert (
@@ -135,6 +163,30 @@ def test_the_timeline_shows_retries_failures_and_the_rebuild():
 
 def test_an_empty_trace_renders_without_failing():
     assert render_timeline([]) == "（没有事件）"
+
+
+def test_a_validation_event_without_a_verdict_does_not_claim_the_checks_passed():
+    events = [
+        transition(0, "VERIFY", "T710"),
+        event(1, "VERIFY", EventType.VALIDATION, "T710", case="T710"),
+    ]
+    assert render_timeline(events).splitlines()[1] == "  VERIFY[T710]      （没有检查结果）"
+
+
+def test_a_long_label_still_leaves_a_gap_before_the_text():
+    events = [
+        transition(0, "VERIFY", "high_temperature_case"),
+        event(
+            1,
+            "VERIFY",
+            EventType.VALIDATION,
+            "x",
+            case="high_temperature_case",
+            verdict={"V1": True},
+        ),
+    ]
+    line = render_timeline(events).splitlines()[1]
+    assert line.startswith("  VERIFY[high_temperature_case]  检查")
 
 
 def failure(**changes: object) -> FailureReport:
@@ -206,3 +258,14 @@ def test_the_summary_lists_outlets_metrics_duty_and_checks(equilibrium):
 def test_the_summary_of_a_task_that_is_still_running_has_no_cases():
     text = render_summary(RunResult(task_id=TASK_ID, status=None, cases=()))
     assert text == f"任务 {TASK_ID}：运行中"
+
+
+def test_the_summary_says_unknown_for_values_it_could_not_read_and_lists_failed_checks(equilibrium):
+    broken = equilibrium.with_stream("Vap", temperature_c=None, molar_flow_kmol_h=None)
+    context = broken.context
+    result = assemble_result(context, run_common_checks(context), provenance())
+    record = CaseRecord(case_name=result.case_name, result=result, case_file_saved=True)
+    text = render_summary(RunResult(task_id=TASK_ID, status=TaskStatus.FAILED, cases=(record,)))
+    assert "Vap：未知 °C" in text and "未知 kmol/h" in text
+    assert "✗" in text
+    assert "Hydrogen/CO" in text and "%" not in text.split("Hydrogen/CO")[1].splitlines()[0]

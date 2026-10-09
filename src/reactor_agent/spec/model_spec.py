@@ -178,7 +178,8 @@ class ModelSpec(FrozenModel):
 
     @model_validator(mode="after")
     def _cases_match_the_heat_mode(self) -> Self:
-        check_unique(tuple(case.name for case in self.cases), "工况名")
+        # 工况名要用来给 .hsc 命名，Windows 的文件名不区分大小写，所以 "A" 和 "a" 算重复
+        check_unique(tuple(case.name.casefold() for case in self.cases), "工况名")
         for index, case in enumerate(self.cases):
             given = frozenset(f for f in CASE_VALUE_FIELDS if getattr(case, f) is not None)
             if given != CASE_REQUIRED[self.heat_mode]:

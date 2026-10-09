@@ -3,13 +3,22 @@
 run_spec 接受 ToolExecutor，所以这里用桩，不需要 HYSYS。
 """
 
+import io
+import sys
 from pathlib import Path
 
 import pytest
 
 from builders import GOLDEN
 from fake_tools import FakeTools
-from reactor_agent.cli import EXIT_FAILED, EXIT_OK, main, run_spec
+from reactor_agent.cli import (
+    EXIT_FAILED,
+    EXIT_OK,
+    EXIT_UNSUPPORTED,
+    _use_utf8_streams,
+    main,
+    run_spec,
+)
 from reactor_agent.errors import ErrorCode
 from reactor_agent.spec.enums import ToolName
 from reactor_agent.spec.model_spec import load_model_spec, spec_hash
@@ -102,3 +111,24 @@ def test_wrong_usage_is_refused_by_the_argument_parser(arguments, capsys):
         main(arguments)
     assert caught.value.code != 0
     assert "Traceback" not in capsys.readouterr().err
+
+
+def test_a_request_the_system_cannot_build_exits_with_the_unsupported_code(
+    conversion, tmp_path, capsys
+):
+    always = {ToolName.BASIS_ENSURE_REACTION: ErrorCode.UNSUPPORTED}
+    tools = FakeTools([conversion.snapshot], always=always)
+    assert run_spec(tools, conversion.spec, GOLDEN_FILE, tmp_path / "runs") == EXIT_UNSUPPORTED
+    assert "unsupported" in capsys.readouterr().err
+
+
+def test_output_streams_are_switched_to_utf8_so_chinese_survives_a_redirect(monkeypatch):
+    legacy = io.TextIOWrapper(io.BytesIO(), encoding="cp1252")
+    legacy_err = io.TextIOWrapper(io.BytesIO(), encoding="cp1252")
+    monkeypatch.setattr(sys, "stdout", legacy)
+    monkeypatch.setattr(sys, "stderr", legacy_err)
+    _use_utf8_streams()
+    assert legacy.encoding == "utf-8" and legacy_err.encoding == "utf-8"
+    print("工况 T710：710 °C", file=legacy)
+    legacy.flush()
+    assert "工况 T710：710 °C" in legacy.buffer.getvalue().decode("utf-8")

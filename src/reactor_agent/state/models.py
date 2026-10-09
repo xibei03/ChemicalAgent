@@ -15,7 +15,6 @@ from reactor_agent.spec.base import FrozenModel
 from reactor_agent.spec.enums import (
     RecoveryAction,
     ResultStatus,
-    StepStatus,
     TaskStatus,
     ToolName,
     WorkflowState,
@@ -29,13 +28,20 @@ SUCCESS_STATUSES = frozenset({TaskStatus.COMPLETE, TaskStatus.COMPLETE_WITH_WARN
 
 
 class StepRecord(FrozenModel):
-    """计划里一步的执行记录：做完了，用了几次尝试，对象发生了什么变化。"""
+    """计划里做完的一步：编号、工具、用了几次尝试、对象发生了什么变化。失败的那一步记在错误记录里。"""
 
     number: int
     tool: ToolName
-    status: StepStatus
     attempts: int
     result_status: ResultStatus | None
+
+
+class Position(FrozenModel):
+    """任务现在在哪里：状态、工况序号和已完成的计划步骤。同一位置的失败共用重试次数。"""
+
+    state: WorkflowState
+    case_index: int
+    cursor: int
 
 
 class SessionInfo(FrozenModel):
@@ -82,7 +88,7 @@ class TaskState(BaseModel):
     cursor: int = 0
     session: SessionInfo | None = None
     case_index: int = 0
-    retry_position: str = ""
+    retry_position: Position | None = None
     retries_at_position: int = 0
     retries_total: int = 0
     rebuilds: int = 0
@@ -90,9 +96,9 @@ class TaskState(BaseModel):
     errors: tuple[TaskError, ...] = ()
 
     @property
-    def position(self) -> str:
-        """任务现在在哪里：状态、工况序号和已完成的计划步骤。同一位置的失败共用重试次数。"""
-        return f"{self.current_state.value}:{self.case_index}:{self.cursor}"
+    def position(self) -> Position:
+        """任务现在的位置。"""
+        return Position(state=self.current_state, case_index=self.case_index, cursor=self.cursor)
 
     @property
     def current_case_name(self) -> str | None:
@@ -129,11 +135,7 @@ class TaskState(BaseModel):
     ) -> None:
         """记录计划里一步做完了，游标前进到这一步。"""
         record = StepRecord(
-            number=number,
-            tool=tool,
-            status=StepStatus.DONE,
-            attempts=self.retries_here() + 1,
-            result_status=result_status,
+            number=number, tool=tool, attempts=self.retries_here() + 1, result_status=result_status
         )
         self.steps = (*self.steps, record)
         self.cursor = number
@@ -143,9 +145,10 @@ class TaskState(BaseModel):
         self.session = SessionInfo(version=version, process_id=process_id)
 
     def set_case_file(self, path: Path) -> None:
-        """记录当前打开的 Case 文件（新建或另存之后）。"""
-        if self.session is not None:
-            self.session = self.session.model_copy(update={"case_file": path})
+        """记录当前打开的 Case 文件（新建或另存之后）。还没有会话就有 Case 文件是调用顺序的错误。"""
+        if self.session is None:
+            raise RuntimeError("还没有 HYSYS 会话，不能记录 Case 文件")
+        self.session = self.session.model_copy(update={"case_file": path})
 
     def record_case(self, summary: CaseSummary) -> None:
         """记录一个工况的验证摘要；同名的覆盖，位置不变。"""
@@ -169,7 +172,7 @@ class TaskState(BaseModel):
         self.cursor = 0
         self.case_index = 0
         self.cases = ()
-        self.retry_position = ""
+        self.retry_position = None
         self.retries_at_position = 0
         if self.session is not None:
             self.session = self.session.model_copy(update={"case_file": None})

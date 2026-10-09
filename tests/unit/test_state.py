@@ -124,7 +124,7 @@ def test_saving_then_loading_gives_the_same_state_and_leaves_no_temporary_file(t
     store.save(task)
     assert store.load(task.task_id) == task
     names = sorted(path.name for path in store.run_dir(task.task_id).iterdir())
-    assert names == ["artifacts", "state.json"]
+    assert names == ["artifacts", "state.json", "work"]
 
 
 def test_a_failed_write_keeps_the_previous_state_file(tmp_path, monkeypatch):
@@ -162,7 +162,31 @@ def test_a_run_directory_is_never_reused(tmp_path):
     store.create_run_dir("same")
     with pytest.raises(ReactorAgentError) as caught:
         store.create_run_dir("same")
+    assert caught.value.code is ErrorCode.CONFLICT
+
+
+def test_a_new_run_gets_another_task_id_when_the_first_one_is_taken(tmp_path, monkeypatch):
+    store = StateStore(tmp_path)
+    ids = iter(["20261009-120000-aa", "20261009-120000-aa", "20261009-120000-bb"])
+    monkeypatch.setattr("reactor_agent.state.store.new_task_id", lambda now: next(ids))
+    now = datetime(2026, 10, 9, 12, 0, 0)
+    assert store.new_run(now) == "20261009-120000-aa"
+    assert store.new_run(now) == "20261009-120000-bb"
+    assert store.work_dir("20261009-120000-bb").is_dir()
+
+
+def test_a_new_run_gives_up_when_every_task_id_is_taken(tmp_path, monkeypatch):
+    store = StateStore(tmp_path)
+    store.create_run_dir("20261009-120000-aa")
+    monkeypatch.setattr("reactor_agent.state.store.new_task_id", lambda now: "20261009-120000-aa")
+    with pytest.raises(ReactorAgentError) as caught:
+        store.new_run(datetime(2026, 10, 9, 12, 0, 0))
     assert caught.value.code is ErrorCode.IO
+
+
+def test_recording_a_case_file_before_there_is_a_session_is_a_programming_error():
+    with pytest.raises(RuntimeError):
+        make_task().set_case_file(Path("case.hsc"))
 
 
 def test_artifacts_round_trip_through_json(tmp_path):

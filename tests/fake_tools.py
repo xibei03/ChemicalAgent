@@ -49,8 +49,11 @@ CASE_TOOLS = frozenset({ToolName.CASE_ENSURE, ToolName.CASE_SAVE, ToolName.CASE_
 class FakeTools(ToolExecutor):
     """按脚本回答的 ToolExecutor。
 
+    snapshots: 第 n 次求解之后读到第 n 份（超出取最后一份）。
     failures: 每个工具一串结果，按调用顺序消耗，None 是成功，错误码是失败；用完之后一律成功。
     always: 这个工具每次都失败。
+    reads: 给了就按读取的次序依次给快照（超出取最后一份），不管求解了几次；用来模拟“同一个状态，
+        第一次读坏、第二次读好”。
     """
 
     def __init__(
@@ -58,10 +61,13 @@ class FakeTools(ToolExecutor):
         snapshots: Sequence[ModelSnapshot],
         failures: Mapping[ToolName, Sequence[ErrorCode | None]] | None = None,
         always: Mapping[ToolName, ErrorCode] | None = None,
+        reads: Sequence[ModelSnapshot] | None = None,
     ) -> None:
         super().__init__({})
         self.calls: list[tuple[ToolName, BaseModel]] = []
         self._snapshots = snapshots
+        self._reads = reads
+        self._reads_made = 0
         self._failures = {tool: list(codes) for tool, codes in (failures or {}).items()}
         self._always = always or {}
         self.active_case: Path | None = None
@@ -102,8 +108,16 @@ class FakeTools(ToolExecutor):
                 duration_s=0.1, status=SolveStatus(is_solving=False, objects=())
             )
         if tool is ToolName.MODEL_READ_SNAPSHOT:
-            return UNCHANGED, self._snapshots[min(self.solves, len(self._snapshots)) - 1]
+            return UNCHANGED, self._next_snapshot()
         return self._answer_build(args)
+
+    def _next_snapshot(self) -> ModelSnapshot:
+        if self._reads is not None:
+            snapshot = self._reads[min(self._reads_made, len(self._reads) - 1)]
+            self._reads_made += 1
+            return snapshot
+        assert self.solves > 0, "还没有求解就读快照：执行器的调用顺序错了"
+        return self._snapshots[min(self.solves, len(self._snapshots)) - 1]
 
     def _answer_case(self, tool: ToolName, args: BaseModel) -> tuple[ResultStatus, ToolData]:
         if isinstance(args, EnsureCaseArgs):

@@ -101,7 +101,7 @@ def _print_outcome(store: StateStore, task: TaskState) -> int:
     if report is not None:
         print(render_failure(report), file=sys.stderr)
     print(f"运行目录：{run_dir}")
-    return EXIT_CODES[task.status or TaskStatus.FAILED]
+    return EXIT_FAILED if task.status is None else EXIT_CODES[task.status]  # 没走到终态不算成功
 
 
 def _trace_command(args: argparse.Namespace) -> int:

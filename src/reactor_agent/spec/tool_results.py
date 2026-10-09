@@ -169,6 +169,12 @@ class ToolResult(FrozenModel):
             raise ValueError("失败的结果只有 error")
         return self
 
+    def data_as(self, expected: type[DataT]) -> DataT:
+        """成功的信封里这个工具自己的数据。类型不对是程序缺陷，不是运行时的失败。"""
+        if not isinstance(self.data, expected):
+            raise TypeError(f"工具返回的数据应当是 {expected.__name__}，实际是 {self.data!r}")
+        return self.data
+
     @classmethod
     def success(cls, outcome: Outcome[DataT]) -> Self:
         """把 Backend 的 Outcome 包成成功的信封。"""

@@ -178,7 +178,7 @@ class TaskStatus(StrEnum):
 
 
 class WorkflowState(StrEnum):
-    """任务经过的状态（计划 §7.3 在 1C 的子集）。终态是 TaskStatus，不在这里。"""
+    """任务经过的状态（计划 §7.3）。终态是 TaskStatus，不在这里。"""
 
     INIT = "INIT"
     PLAN = "PLAN"
@@ -199,7 +199,7 @@ class RecoveryAction(StrEnum):
 
 
 class EventType(StrEnum):
-    """Trace 事件的类型（计划 §14.1 在 1C 的子集）。"""
+    """Trace 事件的类型（计划 §14.1）。"""
 
     STATE_TRANSITION = "state_transition"
     TOOL_CALL = "tool_call"
@@ -209,8 +209,10 @@ class EventType(StrEnum):
     ERROR = "error"
 
 
-class StepStatus(StrEnum):
-    """计划里一步的执行结果：做完了，或者失败了。"""
+class Checkpoint(StrEnum):
+    """检查点事件的名字：规格冻结、计划保存、工况的 Case 保存、结果保存。"""
 
-    DONE = "done"
-    FAILED = "failed"
+    SPEC_FROZEN = "spec_frozen"
+    PLAN_SAVED = "plan_saved"
+    CASE_SAVED = "case_saved"
+    RESULT_SAVED = "result_saved"

@@ -18,6 +18,9 @@ from reactor_agent.state.models import TaskState
 
 STATE_FILE = "state.json"
 ARTIFACTS_DIR = "artifacts"
+# 建模用的 Case 和出错时留下的现场放在这里，不和各工况的 .hsc 混在一起，也就不会撞名。
+WORK_DIR = "work"
+MAX_ID_ATTEMPTS = 20
 TEMPORARY_SUFFIX = ".tmp"
 TASK_ID_TIME_FORMAT = "%Y%m%d-%H%M%S"
 ModelT = TypeVar("ModelT", bound=BaseModel)
@@ -55,14 +58,38 @@ class StateStore:
         """一个任务的运行目录。"""
         return self._runs_dir / task_id
 
+    def work_dir(self, task_id: str) -> Path:
+        """建模用的 Case 和出错现场的目录。"""
+        return self.run_dir(task_id) / WORK_DIR
+
     def create_run_dir(self, task_id: str) -> Path:
-        """建运行目录和 artifacts/。目录已经存在说明任务标识撞了，不能覆盖别人的运行。"""
+        """建运行目录、artifacts/ 和 work/。目录已经存在是 E_CONFLICT：不能覆盖别人的运行。"""
         directory = self.run_dir(task_id)
         try:
-            (directory / ARTIFACTS_DIR).mkdir(parents=True)
+            directory.mkdir(parents=True)
+            (directory / ARTIFACTS_DIR).mkdir()
+            (directory / WORK_DIR).mkdir()
+        except FileExistsError as error:
+            raise ReactorAgentError(ErrorCode.CONFLICT, f"运行目录已经存在：{directory}") from error
         except OSError as error:
             raise ReactorAgentError(ErrorCode.IO, f"建不了运行目录 {directory}：{error}") from error
         return directory
+
+    def new_run(self, now: datetime) -> str:
+        """分配一个没有用过的任务标识并建好运行目录。
+
+        标识的随机部分只有一个字节，同一秒内两次创建有 1/256 的概率撞号，撞了就换一个。
+        """
+        for _ in range(MAX_ID_ATTEMPTS):
+            task_id = new_task_id(now)
+            try:
+                self.create_run_dir(task_id)
+            except ReactorAgentError as error:
+                if error.code is not ErrorCode.CONFLICT:
+                    raise
+                continue
+            return task_id
+        raise ReactorAgentError(ErrorCode.IO, f"连续 {MAX_ID_ATTEMPTS} 次分配的任务标识都已被用过")
 
     def artifact_path(self, task_id: str, name: ArtifactName) -> Path:
         """artifacts/ 下某个文件的路径。"""

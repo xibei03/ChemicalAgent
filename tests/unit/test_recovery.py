@@ -27,7 +27,9 @@ LONGEST_CHAIN = 6
 def chain(code: ErrorCode) -> list[RecoveryAction]:
     """沿着策略一直走下去：重试用的是同一个位置的次数，重建之后位置变了，次数从零开始。"""
     retries, rebuilds, actions = 0, 0, []
-    while ABORT not in actions:
+    for _ in range(LONGEST_CHAIN + 1):  # decide 一旦不再给出 ABORT，测试要失败而不是挂死
+        if ABORT in actions:
+            break
         action = decide(code, retries, rebuilds)
         actions.append(action)
         if action is RETRY:
