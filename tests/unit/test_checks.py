@@ -4,7 +4,10 @@
 “破坏 → 应当失败的检查集合”的表。
 """
 
+from dataclasses import replace
+
 import pytest
+from pydantic import ValidationError
 
 from builders import (
     conversion_scenario,
@@ -15,9 +18,11 @@ from builders import (
 )
 from reactor_agent.recipes import recipe_for
 from reactor_agent.spec.enums import CheckId, CheckSeverity, KeqSource, ObjectState
+from reactor_agent.spec.model_spec import OperatingCase
 from reactor_agent.spec.plan import system_feed_names, system_outlet_names
 from reactor_agent.spec.snapshot import EnergyStreamSnapshot
 from reactor_agent.validation.checks import COMMON_CHECKS, run_common_checks
+from reactor_agent.validation.conservation import relative_error
 
 V1, V2, V3, V4 = CheckId.SOLVED, CheckId.STRUCTURE, CheckId.FEEDS, CheckId.SPECIFICATIONS
 V5, V6, V7 = CheckId.OUTPUTS, CheckId.PHYSICAL, CheckId.CONSERVATION
@@ -106,6 +111,26 @@ def with_unknown_duty(scenario):
     )
 
 
+def with_other_components_in_the_fluid_package(scenario):
+    thermo = scenario.snapshot.thermo
+    return scenario.with_snapshot(
+        thermo=thermo.model_copy(update={"components": thermo.components[:-1]})
+    )
+
+
+def with_case_temperature(scenario, temperature_c):
+    """规格里的第一个工况（连同当前工况）改成另一个出口温度，快照和计划不变。"""
+    data = golden_data("smr_equilibrium")
+    data["cases"][0]["outlet_temperature_c"] = temperature_c
+    spec = spec_from(data)
+    return scenario.with_spec(spec, spec.cases[0])
+
+
+def without_case_steps(scenario):
+    steps = tuple(step for step in scenario.plan.steps if step.case_name is None)
+    return replace(scenario, plan=scenario.plan.model_copy(update={"steps": steps}))
+
+
 def with_fixed_k(constant):
     data = golden_data("smr_equilibrium")
     data["reactions"][1].update(keq_source="fixed_k", equilibrium_constant=constant)
@@ -150,6 +175,21 @@ BREAKS = [
     ),
     pytest.param(equilibrium_scenario, with_reaction_as_fixed_k, {V2}, id="reaction differs"),
     pytest.param(equilibrium_scenario, with_reaction_sets_detached, {V2}, id="set not attached"),
+    pytest.param(
+        equilibrium_scenario,
+        lambda s: s.with_snapshot(reactions=s.snapshot.reactions[:1]),
+        {V2},
+        id="reaction missing",
+    ),
+    pytest.param(
+        equilibrium_scenario, lambda s: s.with_snapshot(reaction_sets=()), {V2}, id="set missing"
+    ),
+    pytest.param(
+        equilibrium_scenario,
+        with_other_components_in_the_fluid_package,
+        {V2},
+        id="fluid package has other components",
+    ),
     pytest.param(
         equilibrium_scenario,
         lambda s: s.with_reactor(0, vapour_product="Liq"),
@@ -561,3 +601,74 @@ class TestNothingInAnOutletIsLeftUnchecked:
                 new = changed_value(getattr(item, field))
                 broken = scenario.with_component(feed.name, item.name, **{field: new})
                 assert failed_ids(broken), (feed.name, item.name, field)
+
+
+class TestChecksComeFromTheSpecAndNotFromThePlan:
+    """计划是 Recipe 编译出来的。编译错了，结果再和计划一致也是错的模型，所以期望值取自规格。"""
+
+    def test_v4_fails_when_the_spec_wants_another_temperature_than_the_model_has(self, equilibrium):
+        assert passes(equilibrium, V4)
+        assert not passes(with_case_temperature(equilibrium, 800.0), V4)
+
+    def test_v4_does_not_need_the_case_steps_of_the_plan(self, equilibrium):
+        without_steps = without_case_steps(equilibrium)
+        assert passes(without_steps, V4)
+        assert not passes(without_steps.with_stream("Vap", temperature_c=650.0), V4)
+
+    def test_a_context_needs_a_case_that_the_spec_has(self, equilibrium):
+        stranger = OperatingCase(name="typo", outlet_temperature_c=999.0)
+        with pytest.raises(ValidationError, match="不是规格里的工况"):
+            _ = replace(equilibrium, case=stranger).context
+
+    def test_v2_fails_when_the_plan_has_another_reaction_than_the_spec(self, equilibrium):
+        data = golden_data("smr_equilibrium")
+        data["reactions"][1]["stoichiometry"][2]["coefficient"] = 2.0
+        result = result_of(equilibrium.with_spec(spec_from(data)), V2)
+        assert not result.passed
+        assert "第 2 个反应" in result.actual
+
+    def test_v2_fails_when_the_spec_has_more_reactions_than_the_plan(self, equilibrium):
+        data = golden_data("smr_equilibrium")
+        data["reactions"].append(data["reactions"][0])
+        result = result_of(equilibrium.with_spec(spec_from(data)), V2)
+        assert "第 3 个反应在计划里不存在" in result.actual
+
+    def test_v2_fails_when_the_plan_has_another_fluid_package_than_the_spec(self, equilibrium):
+        data = golden_data("smr_equilibrium")
+        data["components"] = list(reversed(data["components"]))
+        assert not passes(equilibrium.with_spec(spec_from(data)), V2)
+
+    def test_the_synthesised_reaction_of_the_two_stage_model_is_not_in_the_spec(self, gasification):
+        assert gasification.spec.reactions == ()
+        assert passes(gasification, V2)
+
+
+class TestToleranceBoundaries:
+    def test_conversion_within_a_tenth_of_a_percentage_point_passes(self):
+        assert passes(conversion_scenario(converted=0.5005), CONVERSION_CHECK)
+
+    def test_conversion_beyond_a_tenth_of_a_percentage_point_fails(self):
+        assert not passes(conversion_scenario(converted=0.502), CONVERSION_CHECK)
+
+    def test_a_fixed_k_within_the_tolerance_passes(self):
+        assert passes(with_fixed_k(SHIFT_QUOTIENT * 1.0005), FIXED_K_CHECK)
+
+    def test_a_fixed_k_beyond_the_tolerance_fails(self):
+        assert not passes(with_fixed_k(SHIFT_QUOTIENT * 1.005), FIXED_K_CHECK)
+
+
+class TestRelativeError:
+    def test_it_is_relative_to_the_larger_of_the_two_quantities(self):
+        assert relative_error(100.0, 99.0) == pytest.approx(0.01)
+        assert relative_error(99.0, 100.0) == pytest.approx(0.01)
+
+    def test_quantities_that_are_both_close_to_zero_have_no_error(self):
+        assert relative_error(0.0, 0.0) == 0.0
+        assert relative_error(1e-12, 3e-12) == 0.0
+
+    def test_an_element_that_appears_from_nowhere_is_a_full_error(self):
+        assert relative_error(0.0, 5.0) == pytest.approx(1.0)
+
+    @pytest.mark.parametrize(("fed", "left"), [(None, 1.0), (1.0, None), (None, None)])
+    def test_an_unreadable_quantity_has_no_error_to_report(self, fed, left):
+        assert relative_error(fed, left) is None

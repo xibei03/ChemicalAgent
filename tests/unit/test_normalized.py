@@ -8,7 +8,12 @@ from reactor_agent.spec.enums import CheckId, CheckSeverity, TaskStatus
 from reactor_agent.spec.results import CaseRecord, CheckResult, NormalizedResult
 from reactor_agent.spec.snapshot import EnergyStreamSnapshot
 from reactor_agent.validation.checks import run_common_checks
-from reactor_agent.validation.normalized import assemble_result, decide_outcome, requested_check
+from reactor_agent.validation.normalized import (
+    assemble_result,
+    decide_outcome,
+    missing_checks,
+    requested_check,
+)
 
 
 def result_for(scenario) -> NormalizedResult:
@@ -141,6 +146,24 @@ class TestRequestedCheck:
         assert ids[:7] == [CheckId(f"V{n}") for n in range(1, 8)]
         assert ids[7] is CheckId.REQUESTED
 
+    def test_checks_that_were_not_run_are_recorded_as_failed(self, equilibrium):
+        result = assemble_result(equilibrium.context, (), provenance())
+        failed = {check.check_id for check in result.checks if not check.passed}
+        assert failed == {CheckId(f"V{n}") for n in range(1, 8)}
+        assert all("没有运行" in c.actual for c in result.checks if not c.passed)
+        assert result.checks[0].check_id is CheckId.REQUESTED
+
+    def test_missing_checks_names_the_numbers_that_are_absent(self, equilibrium):
+        checks = result_for(equilibrium).checks
+        assert missing_checks(checks) == ()
+        assert missing_checks(checks[:3]) == (
+            CheckId.SPECIFICATIONS,
+            CheckId.OUTPUTS,
+            CheckId.PHYSICAL,
+            CheckId.CONSERVATION,
+            CheckId.REQUESTED,
+        )
+
     def test_requested_check_on_its_own(self, equilibrium):
         metrics = result_for(equilibrium).metrics
         assert requested_check(metrics).passed
@@ -201,18 +224,22 @@ class TestOutcome:
         assert decide_outcome(names, [record(hot), record(bad)]) is TaskStatus.FAILED
         assert decide_outcome(names, [record(hot), record(cold, saved=False)]) is TaskStatus.FAILED
 
+    def test_a_result_whose_checks_are_not_all_there_is_a_failure(self, equilibrium):
+        whole = record(equilibrium)
+        for dropped in range(8):
+            checks = tuple(c for i, c in enumerate(whole.result.checks) if i != dropped)
+            trimmed = whole.model_copy(
+                update={"result": whole.result.model_copy(update={"checks": checks})}
+            )
+            assert decide_outcome(["T710"], [trimmed]) is TaskStatus.FAILED, dropped
+
+    def test_a_result_that_belongs_to_another_case_is_not_accepted(self, equilibrium):
+        assert decide_outcome(["T600"], [record(equilibrium, name="T600")]) is TaskStatus.FAILED
+
+    def test_a_task_without_cases_has_no_result_to_complete(self, equilibrium):
+        assert decide_outcome([], []) is TaskStatus.FAILED
+        assert decide_outcome([], [record(equilibrium)]) is TaskStatus.FAILED
+
     def test_records_of_cases_the_spec_does_not_have_are_ignored(self, equilibrium):
         extra = record(equilibrium, name="other")
         assert decide_outcome(["T710"], [record(equilibrium), extra]) is TaskStatus.COMPLETE
-
-    def test_the_outcome_only_ever_depends_on_the_first_three_statuses(self, equilibrium):
-        possible = {
-            decide_outcome(["T710"], [record(equilibrium)]),
-            decide_outcome(["T710"], []),
-            decide_outcome(["T710"], [record(equilibrium, extra_check=warning())]),
-        }
-        assert possible <= {
-            TaskStatus.COMPLETE,
-            TaskStatus.COMPLETE_WITH_WARNINGS,
-            TaskStatus.FAILED,
-        }

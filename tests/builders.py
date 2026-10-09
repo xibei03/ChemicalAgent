@@ -121,9 +121,9 @@ class Scenario:
             snapshot=self.snapshot,
         )
 
-    def with_spec(self, spec: ModelSpec) -> "Scenario":
-        """换一份规格，快照和计划不变：用来检查结果检查是拿快照和规格比，而不是和计划自己比。"""
-        return replace(self, spec=spec)
+    def with_spec(self, spec: ModelSpec, case: OperatingCase | None = None) -> "Scenario":
+        """换一份规格（以及它的工况），快照和计划不变：检查要拿快照和规格比，而不是和计划自己比。"""
+        return replace(self, spec=spec, case=case or self.case)
 
     def with_reactor(self, index: int, **changes: object) -> "Scenario":
         """把第 index 台反应器的某些字段改掉。"""

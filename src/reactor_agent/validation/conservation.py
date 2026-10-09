@@ -54,7 +54,8 @@ def _balance_rows(
     return rows
 
 
-def _relative_error(fed: float | None, left: float | None) -> float | None:
+def relative_error(fed: float | None, left: float | None) -> float | None:
+    """进出的量的相对误差；有一个读不到是 None；两边都接近 0 时没有误差可言，当作 0。"""
     if fed is None or left is None:
         return None
     scale = max(abs(fed), abs(left))
@@ -75,7 +76,7 @@ def check_conservation(context: CheckContext) -> CheckResult:
     problems = []
     errors = []
     for row in _balance_rows(context, feeds, outlets):
-        error = _relative_error(row.fed, row.left)
+        error = relative_error(row.fed, row.left)
         if error is None:
             problems.append(f"{row.label} 进出的量读不到，无法核算")
         elif not math.isclose(error, 0.0, abs_tol=row.tolerance):

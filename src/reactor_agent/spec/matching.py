@@ -28,6 +28,8 @@ from reactor_agent.spec.tool_args import (
 STOICHIOMETRY_TOLERANCE = 1e-3
 # 写进去再读回来的物理量，只有换算和浮点表示的误差。
 VALUE_REL_TOLERANCE = 1e-6
+# 温度、压力、流量接近 0 时相对容差没有意义；差在这个范围内就算相同。
+ABSOLUTE_FLOOR = 1e-9
 
 
 def _close(first: float | None, second: float | None, tolerance: float) -> bool:
@@ -39,8 +41,18 @@ def _close(first: float | None, second: float | None, tolerance: float) -> bool:
 def values_close(
     first: float | None, second: float | None, tolerance: float = VALUE_REL_TOLERANCE
 ) -> bool:
-    """两个物理量是否相同：默认只允许换算和浮点表示的误差。读不到（None）算不同。"""
+    """两个物理量是否相同：相对和绝对容差都取 tolerance，默认只允许换算和浮点表示的误差。
+
+    两个都读不到（None）算相同，只有一个读不到算不同。
+    """
     return _close(first, second, tolerance)
+
+
+def _relative_close(first: float | None, second: float | None, tolerance: float) -> bool:
+    """相对容差为 tolerance；绝对容差只用来处理接近 0 的量，所以很小。"""
+    if first is None or second is None:
+        return first is second
+    return math.isclose(first, second, rel_tol=tolerance, abs_tol=min(tolerance, ABSOLUTE_FLOOR))
 
 
 def _difference(what: str, existing: object, wanted: object) -> str:
@@ -145,19 +157,22 @@ def _composition_differences(
 def stream_differences(
     existing: StreamSnapshot, wanted: FeedConditions, tolerance: float = VALUE_REL_TOLERANCE
 ) -> tuple[str, ...]:
-    """已有的物流与期望的规定（温度、压力、组成、流量）有哪些不同，容差默认只含读写的误差。"""
+    """已有的物流与期望的规定（温度、压力、组成、流量）有哪些不同。
+
+    温度、压力、流量按相对容差比，摩尔分率按绝对偏差比，容差默认只含读写的误差。
+    """
     found = []
-    if not values_close(existing.temperature_c, wanted.temperature_c, tolerance):
+    if not _relative_close(existing.temperature_c, wanted.temperature_c, tolerance):
         found.append(_difference("温度 °C", existing.temperature_c, wanted.temperature_c))
-    if not values_close(existing.pressure_bar, wanted.pressure_bar, tolerance):
+    if not _relative_close(existing.pressure_bar, wanted.pressure_bar, tolerance):
         found.append(_difference("压力 bar", existing.pressure_bar, wanted.pressure_bar))
     found += _composition_differences(existing, wanted, tolerance)
     if wanted.molar_flow_kmol_h is not None:
-        if not values_close(existing.molar_flow_kmol_h, wanted.molar_flow_kmol_h, tolerance):
+        if not _relative_close(existing.molar_flow_kmol_h, wanted.molar_flow_kmol_h, tolerance):
             found.append(
                 _difference("摩尔流量 kmol/h", existing.molar_flow_kmol_h, wanted.molar_flow_kmol_h)
             )
-    elif not values_close(existing.mass_flow_kg_h, wanted.mass_flow_kg_h, tolerance):
+    elif not _relative_close(existing.mass_flow_kg_h, wanted.mass_flow_kg_h, tolerance):
         found.append(_difference("质量流量 kg/h", existing.mass_flow_kg_h, wanted.mass_flow_kg_h))
     return tuple(found)
 

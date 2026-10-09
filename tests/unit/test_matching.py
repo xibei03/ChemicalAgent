@@ -231,6 +231,11 @@ class TestStreams:
         assert stream_differences(off, conditions())
         assert stream_differences(off, conditions(), tolerance=1e-4) == ()
 
+    def test_a_small_flow_is_compared_by_its_relative_error(self):
+        wanted = conditions(mass_flow_kg_h=None, molar_flow_kmol_h=0.005)
+        assert stream_differences(stream_snapshot(molar_flow_kmol_h=0.005), wanted, 1e-4) == ()
+        assert stream_differences(stream_snapshot(molar_flow_kmol_h=0.0051), wanted, 1e-4)
+
     def test_a_looser_tolerance_still_rejects_real_differences(self):
         assert stream_differences(stream_snapshot(temperature_c=381.0), conditions(), 1e-4)
         off = stream_snapshot(

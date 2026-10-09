@@ -42,7 +42,7 @@ class TestRequestedMetrics:
     def test_yield_is_not_multiplied_by_a_stoichiometric_coefficient(self, equilibrium):
         # 出口氢气 1850 kmol/h，进口甲烷 1000 kmol/h：收率 185%，反应式里氢气的系数 3 不参与
         request = {"kind": "yield", "product": "Hydrogen", "basis": "Methane"}
-        metric = metrics_of(with_metrics(equilibrium, request))["Hydrogen 收率"]
+        metric = metrics_of(with_metrics(equilibrium, request))["Hydrogen 收率（以 Methane 计）"]
         assert metric.value == pytest.approx(185.0, abs=TOLERANCE)
         assert (metric.unit, metric.request.kind) == (MetricUnit.PERCENT, MetricKind.YIELD)
 
@@ -53,8 +53,18 @@ class TestRequestedMetrics:
         carbon, water = feed["Carbon"], feed["H2O"]
         monoxide = water * (1 - GASIFICATION_METHANATION - GASIFICATION_SHIFT)
         found = metrics_of(gasification)
-        assert found["CO 收率"].value == pytest.approx(monoxide / carbon * 100, abs=TOLERANCE)
+        assert found["CO 收率（以 Carbon 计）"].value == pytest.approx(
+            monoxide / carbon * 100, abs=TOLERANCE
+        )
         assert found["Carbon 转化率"].value == pytest.approx(water / carbon * 100, abs=TOLERANCE)
+
+    def test_yields_of_the_same_product_on_different_bases_have_different_names(self, equilibrium):
+        by_methane = {"kind": "yield", "product": "Hydrogen", "basis": "Methane"}
+        by_water = {"kind": "yield", "product": "Hydrogen", "basis": "H2O"}
+        names = [
+            m.name for m in compute_metrics(with_metrics(equilibrium, by_methane, by_water).context)
+        ]
+        assert len(set(names)) == 2
 
     def test_metrics_follow_the_order_of_the_requests(self, equilibrium):
         assert [m.name for m in compute_metrics(equilibrium.context)] == [
@@ -77,7 +87,8 @@ class TestRequestedMetrics:
     def test_the_definition_of_a_yield_says_it_has_no_stoichiometric_factor(self, equilibrium):
         request = {"kind": "yield", "product": "CO", "basis": "Methane"}
         assert (
-            "不乘计量系数" in metrics_of(with_metrics(equilibrium, request))["CO 收率"].definition
+            "不乘计量系数"
+            in metrics_of(with_metrics(equilibrium, request))["CO 收率（以 Methane 计）"].definition
         )
 
 
@@ -106,7 +117,10 @@ class TestMissingValues:
 
     def test_yield_on_a_basis_that_was_not_fed_is_none(self, equilibrium):
         request = {"kind": "yield", "product": "Hydrogen", "basis": "CO"}
-        assert metrics_of(with_metrics(equilibrium, request))["Hydrogen 收率"].value is None
+        assert (
+            metrics_of(with_metrics(equilibrium, request))["Hydrogen 收率（以 CO 计）"].value
+            is None
+        )
 
     def test_an_unreadable_flow_makes_only_the_metrics_that_use_it_none(self, equilibrium):
         broken = equilibrium.with_component("Vap", "CO", molar_flow_kmol_h=None)

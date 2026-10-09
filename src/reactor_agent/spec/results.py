@@ -7,8 +7,9 @@ NormalizedResult 是一个工况交给报告的全部内容，数字都是规范
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 from types import MappingProxyType
+from typing import Self
 
-from pydantic import AwareDatetime
+from pydantic import AwareDatetime, model_validator
 
 from reactor_agent.errors import ErrorCode
 from reactor_agent.spec.base import FrozenModel
@@ -31,6 +32,17 @@ CHECK_TITLES: Mapping[CheckId, str] = MappingProxyType(
         CheckId.CONVERSION_SPECIFIED: "转化率满足规定",
         CheckId.FIXED_K_SATISFIED: "平衡常数满足规定",
     }
+)
+# 每个工况的结果里必须有的检查：V1 至 V8（计划 §12.3）。各种反应器的专有检查不在其中。
+COMMON_CHECK_IDS: tuple[CheckId, ...] = (
+    CheckId.SOLVED,
+    CheckId.STRUCTURE,
+    CheckId.FEEDS,
+    CheckId.SPECIFICATIONS,
+    CheckId.OUTPUTS,
+    CheckId.PHYSICAL,
+    CheckId.CONSERVATION,
+    CheckId.REQUESTED,
 )
 # 说明里最多列出的问题条数，其余只报个数。
 MAX_PROBLEMS_SHOWN = 5
@@ -106,6 +118,12 @@ class CheckContext(FrozenModel):
     plan: BuildPlan
     components: ComponentTable
     snapshot: ModelSnapshot
+
+    @model_validator(mode="after")
+    def _case_belongs_to_the_spec(self) -> Self:
+        if self.case not in self.spec.cases:
+            raise ValueError(f"工况 {self.case.name!r} 不是规格里的工况")
+        return self
 
 
 class MetricResult(FrozenModel):

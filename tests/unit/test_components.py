@@ -162,6 +162,20 @@ class TestFeedFlow:
         table = load_component_table(TABLE_FILE)
         assert feed_molar_flow_kmol_h(self.feed(molar_flow_kmol_h=12.5), table) == 12.5
 
+    def test_a_feed_without_any_flow_is_a_domain_error(self):
+        table = load_component_table(TABLE_FILE)
+        # model_construct 跳过校验，造出模型校验本来不会放过的进料
+        feed = FeedConditions.model_construct(
+            temperature_c=25.0,
+            pressure_bar=1.0,
+            composition=(CompositionEntry(component="Methane", mole_fraction=1.0),),
+            molar_flow_kmol_h=None,
+            mass_flow_kg_h=None,
+        )
+        with pytest.raises(ReactorAgentError) as caught:
+            feed_molar_flow_kmol_h(feed, table)
+        assert caught.value.code is ErrorCode.SCHEMA
+
     def test_mass_flow_is_divided_by_the_mean_molecular_weight(self):
         table = load_component_table(TABLE_FILE)
         mean_weight = 0.5 * 16.043 + 0.5 * 18.015

@@ -8,7 +8,7 @@ V6 除了分率非负、和为 1、流量非负，还要求一股物流里的数
 import math
 from collections.abc import Mapping
 
-from reactor_agent.spec.balances import sum_or_none
+from reactor_agent.spec.balances import ZERO_FLOW_KMOL_H, sum_or_none
 from reactor_agent.spec.components import molecular_weights
 from reactor_agent.spec.enums import CheckId
 from reactor_agent.spec.plan import energy_stream_names, material_stream_names, system_outlet_names
@@ -17,9 +17,8 @@ from reactor_agent.spec.snapshot import StreamSnapshot
 
 # 摩尔分率之和与 1 的最大偏差，摩尔分率与组分流量占总流量之比的最大偏差。
 FRACTION_TOLERANCE = 1e-6
-# 数值噪声允许的负值下限，也是比较流量时的绝对容差；总流量小于它才算流量为 0。
+# 数值噪声允许的负值下限，也是比较流量时的绝对容差。
 NEGATIVE_TOLERANCE = 1e-9
-ZERO_FLOW_KMOL_H = 1e-9
 # 各组分流量之和与总流量的相对偏差上限，只允许浮点误差。
 SUM_TOLERANCE = 1e-6
 # 组分质量流量与摩尔流量乘分子量的相对偏差上限。仿真软件的分子量和组分表里的只差在第四位有效数字。

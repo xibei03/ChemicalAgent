@@ -19,14 +19,14 @@ from reactor_agent.spec.results import CheckContext, MetricResult
 from reactor_agent.spec.snapshot import StreamSnapshot
 
 
-def _describe(request: MetricRequest) -> tuple[str, str, MetricUnit]:
+def _name_and_definition(request: MetricRequest) -> tuple[str, str, MetricUnit]:
     """指标的名字、定义和单位。"""
     if isinstance(request, ConversionMetric):
         name = f"{request.component} 转化率"
         definition = f"{name} = （进料量 − 出料量）÷ 进料量，进料和出料都按全部物流合计"
         return name, definition, MetricUnit.PERCENT
     if isinstance(request, YieldMetric):
-        name = f"{request.product} 收率"
+        name = f"{request.product} 收率（以 {request.basis} 计）"
         definition = (
             f"{name} = 出料中 {request.product} 的摩尔流量 ÷ 进料中 {request.basis} 的摩尔流量"
             "（不乘计量系数）"
@@ -58,7 +58,7 @@ def compute_metrics(context: CheckContext) -> tuple[MetricResult, ...]:
     outlets = snapshot.streams_named(system_outlet_names(plan))
     results = []
     for request in context.spec.metrics:
-        name, definition, unit = _describe(request)
+        name, definition, unit = _name_and_definition(request)
         value = None if feeds is None or outlets is None else _value(request, feeds, outlets)
         results.append(
             MetricResult(request=request, name=name, definition=definition, value=value, unit=unit)

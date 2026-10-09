@@ -10,8 +10,8 @@ from collections.abc import Iterable, Mapping, Sequence
 from reactor_agent.spec.snapshot import StreamSnapshot
 
 PERCENT = 100.0
-# 进料里的量小到这个程度就当作没有，转化率的分母不能是它。
-FLOW_ZERO_TOLERANCE_KMOL_H = 1e-12
+# 小于它的摩尔流量当作没有：不能当分母，物流也算没有流量。
+ZERO_FLOW_KMOL_H = 1e-9
 
 
 def sum_or_none(values: Iterable[float | None]) -> float | None:
@@ -59,7 +59,7 @@ def flow_ratio(
     numerator: float | None, denominator: float | None, scale: float = 1.0
 ) -> float | None:
     """两个流量的比再乘 scale；有一个读不到或者分母为零，就是 None，不做除法。"""
-    if numerator is None or denominator is None or denominator <= FLOW_ZERO_TOLERANCE_KMOL_H:
+    if numerator is None or denominator is None or denominator <= ZERO_FLOW_KMOL_H:
         return None
     return numerator / denominator * scale
 

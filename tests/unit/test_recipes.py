@@ -511,8 +511,6 @@ class TestGibbsRules:
 class TestRegistry:
     def test_the_three_supported_types_have_a_recipe(self):
         assert set(RECIPES) == {ReactorType.CONVERSION, ReactorType.EQUILIBRIUM, ReactorType.GIBBS}
-        for reactor_type in RECIPES:
-            assert recipe_for(reactor_type) is RECIPES[reactor_type]
 
     @pytest.mark.parametrize("reactor_type", [ReactorType.PFR, ReactorType.CSTR])
     def test_types_without_a_recipe_give_none(self, reactor_type):

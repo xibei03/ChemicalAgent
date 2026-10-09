@@ -12,11 +12,14 @@ from typing import Annotated, Self
 
 from pydantic import Field, field_validator, model_validator
 
+from reactor_agent.errors import ErrorCode, ReactorAgentError
 from reactor_agent.spec.base import FrozenModel
 from reactor_agent.spec.enums import ComponentPhase
 from reactor_agent.spec.loading import parse_model, read_document
 from reactor_agent.spec.tool_args import FeedConditions
 
+# 水的分子式：干基组成要扣除它，气化的进料要有它。
+WATER_FORMULA = "H2O"
 # 元素符号加个数，或者括号的开和闭（闭括号后面可以跟倍数）。
 FORMULA_TOKEN = re.compile(r"([A-Z][a-z]?)(\d*)|(\()|(\))(\d*)")
 
@@ -112,7 +115,8 @@ def feed_molar_flow_kmol_h(feed: FeedConditions, table: ComponentTable) -> float
     if feed.molar_flow_kmol_h is not None:
         return feed.molar_flow_kmol_h
     mass_flow = feed.mass_flow_kg_h
-    assert mass_flow is not None  # FeedConditions 保证两种流量给了一种
+    if mass_flow is None:
+        raise ReactorAgentError(ErrorCode.SCHEMA, "进料没有给出摩尔流量，也没有给出质量流量")
     weights = molecular_weights(table)
     mean_weight = sum(item.mole_fraction * weights[item.component] for item in feed.composition)
     return mass_flow / mean_weight
