@@ -310,6 +310,7 @@ class Engine:
             ArtifactName.RESULT,
             RunResult(task_id=task.task_id, status=status, cases=records),
         )
+        self._emit(task, EventBody(type=EventType.CHECKPOINT, name="result_saved"))
         task.finish(status)
         self._emit(task, EventBody(type=EventType.STATE_TRANSITION, name=status.value))
 

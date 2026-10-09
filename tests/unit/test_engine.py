@@ -103,6 +103,9 @@ def test_normal_path_calls_tools_in_plan_order_and_completes(scenarios, tmp_path
     per_case = ["SOLVE", "VERIFY"] * len(scenarios[0].spec.cases)
     assert run.transitions() == [*BEFORE_THE_CASES, *per_case, *AFTER_THE_CASES]
     assert run.task.cursor == len(scenarios[0].plan.steps)
+    checkpoints = [e.name for e in run.events if e.type is EventType.CHECKPOINT]
+    saved_cases = ["case_saved"] * len(scenarios[0].spec.cases)
+    assert checkpoints == ["spec_frozen", "plan_saved", *saved_cases, "result_saved"]
     assert run.store.load(run.task.task_id) == run.task
 
 
