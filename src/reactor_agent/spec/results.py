@@ -14,7 +14,7 @@ from pydantic import AwareDatetime, model_validator
 from reactor_agent.errors import ErrorCode
 from reactor_agent.spec.base import FrozenModel
 from reactor_agent.spec.components import ComponentTable
-from reactor_agent.spec.enums import CheckId, CheckSeverity, MetricUnit
+from reactor_agent.spec.enums import CheckId, CheckSeverity, MetricUnit, TaskStatus, WorkflowState
 from reactor_agent.spec.model_spec import Assumption, MetricRequest, ModelSpec, OperatingCase
 from reactor_agent.spec.plan import BuildPlan
 from reactor_agent.spec.snapshot import ModelSnapshot
@@ -188,3 +188,32 @@ class CaseRecord(FrozenModel):
     case_name: str
     result: NormalizedResult | None
     case_file_saved: bool
+
+
+class RunResult(FrozenModel):
+    """artifacts/result.json：每个工况的记录，以及任务的终态（还没结束时是 None）。"""
+
+    task_id: str
+    status: TaskStatus | None
+    cases: tuple[CaseRecord, ...]
+
+
+class FailureReport(FrozenModel):
+    """一次没有完成的任务的诊断：停在哪里、哪一步、什么错、试过什么、文件在哪里。
+
+    details 的键是对象名、字段名或检查编号，值是说明（比如各对象缺什么规定、哪项检查没通过）。
+    """
+
+    task_id: str
+    status: TaskStatus
+    state: WorkflowState
+    tool: str | None
+    arguments: str | None
+    code: ErrorCode
+    message: str
+    details: Mapping[str, str]
+    retries: int
+    rebuilds: int
+    trace_path: Path
+    case_path: Path | None
+    spec_path: Path

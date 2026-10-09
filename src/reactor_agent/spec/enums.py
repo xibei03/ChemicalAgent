@@ -175,3 +175,42 @@ class TaskStatus(StrEnum):
     FAILED = "failed"
     UNSUPPORTED = "unsupported"
     NEEDS_INPUT = "needs_input"
+
+
+class WorkflowState(StrEnum):
+    """任务经过的状态（计划 §7.3 在 1C 的子集）。终态是 TaskStatus，不在这里。"""
+
+    INIT = "INIT"
+    PLAN = "PLAN"
+    PREFLIGHT = "PREFLIGHT"
+    BUILD_BASIS = "BUILD_BASIS"
+    BUILD_FLOWSHEET = "BUILD_FLOWSHEET"
+    SOLVE = "SOLVE"
+    VERIFY = "VERIFY"
+    REPORT = "REPORT"
+
+
+class RecoveryAction(StrEnum):
+    """出错时执行器可以采取的动作：重试当前这一步、干净重建、中止。"""
+
+    RETRY = "retry"
+    REBUILD = "rebuild"
+    ABORT = "abort"
+
+
+class EventType(StrEnum):
+    """Trace 事件的类型（计划 §14.1 在 1C 的子集）。"""
+
+    STATE_TRANSITION = "state_transition"
+    TOOL_CALL = "tool_call"
+    VALIDATION = "validation"
+    CHECKPOINT = "checkpoint"
+    RECOVERY = "recovery"
+    ERROR = "error"
+
+
+class StepStatus(StrEnum):
+    """计划里一步的执行结果：做完了，或者失败了。"""
+
+    DONE = "done"
+    FAILED = "failed"
