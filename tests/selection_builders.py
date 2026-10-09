@@ -60,6 +60,19 @@ def make_features(
     )
 
 
+def cite(features: SelectionFeatures, text: str) -> SelectionFeatures:
+    """把特征里所有的依据换成原文开头的一段，让依据检查通过。"""
+    quote = text[:6]
+    updates: dict[str, object] = {}
+    for name in FeatureName:
+        if features.flag(name).value:
+            updates[name.value] = Flag(value=True, evidence=quote)
+    named = features.named_reactor
+    if named.reactor_type is not None:
+        updates["named_reactor"] = NamedReactor(reactor_type=named.reactor_type, evidence=quote)
+    return features.model_copy(update=updates)
+
+
 def evidence_text(features: SelectionFeatures) -> str:
     """把 make_features 造出的全部依据拼成一段“原文”，让依据检查通过。"""
     return "，".join(quote.text for quote in features.quotes())

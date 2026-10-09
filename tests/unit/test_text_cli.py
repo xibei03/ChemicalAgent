@@ -66,7 +66,7 @@ def test_nothing_in_a_dry_run_touches_hysys(tmp_path, monkeypatch):
 def test_main_reads_the_description_from_a_utf8_file_and_stops_after_selection(
     tmp_path, monkeypatch, capsys
 ):
-    monkeypatch.setattr(cli, "_llm_client", lambda _settings: equilibrium_llm())
+    monkeypatch.setattr(cli, "create_llm_client", lambda _settings: equilibrium_llm())
     description = tmp_path / "描述.txt"
     description.write_text(TEXT + "\n", encoding="utf-8")
     runs = tmp_path / "runs"
@@ -77,13 +77,13 @@ def test_main_reads_the_description_from_a_utf8_file_and_stops_after_selection(
 
 
 def test_main_accepts_the_description_as_a_positional_argument(tmp_path, monkeypatch, capsys):
-    monkeypatch.setattr(cli, "_llm_client", lambda _settings: equilibrium_llm())
+    monkeypatch.setattr(cli, "create_llm_client", lambda _settings: equilibrium_llm())
     code = main(["run", TEXT, "--dry-run", "--runs-dir", str(tmp_path / "runs")])
     assert code == EXIT_OK and "选型结论：Equilibrium" in capsys.readouterr().out
 
 
 def test_a_file_with_a_bom_is_read_without_the_bom(tmp_path, monkeypatch):
-    monkeypatch.setattr(cli, "_llm_client", lambda _settings: equilibrium_llm())
+    monkeypatch.setattr(cli, "create_llm_client", lambda _settings: equilibrium_llm())
     description = tmp_path / "bom.txt"
     description.write_bytes(b"\xef\xbb\xbf" + TEXT.encode("utf-8"))
     runs = tmp_path / "runs"
@@ -98,7 +98,7 @@ def test_an_empty_or_non_utf8_description_is_a_schema_error_and_never_calls_the_
     def refuse(_settings: object) -> None:
         raise AssertionError("描述不合法时不该去创建 LLM 客户端")
 
-    monkeypatch.setattr(cli, "_llm_client", refuse)
+    monkeypatch.setattr(cli, "create_llm_client", refuse)
     description = tmp_path / "bad.txt"
     description.write_bytes(content)
     code = main(["run", "--text-file", str(description), "--runs-dir", str(tmp_path / "runs")])
@@ -127,7 +127,7 @@ def test_a_missing_api_key_names_the_variable_and_how_to_set_it_without_a_traceb
 
 def test_the_key_comes_only_from_the_environment_and_is_never_in_the_settings_file(monkeypatch):
     monkeypatch.setenv("DASHSCOPE_API_KEY", "sk-test-not-a-real-key")
-    llm = cli._llm_client(cli.load_settings(cli.SETTINGS_FILE).llm)
+    llm = cli.create_llm_client(cli.load_settings(cli.SETTINGS_FILE).llm)
     assert hasattr(llm, "complete")
     assert "sk-test" not in cli.SETTINGS_FILE.read_text(encoding="utf-8")
 

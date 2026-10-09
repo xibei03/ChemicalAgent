@@ -87,7 +87,7 @@ def _hysys() -> Iterator[SimBackend]:
         backend.shutdown()
 
 
-def _llm_client(settings: LlmSettings) -> LlmClient:
+def create_llm_client(settings: LlmSettings) -> LlmClient:
     """按配置创建 LLM 客户端。密钥只从环境变量读，读不到就说明怎么设置。"""
     api_key = os.environ.get(settings.api_key_env, "")
     if not api_key:
@@ -162,7 +162,7 @@ def _run_command(args: argparse.Namespace) -> int:
         with _hysys() as backend:
             return run_spec(ToolExecutor(register_tools(backend)), spec, spec_path, runs_dir)
     text = _text_of(args)  # 先读描述，再去连 LLM
-    llm = _llm_client(load_settings(SETTINGS_FILE).llm)
+    llm = create_llm_client(load_settings(SETTINGS_FILE).llm)
     return run_text(llm, text, runs_dir, dry_run=args.dry_run)
 
 

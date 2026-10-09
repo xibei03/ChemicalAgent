@@ -129,7 +129,7 @@ ignore_missing_imports = true
 # ---------------------------------------------------------------- pytest
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["src"]
+pythonpath = ["src", "evals"]
 markers = [
     "hysys: 需要本机的 Aspen HYSYS",
     "llm: 需要调用 LLM 接口",
