@@ -16,6 +16,8 @@ from reactor_agent.spec.settings import LlmSettings
 
 # 网络错误和 5xx、429 的重试由 SDK 自己做，次数有限，演示时网络不通也不会卡上几分钟。
 MAX_NETWORK_RETRIES = 2
+# 连接单独给一个短超时：网络不通时约 30 秒就放弃，不用等读超时（台账 L39）。
+CONNECT_TIMEOUT_S = 10.0
 TEMPERATURE = 0
 # Qwen3 默认开着思考：同一个选型请求，思考开着 90 秒还没有回完，关掉只要 7 秒（台账 L39）。
 # 选型是读懂原文、按定义抽特征，不需要长链推理，所以关掉。
@@ -52,7 +54,7 @@ class DashScopeProvider:
         self._client = OpenAI(
             api_key=api_key,
             base_url=settings.base_url,
-            timeout=settings.timeout_s,
+            timeout=openai.Timeout(settings.timeout_s, connect=CONNECT_TIMEOUT_S),
             max_retries=MAX_NETWORK_RETRIES,
         )
 

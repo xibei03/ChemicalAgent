@@ -19,7 +19,11 @@ from pydantic import BaseModel
 from reactor_agent.errors import ErrorCode, ReactorAgentError
 from reactor_agent.llm.client import StructuredClient
 from reactor_agent.llm.providers import dashscope
-from reactor_agent.llm.providers.dashscope import MAX_NETWORK_RETRIES, DashScopeProvider
+from reactor_agent.llm.providers.dashscope import (
+    CONNECT_TIMEOUT_S,
+    MAX_NETWORK_RETRIES,
+    DashScopeProvider,
+)
 from reactor_agent.spec.settings import LlmSettings
 
 SETTINGS = LlmSettings(
@@ -78,7 +82,8 @@ def status_error(code: int, body: object = None) -> openai.APIStatusError:
 
 def test_the_client_is_built_with_the_configured_timeout_and_a_bounded_number_of_retries(provider):
     built = FakeOpenAI.constructed
-    assert built["timeout"] == 12.5 and built["max_retries"] == MAX_NETWORK_RETRIES
+    assert built["timeout"].read == 12.5 and built["max_retries"] == MAX_NETWORK_RETRIES
+    assert built["timeout"].connect == CONNECT_TIMEOUT_S
     assert built["base_url"] == SETTINGS.base_url and built["api_key"] == SECRET
     assert 0 < MAX_NETWORK_RETRIES <= 3
 
