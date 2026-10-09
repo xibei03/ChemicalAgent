@@ -10,7 +10,6 @@ from datetime import datetime
 from functools import partial
 from pathlib import Path
 
-from reactor_agent.errors import ErrorCode, ReactorAgentError
 from reactor_agent.harness.budgets import MAX_SELECTION_REASKS
 from reactor_agent.harness.context import Prompt, reask_content, selection_prompt
 from reactor_agent.harness.results import write_result
@@ -27,12 +26,7 @@ from reactor_agent.skill_loader import Skill, load_rules, load_skill
 from reactor_agent.spec.enums import Checkpoint, EventType, ReactorType, WorkflowState
 from reactor_agent.spec.llm import summarize_call
 from reactor_agent.spec.selection import SelectionDraft, SelectionResult, SelectionRules
-from reactor_agent.spec.selection_rules import (
-    assess,
-    build_result,
-    reask_feedback,
-    unsupported_reason,
-)
+from reactor_agent.spec.selection_rules import assess, build_result, require_supported
 from reactor_agent.state.models import TaskState
 from reactor_agent.state.store import ArtifactName, StateStore
 
@@ -47,7 +41,7 @@ def select_reactor(ask: Ask, prompt: Prompt, text: str, rules: SelectionRules) -
     assessment = assess(draft, text, rules)
     reasks = 0
     while not assessment.settled and reasks < MAX_SELECTION_REASKS:
-        draft = ask(reask_content(prompt, draft, reask_feedback(draft, assessment)))
+        draft = ask(reask_content(prompt, draft, assessment))
         assessment = assess(draft, text, rules)
         reasks += 1
     return build_result(draft, text, assessment, reasked=reasks > 0)
@@ -83,9 +77,7 @@ class Selector:
         self.store.write_artifact(task.task_id, ArtifactName.SELECTION, result)
         task.record_selection(result.summary)
         self._emit(task, selection_saved_event(result))
-        reason = unsupported_reason(result, self.recipes)
-        if reason is not None:
-            raise ReactorAgentError(ErrorCode.UNSUPPORTED, reason)
+        require_supported(result, self.recipes)
         return WorkflowState.SPECIFY
 
     def _ask(self, task: TaskState, skill: Skill, system: str, user: str) -> SelectionDraft:

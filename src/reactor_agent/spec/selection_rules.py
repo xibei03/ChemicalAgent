@@ -9,6 +9,7 @@ from collections.abc import Callable, Collection, Mapping
 from dataclasses import dataclass
 from types import MappingProxyType
 
+from reactor_agent.errors import ErrorCode, ReactorAgentError
 from reactor_agent.spec.base import FrozenModel
 from reactor_agent.spec.enums import ReactorType
 from reactor_agent.spec.selection import (
@@ -355,11 +356,13 @@ def reask_feedback(draft: SelectionDraft, assessment: Assessment) -> str:
     return "\n".join(f"{number}. {problem}" for number, problem in enumerate(problems, start=1))
 
 
-def unsupported_reason(result: SelectionResult, buildable: Collection[ReactorType]) -> str | None:
-    """选型的结论系统做不做得了：不是反应过程，或者这种类型还不能建模，返回原因；做得了是 None。"""
+def require_supported(result: SelectionResult, buildable: Collection[ReactorType]) -> None:
+    """选型的结论系统做不做得了：不是反应过程，或者这种类型还不能建模，抛 E_UNSUPPORTED。"""
     if result.reactor_type is None:
-        return "这不是反应过程的模拟请求，系统只处理反应器的建模"
-    if result.reactor_type not in buildable:
+        message = "这不是反应过程的模拟请求，系统只处理反应器的建模"
+    elif result.reactor_type not in buildable:
         name = REACTOR_NAMES[result.reactor_type]
-        return f"选型的结论是 {name}，系统还不支持这种反应器的建模"
-    return None
+        message = f"选型的结论是 {name}，系统还不支持这种反应器的建模"
+    else:
+        return
+    raise ReactorAgentError(ErrorCode.UNSUPPORTED, message)

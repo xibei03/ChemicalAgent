@@ -64,8 +64,9 @@ def test_the_reask_keeps_the_original_prompt_the_previous_output_and_the_feedbac
     skill = load_skill(SKILLS_DIR, "reactor-selection")
     prompt = selection_prompt("系统", skill, TEXT)
     draft = make_draft(FEATURES, GIBBS)
-    feedback = reask_feedback(draft, assess(draft, TEXT, load_rules()))
-    content = reask_content(prompt, draft, feedback)
+    assessment = assess(draft, TEXT, load_rules())
+    feedback = reask_feedback(draft, assessment)
+    content = reask_content(prompt, draft, assessment)
     assert content.startswith(prompt.user) and draft.model_dump_json() in content
     assert feedback in content and "重新核对每个特征" in content
 
