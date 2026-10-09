@@ -55,7 +55,7 @@ from reactor_agent.spec.tool_args import (
     SolveArgs,
 )
 from reactor_agent.spec.tool_results import CaseData, ConnectData, SaveData, ToolResult
-from reactor_agent.state.models import CaseSummary, TaskError, TaskState
+from reactor_agent.state.models import BEFORE_CASE_STATES, CaseSummary, TaskError, TaskState
 from reactor_agent.state.store import ArtifactName, StateStore
 from reactor_agent.tools.registry import ToolExecutor
 from reactor_agent.validation.checks import run_common_checks
@@ -260,7 +260,8 @@ class Engine:
 
     def _recover(self, task: TaskState, error: ReactorAgentError) -> WorkflowState | TaskStatus:
         """按错误码决定重试、重建或中止，记下来，返回下一个状态。"""
-        action = decide(error.code, task.retries_here(), task.rebuilds)
+        case_exists = task.current_state not in BEFORE_CASE_STATES
+        action = decide(error.code, task.retries_here(), task.rebuilds, case_exists=case_exists)
         self._record_error(task, error, action)
         if action is RecoveryAction.RETRY:
             task.count_retry()

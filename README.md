@@ -18,7 +18,15 @@ reactor-agent trace <task_id>                    打印一次运行的时间线
 
 ## 密钥
 
-LLM 用阿里云百炼的 Qwen（配置在 `config/settings.yaml`）。密钥只从环境变量 `DASHSCOPE_API_KEY` 读，不写进文件、不进日志。在自己的终端里设置（PowerShell，输入时不回显）：
+LLM 用阿里云百炼的 Qwen（配置在 `config/settings.yaml`）。系统只从环境变量 `DASHSCOPE_API_KEY` 读密钥，不写进文件、不进日志。
+
+**交互入口**：在终端里输入一次密钥（不回显，只留在进程的环境里），然后用菜单运行探针、三个场景的选型、选型评测，或者对你输入的一段描述做选型：
+
+```
+python evals/interactive.py
+```
+
+也可以自己设置环境变量（PowerShell，输入时不回显）：
 
 ```
 $key = Read-Host -AsSecureString 'DASHSCOPE_API_KEY'; $env:DASHSCOPE_API_KEY = [System.Net.NetworkCredential]::new('', $key).Password

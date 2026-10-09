@@ -47,11 +47,16 @@ POLICIES: Mapping[ErrorCode, Policy] = MappingProxyType(
 )
 
 
-def decide(code: ErrorCode, retries_used: int, rebuilds_used: int) -> RecoveryAction:
-    """下一步做什么：这个位置的重试还没用完就重试，否则重建（如果允许且还没用掉），否则中止。"""
+def decide(
+    code: ErrorCode, retries_used: int, rebuilds_used: int, *, case_exists: bool = True
+) -> RecoveryAction:
+    """下一步做什么：这个位置的重试还没用完就重试，否则重建（如果允许且还没用掉），否则中止。
+
+    还没有 Case 的阶段（选型、写规格）没有可以丢弃重建的东西，所以不重建。
+    """
     policy = POLICIES.get(code, ABORT_ONLY)
     if retries_used < policy.retries:
         return RecoveryAction.RETRY
-    if policy.rebuild and rebuilds_used < MAX_REBUILDS:
+    if policy.rebuild and case_exists and rebuilds_used < MAX_REBUILDS:
         return RecoveryAction.REBUILD
     return RecoveryAction.ABORT

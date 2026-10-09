@@ -231,3 +231,15 @@ def test_the_state_file_of_a_stopped_text_task_can_be_read_back(tmp_path):
     loaded = run.store.load(run.task.task_id)
     assert loaded == run.task
     assert loaded.current_state is WorkflowState.SPECIFY and loaded.selection is not None
+
+
+def test_a_failure_before_any_case_is_retried_but_never_rebuilt(tmp_path):
+    errors = [ReactorAgentError(ErrorCode.IO, "磁盘写不了")] * 3
+    run = select(tmp_path, EQUILIBRIUM_FEATURES, errors)
+    assert run.task.status is TaskStatus.FAILED
+    assert [e.action for e in run.task.errors] == [
+        RecoveryAction.RETRY,
+        RecoveryAction.RETRY,
+        RecoveryAction.ABORT,
+    ]
+    assert run.task.rebuilds == 0 and run.llm.calls == 3

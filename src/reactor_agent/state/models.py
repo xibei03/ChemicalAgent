@@ -24,6 +24,8 @@ from reactor_agent.spec.selection import SelectionSummary
 
 # 在这些状态里，事件和诊断要带上正在处理的工况名。
 PER_CASE_STATES = frozenset({WorkflowState.SOLVE, WorkflowState.VERIFY})
+# 这些状态还没有碰过 HYSYS 的 Case，出错时没有什么可以丢弃重建。
+BEFORE_CASE_STATES = frozenset({WorkflowState.SELECT, WorkflowState.SPECIFY})
 UNKNOWN_VERSION = "未知"
 SUCCESS_STATUSES = frozenset({TaskStatus.COMPLETE, TaskStatus.COMPLETE_WITH_WARNINGS})
 

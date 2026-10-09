@@ -98,13 +98,20 @@ def git_state() -> str:
     return f"{git('rev-parse', '--short', 'HEAD')}{dirty}"
 
 
+def result_file(runs_dir: Path, *, partial: bool) -> Path:
+    """跑全部用例写 docs/EVAL_RESULTS.md；只跑一部分写在运行目录里，不覆盖完整的结果。"""
+    return runs_dir / "EVAL_PARTIAL.md" if partial else DEFAULT_OUTPUT
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawTextHelpFormatter
     )
     parser.add_argument("--ask-key", action="store_true", help="环境变量里没有密钥时在终端里输入")
     parser.add_argument("--cases", help="只跑这些用例（逗号分隔的编号），默认全部")
-    parser.add_argument("--output", default=str(DEFAULT_OUTPUT), help="结果文件")
+    parser.add_argument(
+        "--output", help="结果文件。默认：全部用例写 docs/EVAL_RESULTS.md，部分用例写在运行目录里"
+    )
     args = parser.parse_args()
     for stream in (sys.stdout, sys.stderr):
         stream.reconfigure(encoding="utf-8")
@@ -145,9 +152,10 @@ def main() -> int:
         "运行目录": runs_dir.relative_to(REPO_ROOT).as_posix(),
     }
     report = render_report(cases, records, meta)
-    Path(args.output).write_text(report, encoding="utf-8")
+    output = Path(args.output) if args.output else result_file(runs_dir, partial=bool(args.cases))
+    output.write_text(report, encoding="utf-8")
     summary = summarize(cases, records)
-    print(f"\n{'门槛通过' if summary.gate_passed else '门槛没有通过'}，结果写在 {args.output}")
+    print(f"\n{'门槛通过' if summary.gate_passed else '门槛没有通过'}，结果写在 {output}")
     return 0 if summary.gate_passed else 1
 
 

@@ -72,3 +72,11 @@ def test_the_number_of_recovery_actions_is_bounded(code):
 def test_a_rebuild_that_was_already_used_is_not_offered_again():
     assert decide(ErrorCode.CONFLICT, retries_used=0, rebuilds_used=1) is ABORT
     assert decide(ErrorCode.NOT_FOUND, retries_used=2, rebuilds_used=1) is ABORT
+
+
+@pytest.mark.parametrize("code", [ErrorCode.CONFLICT, ErrorCode.NOT_SOLVED, ErrorCode.IO])
+def test_nothing_is_rebuilt_before_a_case_exists(code):
+    retries = POLICIES[code].retries
+    assert decide(code, retries, 0, case_exists=False) is ABORT
+    if retries:
+        assert decide(code, 0, 0, case_exists=False) is RETRY
