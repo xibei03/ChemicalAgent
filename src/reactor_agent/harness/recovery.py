@@ -1,0 +1,53 @@
+"""恢复策略：错误码 → 重试几次、能不能重建。
+
+决定做什么是这里的纯函数（查表），去做是执行器的事。表是计划 §13.2 在阶段 1C 的子集：
+会话失效（R1）、规格问题（R3）、向用户提问（R4）在本阶段都没有，所以这几类错误直接中止。
+"""
+
+from collections.abc import Mapping
+from dataclasses import dataclass
+from types import MappingProxyType
+
+from reactor_agent.errors import ErrorCode
+from reactor_agent.harness.budgets import MAX_REBUILDS
+from reactor_agent.spec.enums import RecoveryAction
+
+
+@dataclass(frozen=True)
+class Policy:
+    """一个错误码的策略链：先重试 retries 次，然后（如果允许）重建一次，最后中止。"""
+
+    retries: int
+    rebuild: bool
+
+
+ABORT_ONLY = Policy(retries=0, rebuild=False)
+TRANSIENT = Policy(retries=2, rebuild=True)
+ONCE = Policy(retries=1, rebuild=True)
+REBUILD_ONLY = Policy(retries=0, rebuild=True)
+
+POLICIES: Mapping[ErrorCode, Policy] = MappingProxyType(
+    {
+        ErrorCode.NOT_FOUND: TRANSIENT,
+        ErrorCode.READBACK_MISMATCH: TRANSIENT,
+        ErrorCode.ATTACH_FAILED: TRANSIENT,
+        ErrorCode.CONNECT_FAILED: TRANSIENT,
+        ErrorCode.IO: TRANSIENT,
+        ErrorCode.CASE_OPEN: TRANSIENT,
+        ErrorCode.TIMEOUT: ONCE,
+        ErrorCode.NOT_CONVERGED: ONCE,
+        ErrorCode.VALIDATION_FATAL: ONCE,
+        ErrorCode.CONFLICT: REBUILD_ONLY,
+        ErrorCode.BASIS_LOCKED: REBUILD_ONLY,
+    }
+)
+
+
+def decide(code: ErrorCode, retries_used: int, rebuilds_used: int) -> RecoveryAction:
+    """下一步做什么：这个位置的重试还没用完就重试，否则重建（如果允许且还没用掉），否则中止。"""
+    policy = POLICIES.get(code, ABORT_ONLY)
+    if retries_used < policy.retries:
+        return RecoveryAction.RETRY
+    if policy.rebuild and rebuilds_used < MAX_REBUILDS:
+        return RecoveryAction.REBUILD
+    return RecoveryAction.ABORT
