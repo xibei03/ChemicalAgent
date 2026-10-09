@@ -40,6 +40,9 @@ POLICIES: Mapping[ErrorCode, Policy] = MappingProxyType(
         ErrorCode.VALIDATION_FATAL: ONCE,
         ErrorCode.CONFLICT: REBUILD_ONLY,
         ErrorCode.BASIS_LOCKED: REBUILD_ONLY,
+        # 多数是确定的欠规定，重建一次还解不出来就中止，诊断里有各对象的状态；但 HYSYS 偶尔
+        # 也会建出结构全对却不求解的模型（台账 L38），新建一个 Case 重来能避开它。
+        ErrorCode.NOT_SOLVED: REBUILD_ONLY,
     }
 )
 

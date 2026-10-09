@@ -311,7 +311,7 @@ def test_an_unrecoverable_error_aborts_at_once_and_keeps_the_case_for_inspection
 
 def test_aborting_in_a_later_case_never_overwrites_the_file_of_an_earlier_case(tmp_path):
     scenarios = SCENARIO_SETS["equilibrium"]()
-    failures = {ToolName.SOLVER_SOLVE: [None, ErrorCode.NOT_SOLVED]}
+    failures = {ToolName.SOLVER_SOLVE: [None, ErrorCode.COM_DISCONNECTED]}
     run = execute(tmp_path, scenarios, failures=failures)
     assert run.task.status is TaskStatus.FAILED
     run_dir = run.store.run_dir(run.task.task_id)
@@ -320,6 +320,31 @@ def test_aborting_in_a_later_case_never_overwrites_the_file_of_an_earlier_case(t
     first = run.result().cases[0]
     assert first.case_name == "T710" and first.result is not None
     assert first.result.provenance.case_path == run_dir / "T710.hsc"
+
+
+def test_a_model_that_does_not_solve_is_rebuilt_once_and_then_completes(conversion, tmp_path):
+    failures = {ToolName.SOLVER_SOLVE: [ErrorCode.NOT_SOLVED]}
+    run = execute(tmp_path, [conversion], failures=failures)
+    assert run.task.status is TaskStatus.COMPLETE
+    assert (run.task.retries_total, run.task.rebuilds) == (0, 1)  # 不重试，直接重建
+    assert run.tools.tools_called.count(ToolName.SOLVER_SOLVE) == 2
+    files = [args.path.name for args in run.tools.args_of(ToolName.CASE_ENSURE)]
+    assert files == ["working-1.hsc", "working-2.hsc"]
+    recoveries = [e.name for e in run.events if e.type is EventType.RECOVERY]
+    assert recoveries == ["rebuild"]
+
+
+def test_a_model_that_still_does_not_solve_after_the_rebuild_aborts_with_the_object_states(
+    conversion, tmp_path
+):
+    run = execute(tmp_path, [conversion], always={ToolName.SOLVER_SOLVE: ErrorCode.NOT_SOLVED})
+    assert run.task.status is TaskStatus.FAILED
+    assert (run.task.retries_total, run.task.rebuilds) == (0, 1)
+    assert run.tools.tools_called.count(ToolName.SOLVER_SOLVE) == 2  # 重建前后各一次
+    last = run.task.errors[-1]
+    assert (last.code, last.action) == (ErrorCode.NOT_SOLVED, RecoveryAction.ABORT)
+    report = run.task.failure_report(Path("trace.jsonl"), Path("model_spec.json"))
+    assert report is not None and report.details == {"CRV-100": "under_specified"}
 
 
 def test_a_failing_save_at_abort_does_not_hide_the_original_error(conversion, tmp_path):

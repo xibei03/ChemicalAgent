@@ -247,19 +247,24 @@ def test_a_conflicting_object_triggers_exactly_one_clean_rebuild_and_the_task_st
     assert "rebuild (E_CONFLICT)" in timeline and timeline.rstrip().endswith("complete")
 
 
-class FailSecondSolve(ToolExecutor):
-    """测试专用的包装：第二次求解直接返回 E_NOT_SOLVED（不真的调用），其余照常。"""
+class FailSolves(ToolExecutor):
+    """测试专用的包装：指定的几次求解直接返回错误（不真的调用），其余照常。
 
-    def __init__(self, inner: ToolExecutor) -> None:
+    which 是第几次求解（从 1 数）；None 是每一次。
+    """
+
+    def __init__(self, inner: ToolExecutor, code: ErrorCode, which: frozenset[int] | None) -> None:
         super().__init__({})
         self._inner = inner
+        self._code = code
+        self._which = which
         self._solves = 0
 
     def call(self, name: str, args: object) -> ToolResult:
         if name == ToolName.SOLVER_SOLVE:
             self._solves += 1
-            if self._solves == 2:
-                return ToolResult.failure(ErrorCode.NOT_SOLVED, "测试注入的失败", {"ERV-100": "x"})
+            if self._which is None or self._solves in self._which:
+                return ToolResult.failure(self._code, "测试注入的失败", {"注入": "not_solved"})
         return self._inner.call(name, args)
 
 
@@ -277,9 +282,10 @@ def outlet_temperature_in(executor: ToolExecutor, execution: Execution, path: Pa
 def test_an_abort_in_the_second_case_keeps_the_first_cases_file_and_saves_the_failure_apart(
     executor, tmp_path, close_the_case
 ):
-    execution = execute(FailSecondSolve(executor), "smr_equilibrium", tmp_path / "runs")
+    tools = FailSolves(executor, ErrorCode.COM_DISCONNECTED, frozenset({2}))
+    execution = execute(tools, "smr_equilibrium", tmp_path / "runs")
     assert execution.task.status is TaskStatus.FAILED
-    assert execution.task.errors[-1].code is ErrorCode.NOT_SOLVED
+    assert execution.task.errors[-1].code is ErrorCode.COM_DISCONNECTED
     first, failed = execution.run_dir / "T710.hsc", execution.run_dir / "work" / "failed.hsc"
     assert failed.is_file() and failed.stat().st_size > 0
     report = execution.task.failure_report(execution.run_dir / TRACE_FILE, first)
@@ -287,3 +293,41 @@ def test_an_abort_in_the_second_case_keeps_the_first_cases_file_and_saves_the_fa
     # 第一个工况的文件还是 710 °C 的状态；现场是第二个工况改了规定、还没解出来的状态（600 °C）
     assert outlet_temperature_in(executor, execution, first) == pytest.approx(710.0, abs=0.1)
     assert outlet_temperature_in(executor, execution, failed) == pytest.approx(600.0, abs=0.1)
+
+
+def solve_outcomes(execution: Execution) -> list[bool]:
+    """Trace 里每次求解调用是否成功，按发生的顺序。"""
+    events = read_events(execution.run_dir / TRACE_FILE)
+    return [e.error is None for e in events if e.name == ToolName.SOLVER_SOLVE]
+
+
+def test_a_model_that_does_not_solve_is_rebuilt_once_and_both_cases_are_computed_again(
+    executor, tmp_path, close_the_case
+):
+    tools = FailSolves(executor, ErrorCode.NOT_SOLVED, frozenset({2}))
+    execution = execute(tools, "smr_equilibrium", tmp_path / "runs")
+    assert execution.task.status is TaskStatus.COMPLETE, execution.task.errors
+    assert (execution.task.retries_total, execution.task.rebuilds) == (0, 1)
+    assert solve_outcomes(execution) == [True, False, True, True]  # 重建后两个工况都重新求解
+    events = read_events(execution.run_dir / TRACE_FILE)
+    recoveries = [e for e in events if e.type is EventType.RECOVERY]
+    assert [e.name for e in recoveries] == ["rebuild"]
+    assert (recoveries[0].error or "").startswith("E_NOT_SOLVED")
+    assert_object_counts_match_the_plan(executor, execution.plan())
+    assert_the_run_directory_is_complete(execution)
+    assert_matches_the_references("smr_equilibrium", execution)
+
+
+def test_a_model_that_never_solves_ends_failed_after_one_rebuild_and_keeps_the_case(
+    executor, tmp_path, close_the_case
+):
+    tools = FailSolves(executor, ErrorCode.NOT_SOLVED, None)
+    execution = execute(tools, "toluene_conversion", tmp_path / "runs")
+    assert execution.task.status is TaskStatus.FAILED
+    assert (execution.task.retries_total, execution.task.rebuilds) == (0, 1)
+    assert solve_outcomes(execution) == [False, False]  # 重建前后各一次
+    failed = execution.run_dir / "work" / "failed.hsc"
+    assert failed.is_file() and failed.stat().st_size > 0
+    report = execution.task.failure_report(execution.run_dir / TRACE_FILE, failed)
+    assert report is not None and report.code is ErrorCode.NOT_SOLVED
+    assert report.details == {"注入": "not_solved"}
