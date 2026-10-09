@@ -1,6 +1,7 @@
 """平衡反应器的 Recipe：反应是可逆的平衡反应，平衡常数来自 Gibbs 自由能，或者直接给定。"""
 
 import math
+from typing import NamedTuple
 
 from reactor_agent.recipes.base import (
     common_rules,
@@ -37,6 +38,14 @@ def _quotient(reaction: EquilibriumReaction, outlet: StreamSnapshot | None) -> f
     return value
 
 
+class _QuotientRow(NamedTuple):
+    """一个固定 K 的反应：给定的平衡常数，和出料算出的反应商。"""
+
+    reaction: str
+    constant: float
+    quotient: float | None
+
+
 def fixed_k_checks(context: CheckContext) -> tuple[CheckResult, ...]:
     """给定了平衡常数 K 的反应：气相出料算出的反应商等于 K（摩尔分率基准，台账 H10）。"""
     rows = []
@@ -46,15 +55,17 @@ def fixed_k_checks(context: CheckContext) -> tuple[CheckResult, ...]:
             if not isinstance(reaction, EquilibriumReaction):
                 continue
             if reaction.equilibrium_constant is not None:
-                rows.append((name, reaction.equilibrium_constant, _quotient(reaction, outlet)))
+                quotient = _quotient(reaction, outlet)
+                rows.append(_QuotientRow(name, reaction.equilibrium_constant, quotient))
     if not rows:
         return ()
-    expected = "；".join(f"{name}：K = {constant:g}" for name, constant, _ in rows)
-    found = "；".join(f"{name}：K = {describe(quotient)}" for name, _, quotient in rows)
+    expected = "；".join(f"{row.reaction}：K = {row.constant:g}" for row in rows)
+    found = "；".join(f"{row.reaction}：K = {describe(row.quotient)}" for row in rows)
     problems = [
-        f"{name} 的平衡常数应为 {constant:g}，出料算出 {describe(quotient)}"
-        for name, constant, quotient in rows
-        if quotient is None or not math.isclose(quotient, constant, rel_tol=FIXED_K_TOLERANCE)
+        f"{row.reaction} 的平衡常数应为 {row.constant:g}，出料算出 {describe(row.quotient)}"
+        for row in rows
+        if row.quotient is None
+        or not math.isclose(row.quotient, row.constant, rel_tol=FIXED_K_TOLERANCE)
     ]
     return (check_result(CheckId.FIXED_K_SATISFIED, expected, found, problems),)
 

@@ -14,7 +14,7 @@ from reactor_agent.spec.components import ComponentTable, atoms_by_component, fi
 from reactor_agent.spec.enums import HeatMode, ReactionKind, ReactorType, SpecVariable, StreamKind
 from reactor_agent.spec.model_spec import FeedSpec, ModelSpec, OperatingCase
 from reactor_agent.spec.plan import BasisArgs, BuildPlan, FlowsheetArgs, assemble_plan
-from reactor_agent.spec.results import CheckContext, CheckResult, Issue
+from reactor_agent.spec.results import CheckContext, CheckResult, Issue, make_issue
 from reactor_agent.spec.tool_args import (
     EnsureReactionArgs,
     EnsureReactionSetArgs,
@@ -197,14 +197,7 @@ def _component_issues(spec: ModelSpec, table: ComponentTable) -> tuple[Issue, ..
             message = f"组分要写规范名 {entry.name!r}，不是 {name!r}"
         else:
             continue
-        issues.append(
-            Issue(
-                code=ErrorCode.COMPONENT_NOT_FOUND,
-                field_path=f"components[{index}]",
-                message=message,
-                user_fixable=False,
-            )
-        )
+        issues.append(make_issue(ErrorCode.COMPONENT_NOT_FOUND, f"components[{index}]", message))
     return tuple(issues)
 
 
@@ -231,14 +224,9 @@ def _reaction_balance_issues(spec: ModelSpec, table: ComponentTable) -> tuple[Is
             detail = "、".join(
                 f"{element} 净增 {net:+.4g}" for element, net in sorted(wrong.items())
             )
-            issues.append(
-                Issue(
-                    code=ErrorCode.REACTION_INVALID,
-                    field_path=f"reactions[{index}].stoichiometry",
-                    message=f"反应式不满足元素守恒（按分子式计算）：{detail}",
-                    user_fixable=False,
-                )
-            )
+            message = f"反应式不满足元素守恒（按分子式计算）：{detail}"
+            path = f"reactions[{index}].stoichiometry"
+            issues.append(make_issue(ErrorCode.REACTION_INVALID, path, message))
     return tuple(issues)
 
 
@@ -255,27 +243,20 @@ def unsupported_heat_modes(
         return ()
     allowed = "、".join(sorted(mode.value for mode in supported))
     message = f"{what or f'{spec.reactor_type.value} 反应器'}只支持这些热模式：{allowed}"
-    return (
-        Issue(
-            code=ErrorCode.UNSUPPORTED, field_path="heat_mode", message=message, user_fixable=False
-        ),
-    )
+    return (make_issue(ErrorCode.UNSUPPORTED, "heat_mode", message),)
 
 
 def reaction_kind_issues(spec: ModelSpec, kind: ReactionKind) -> tuple[Issue, ...]:
     """转化、平衡反应器的要求：至少一个反应，并且全部是这种类型的反应。"""
     if not spec.reactions:
         message = f"{spec.reactor_type.value} 反应器至少要有一个{KIND_NAMES[kind]}反应"
-        return (
-            Issue(code=ErrorCode.RULE, field_path="reactions", message=message, user_fixable=True),
-        )
+        return (make_issue(ErrorCode.RULE, "reactions", message, user_fixable=True),)
     allowed = f"{spec.reactor_type.value} 反应器只能用{KIND_NAMES[kind]}反应"
     return tuple(
-        Issue(
-            code=ErrorCode.SET_INCOMPATIBLE,
-            field_path=f"reactions[{index}]",
-            message=f"{allowed}，这里是 {reaction.kind.value}",
-            user_fixable=False,
+        make_issue(
+            ErrorCode.SET_INCOMPATIBLE,
+            f"reactions[{index}]",
+            f"{allowed}，这里是 {reaction.kind.value}",
         )
         for index, reaction in enumerate(spec.reactions)
         if reaction.kind is not kind

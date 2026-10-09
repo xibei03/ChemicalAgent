@@ -45,6 +45,13 @@ class Issue(FrozenModel):
     user_fixable: bool
 
 
+def make_issue(
+    code: ErrorCode, field_path: str, message: str, *, user_fixable: bool = False
+) -> Issue:
+    """构造规格问题。多数问题不是用户给的信息造成的，所以 user_fixable 默认是假。"""
+    return Issue(code=code, field_path=field_path, message=message, user_fixable=user_fixable)
+
+
 class CheckResult(FrozenModel):
     """一项结果检查的结论。期望值和实测值是代码格式化好的文字，不同的检查单位各不相同。"""
 

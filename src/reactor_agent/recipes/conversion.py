@@ -5,6 +5,7 @@ HYSYS 按进料里基准组分的量计算转化率；同一基准组分的几�
 """
 
 from collections.abc import Iterable
+from typing import NamedTuple
 
 from reactor_agent.errors import ErrorCode
 from reactor_agent.recipes.base import (
@@ -19,7 +20,14 @@ from reactor_agent.spec.components import ComponentTable
 from reactor_agent.spec.enums import CheckId, HeatMode, ReactionKind
 from reactor_agent.spec.model_spec import ModelSpec
 from reactor_agent.spec.plan import BuildPlan
-from reactor_agent.spec.results import CheckContext, CheckResult, Issue, check_result, describe
+from reactor_agent.spec.results import (
+    CheckContext,
+    CheckResult,
+    Issue,
+    check_result,
+    describe,
+    make_issue,
+)
 from reactor_agent.spec.tool_args import ConversionReaction, EnsureReactorArgs, ReactionDefinition
 
 REACTOR_NAME = "CRV-100"
@@ -42,10 +50,10 @@ def _totals_by_base(reactions: Iterable[ReactionDefinition]) -> dict[str, float]
 
 def _parallel_sum_issues(spec: ModelSpec) -> tuple[Issue, ...]:
     return tuple(
-        Issue(
-            code=ErrorCode.RULE,
-            field_path="reactions",
-            message=f"以 {base} 为基准的转化率之和是 {total:g}%，超过了 100%",
+        make_issue(
+            ErrorCode.RULE,
+            "reactions",
+            f"以 {base} 为基准的转化率之和是 {total:g}%，超过了 100%",
             user_fixable=True,
         )
         for base, total in _totals_by_base(spec.reactions).items()
@@ -66,14 +74,7 @@ def _shared_base_issues(spec: ModelSpec) -> tuple[Issue, ...]:
                 f"{others} 是别的转化反应的基准组分，又出现在这个反应里；转化率按进料里的量"
                 "计算，不支持前后串联的反应"
             )
-            issues.append(
-                Issue(
-                    code=ErrorCode.UNSUPPORTED,
-                    field_path=f"reactions[{index}]",
-                    message=message,
-                    user_fixable=False,
-                )
-            )
+            issues.append(make_issue(ErrorCode.UNSUPPORTED, f"reactions[{index}]", message))
     return tuple(issues)
 
 
@@ -88,21 +89,30 @@ def _measured_conversion(
     return conversion_percent(feeds, outlets, base)
 
 
+class _ConversionRow(NamedTuple):
+    """一台反应器的一个基准组分：规定的转化率和实测的转化率（%）。"""
+
+    reactor: str
+    base: str
+    wanted: float
+    actual: float | None
+
+
 def conversion_checks(context: CheckContext) -> tuple[CheckResult, ...]:
     """每台挂了转化反应的反应器：基准组分实际的转化率等于各反应转化率之和（±0.1 个百分点）。"""
     rows = [
-        (reactor.name, base, wanted, _measured_conversion(context, reactor, base))
+        _ConversionRow(reactor.name, base, wanted, _measured_conversion(context, reactor, base))
         for reactor, named in reactions_by_reactor(context.plan)
         for base, wanted in _totals_by_base(named.values()).items()
     ]
     if not rows:
         return ()
-    expected = "；".join(f"{base} 转化 {wanted:g}%" for _, base, wanted, _ in rows)
-    found = "；".join(f"{base} 转化 {describe(actual)}%" for _, base, _, actual in rows)
+    expected = "；".join(f"{row.base} 转化 {row.wanted:g}%" for row in rows)
+    found = "；".join(f"{row.base} 转化 {describe(row.actual)}%" for row in rows)
     problems = [
-        f"{reactor} 的 {base} 转化率应为 {wanted:g}%，实测 {describe(actual)}%"
-        for reactor, base, wanted, actual in rows
-        if actual is None or abs(actual - wanted) > CONVERSION_TOLERANCE_PERCENT
+        f"{row.reactor} 的 {row.base} 转化率应为 {row.wanted:g}%，实测 {describe(row.actual)}%"
+        for row in rows
+        if row.actual is None or abs(row.actual - row.wanted) > CONVERSION_TOLERANCE_PERCENT
     ]
     return (check_result(CheckId.CONVERSION_SPECIFIED, expected, found, problems),)
 

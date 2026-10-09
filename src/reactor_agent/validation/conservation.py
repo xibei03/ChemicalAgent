@@ -5,6 +5,7 @@ V7 能发现“仿真软件说已求解，但模型本身是错的”这一类�
 """
 
 import math
+from typing import NamedTuple
 
 from reactor_agent.spec.balances import total_element_flow_kmol_h, total_mass_flow_kg_h
 from reactor_agent.spec.components import atoms_by_component
@@ -18,8 +19,14 @@ ELEMENT_BALANCE_TOLERANCE = 1e-3
 # 两边都接近 0 的量（比如进料里没有的元素）相对误差没有意义，差在这个范围内就算守恒。
 ABSOLUTE_TOLERANCE = 1e-9
 
-# 项目名、进的量、出的量、相对误差上限
-BalanceRow = tuple[str, float | None, float | None, float]
+
+class BalanceRow(NamedTuple):
+    """一项守恒：项目名、进的量、出的量、相对误差上限。"""
+
+    label: str
+    fed: float | None
+    left: float | None
+    tolerance: float
 
 
 def _balance_rows(
@@ -27,8 +34,8 @@ def _balance_rows(
 ) -> list[BalanceRow]:
     atoms = atoms_by_component(context.components)
     elements = sorted({e for name in context.spec.components for e in atoms.get(name, {})})
-    rows: list[BalanceRow] = [
-        (
+    rows = [
+        BalanceRow(
             "总质量 kg/h",
             total_mass_flow_kg_h(feeds),
             total_mass_flow_kg_h(outlets),
@@ -36,7 +43,7 @@ def _balance_rows(
         )
     ]
     rows += [
-        (
+        BalanceRow(
             f"元素 {element} kmol/h",
             total_element_flow_kmol_h(feeds, element, atoms),
             total_element_flow_kmol_h(outlets, element, atoms),
@@ -67,13 +74,12 @@ def check_conservation(context: CheckContext) -> CheckResult:
         return check_result(CheckId.CONSERVATION, expected, "", ["进料或出料物流不存在，无法核算"])
     problems = []
     errors = []
-    for label, fed, left, tolerance in _balance_rows(context, feeds, outlets):
-        error = _relative_error(fed, left)
+    for row in _balance_rows(context, feeds, outlets):
+        error = _relative_error(row.fed, row.left)
         if error is None:
-            problems.append(f"{label} 进出的量读不到，无法核算")
-        elif not math.isclose(error, 0.0, abs_tol=tolerance):
-            problems.append(
-                f"{label} 进 {describe(fed)}，出 {describe(left)}，相对误差 {error:.2e}"
-            )
+            problems.append(f"{row.label} 进出的量读不到，无法核算")
+        elif not math.isclose(error, 0.0, abs_tol=row.tolerance):
+            fed, left = describe(row.fed), describe(row.left)
+            problems.append(f"{row.label} 进 {fed}，出 {left}，相对误差 {error:.2e}")
         errors.append(error or 0.0)
     return check_result(CheckId.CONSERVATION, expected, f"最大相对误差 {max(errors):.2e}", problems)
