@@ -1,4 +1,8 @@
-"""集成测试的夹具：整个测试会话只启动一次 HYSYS，每个测试用自己的 Case。"""
+"""集成测试的夹具：每个测试文件启动一次 HYSYS，文件里的每个测试用自己的 Case。
+
+不是整个会话共用一个：同一个 HYSYS 实例里建了四十多个 Case 之后，偶尔会出现建好的模型不求解、
+转化反应器不反应的情况（台账 L38），所以每个测试文件换一个新的实例。
+"""
 
 import faulthandler
 
@@ -11,9 +15,9 @@ from reactor_agent.tools.definitions import register_tools
 from reactor_agent.tools.registry import ToolExecutor
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def backend():
-    """会话级的 Backend：测试结束时结束自己启动的 HYSYS 实例。"""
+    """文件级的 Backend：文件里的测试结束时结束自己启动的 HYSYS 实例。"""
     # 退出 HYSYS 时进程在 Quit() 调用中途消失，Windows 报 RPC 异常 0x800706ba，Backend 已经
     # 处理了它，但 pytest 的 faulthandler 会把它当作致命错误打印出来。它在配置阶段才启用，
     # 所以在这里关掉。
@@ -25,7 +29,7 @@ def backend():
     assert dialogs == (), f"测试期间 HYSYS 弹出过对话框，正常的建模流程不应该这样：{dialogs}"
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def executor(backend):
     """已经连接好 HYSYS 的 ToolExecutor。测试只通过它调用工具。"""
     executor = ToolExecutor(register_tools(backend))
