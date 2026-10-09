@@ -13,7 +13,7 @@
 - 阶段 0A：**已完成**（主体 2026-10-08 10:55 结束，UTC+8；用户答复后补做 D11，12:00 结束）。首次开始于 2026-10-03 09:50，共 3 个会话（见"已完成"的时间表）。任务 1 至 3、5 至 11 都完成，完成标准的 6 条都有实际运行的验证。**任务 4（E0，LLM 连通性）挂起**，等用户给出供应商、模型和密钥所在的环境变量（D1）（2026-10-08 用户已给出；2026-10-09 用户运行探针，通过，见台账 L35）。**D11（参考 Case）已由助手用代码建成并补跑了 E3，不再等用户。**当前没有残留的 HYSYS 进程。
 - **用户 2026-10-08 的答复（0A 交接之后）：D11 由助手自行创建参考 Case，建好后补跑 E3；D9 之后的提交署名改为 `xibei03 <jsl_03@163.com>`；"完成后续跑"。** 我的理解和假设：自行创建用 COM 代码做（没有别的手段），所以这部分工作等于提前做了 0B/0C 的一部分探针（E4 至 E9），台账里按探针记录；"完成后续跑"理解为做完这些之后补跑 E3，**不进入阶段 0B**（阶段边界不变，0B 仍在新会话里做，可以直接用这里的结论）。如果用户的意思是连续做 0B，请在回复里明说。（用户随后回复“继续 0B”，0B 在同一个会话里做了。）
 - 最近通过的闸门：**G1（2026-10-09，阶段 1C）**，此前是 G0（2026-10-08，阶段 0B）；0C、1A、1B 没有闸门。1C 结束时质量工具全绿：`ruff format --check`、`ruff check`、`mypy src`（59 个源文件）、`pytest`（839 passed）、`pytest -m hysys tests/integration`（56 passed，约 180 秒）；`python tests/test_code_health.py` 输出 `src/` 4631 行代码，`harness` 353 行，最长函数 28 行，最深嵌套 3 层，没有忽略检查的注释。1A 结束时质量工具全绿：`ruff format --check`、`ruff check`、`mypy src`、`pytest`（230 passed）、`pytest -m hysys tests/integration`（39 passed）；`python tests/test_code_health.py` 输出 `src/` 1971 行代码（`backends` 1280、`spec` 548、`tools` 83、`errors` 60），最长函数 27 行，最深嵌套 3 层，没有忽略检查的注释。
-- 最近一次更新：2026-10-09 21:50
+- 最近一次更新：2026-10-09 22:10
 - 时间记法：本机时钟是 UTC，进度文件里的时间一律换算成 UTC+8（加 8 小时）。
 - 推送状态：本阶段每个任务的提交都已推送到 `origin/main`，没有强制推送；推送方式见"环境事实"的"GitHub 凭据"。
 
@@ -183,7 +183,23 @@
 
 ## 进行中
 
-没有进行中的阶段。1C 已完成（只等用户确认第 5 条），下一个会话做 2A（见“下一步”）。1C 的设计决定留在下面，后面的阶段按它们理解执行器；1B 的设计决定在其后。
+**阶段 2A（反应器选型）进行中**，2026-10-09 22:03 开始（UTC+8）。时间盒约 2.5 小时。
+
+### 阶段 2A 的设计草图（2026-10-09 22:10）
+
+**任务顺序**：①评测用例（先写先提交）→ ②`spec/selection.py`（特征、规则表、规则检查、原文依据检查、结果模型）→ ③探针 E18（LLM 的 `json_schema`、温度 0、关闭思考、超时；**需要用户在自己的终端里运行**）→ ④`skill_loader.py` → ⑤选型 Skill 和 Skill 内容测试 → ⑥`llm/`（客户端、供应商、系统提示）和 `config/settings.yaml` → ⑦SELECT 状态、`harness/context.py`、Trace 的 LLM 事件 → ⑧命令行 → ⑨`evals/run_evals.py` 和运行（用户的终端）→ ⑩体检、文档、交接。
+
+**文件与估计行数**（代码行）：`spec/selection.py` 加 `spec/selection_rules.py`（模型约 150，纯函数约 180，视 300 行上限拆分）、`spec/llm.py`（调用记录，~35）、`spec/settings.py`（~30）；`llm/client.py`（~80）、`llm/providers/dashscope.py`（~60，用 `openai` SDK 连百炼的 OpenAI 兼容接口）；`skill_loader.py`（~90）；`harness/context.py`（~25）、`harness/selection.py`（~60）、`engine.py`（~+12，已有 281 行，所以 SELECT 的逻辑不放进去）；`state/models.py`（~+15）、`state/store.py`（~+20）；`observability`（~+60：LLM 事件、选型渲染）；`cli.py`（~+60）。`harness/` 预计从 353 到约 440。
+
+**接口**：`LlmClient.complete(system, user, output_type) -> LlmReply[T]`（Protocol，harness 只看见它）；`ChatProvider.generate(system, user, schema) -> RawReply`（各家供应商只实现这一个）；`StructuredClient` 把供应商接成 `LlmClient`，校验不过时带着错误重问一次、再不过抛 `E_LLM`。选型：`SelectionDraft`（LLM 的输出：特征、推荐类型、理由、备选的不选原因）→ `assess(draft, text, rules)`（纯函数：无效依据、规则结论、是否一致）→ 不一致或有无效依据时重问一次（`budgets.MAX_SELECTION_REASKS`）→ `finalize` 得到 `SelectionResult`，写 `artifacts/selection.json`，`TaskState.selection` 只存类型和决定方式。
+
+**入口**：`Engine.create_text_task(text)` 从 SELECT 开始（输入存 `artifacts/input.txt`）；SELECT 之后的状态 `SPECIFY` 先只在枚举里（2B 写处理函数），`--dry-run` 用 `run(stop_at=SPECIFY)` 停下。不支持（不是反应过程，或选出的类型没有 Recipe）抛 `E_UNSUPPORTED`，走 1C 已有的 `_recover`，终态 `UNSUPPORTED`。
+
+**对 1C 的改动**：`TaskState.spec_file`、`spec_hash` 变成可空（文本任务在规格冻结之前没有），`case_names` 默认空；`TraceEvent.spec_hash` 可空；`ToolExecutor({})` 作为 dry-run 的空工具集（不创建 Backend）。
+
+### 阶段 1C 的设计草图和决定（留作参考）
+
+没有进行中的阶段之外的事项。1C 已完成，后面的阶段按下面的设计决定理解执行器；1B 的设计决定在其后。
 
 ### 阶段 1C 的设计草图（2026-10-09 18:40）
 
