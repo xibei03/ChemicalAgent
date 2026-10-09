@@ -48,7 +48,10 @@ FULL_CONVERSION_PERCENT = 100.0
 
 def _fed_components(spec: ModelSpec) -> set[str]:
     return {
-        item.component for feed in spec.feeds for item in feed.composition if item.mole_fraction
+        item.component
+        for feed in spec.feeds
+        for item in feed.composition
+        if item.mole_fraction > 0.0
     }
 
 
@@ -60,6 +63,21 @@ def _is_solid(table: ComponentTable, name: str) -> bool:
 def _solid_feed_components(spec: ModelSpec, table: ComponentTable) -> tuple[str, ...]:
     fed = _fed_components(spec)
     return tuple(name for name in spec.components if name in fed and _is_solid(table, name))
+
+
+def _unfed_solid_issues(spec: ModelSpec, table: ComponentTable) -> tuple[Issue, ...]:
+    """固体只能在进料里（两段式）。库里固体碳的热力学数据让它当不了 Gibbs 反应器的产物。"""
+    fed = _fed_components(spec)
+    return tuple(
+        Issue(
+            code=ErrorCode.UNSUPPORTED,
+            field_path=f"components[{index}]",
+            message=f"固体组分 {name} 不在进料里；Gibbs 反应器不能让固体作为产物生成",
+            user_fixable=False,
+        )
+        for index, name in enumerate(spec.components)
+        if name not in fed and _is_solid(table, name)
+    )
 
 
 def _reaction_issues(spec: ModelSpec) -> tuple[Issue, ...]:
@@ -116,7 +134,8 @@ def _two_stage_issues(
             message = f"组分表里要有分子式为 {formula} 的组分，作为碳气化的产物"
             problems.append((ErrorCode.RULE, "components", message, False))
     issues = [Issue(code=c, field_path=p, message=m, user_fixable=u) for c, p, m, u in problems]
-    return (*issues, *unsupported_heat_modes(spec, TWO_STAGE_HEAT_MODES))
+    two_stage = "含固体碳的 Gibbs 反应器（两段式）"
+    return (*issues, *unsupported_heat_modes(spec, TWO_STAGE_HEAT_MODES, two_stage))
 
 
 def _component_with(spec: ModelSpec, table: ComponentTable, formula: str) -> str:
@@ -192,6 +211,7 @@ class GibbsRecipe:
             *common_rules(spec, components),
             *_reaction_issues(spec),
             *_coverage_issues(spec, components),
+            *_unfed_solid_issues(spec, components),
             *specific,
         )
 

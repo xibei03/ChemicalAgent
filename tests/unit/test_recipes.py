@@ -454,6 +454,13 @@ class TestGibbsRules:
         # 两段式还需要 CO 和氢气作为气化的产物
         assert [i.field_path for i in issues[1:]] == ["components", "components"]
 
+    def test_a_solid_that_is_not_in_the_feed_cannot_be_a_product(self):
+        data = as_gibbs(golden_data("smr_equilibrium"))
+        data["components"] = [*data["components"], "Carbon"]
+        (issue,) = issues_of(data)
+        assert (issue.code, issue.field_path) == (ErrorCode.UNSUPPORTED, "components[5]")
+        assert "Carbon" in issue.message
+
     def test_solid_carbon_needs_both_syngas_components(self):
         data = golden_data("slurry_gibbs")
         data["components"] = ["Carbon", "H2O", "CO", "CO2", "Methane"]
@@ -496,7 +503,9 @@ class TestGibbsRules:
     def test_the_two_stage_model_is_only_verified_with_a_specified_outlet_temperature(self):
         data = golden_data("slurry_gibbs")
         data.update(heat_mode="adiabatic", cases=[{"name": "base"}])
-        assert where(issues_of(data)) == [(ErrorCode.UNSUPPORTED, "heat_mode")]
+        (issue,) = issues_of(data)
+        assert (issue.code, issue.field_path) == (ErrorCode.UNSUPPORTED, "heat_mode")
+        assert "两段式" in issue.message
 
 
 class TestRegistry:

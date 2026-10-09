@@ -31,8 +31,8 @@ VAPOUR_NAME = "Vap"
 LIQUID_NAME = "Liq"
 ENERGY_NAME = "Q-100"
 REACTION_SET_NAME = "RxnSet-1"
-# 元素的净增量超过反应式里这个元素被搬动的总量的这个比例，就算不守恒。
-ELEMENT_BALANCE_TOLERANCE = 1e-3
+# 反应式里元素的净增量超过这个元素被搬动的总量的这个比例，就算反应式不守恒。
+STOICHIOMETRY_BALANCE_TOLERANCE = 1e-3
 KIND_NAMES = {ReactionKind.CONVERSION: "转化", ReactionKind.EQUILIBRIUM: "平衡"}
 
 
@@ -217,7 +217,7 @@ def _element_imbalances(
         for element, count in atoms[term.component].items():
             net[element] = net.get(element, 0.0) + term.coefficient * count
             moved[element] = moved.get(element, 0.0) + abs(term.coefficient * count)
-    return {el: n for el, n in net.items() if abs(n) > ELEMENT_BALANCE_TOLERANCE * moved[el]}
+    return {el: n for el, n in net.items() if abs(n) > STOICHIOMETRY_BALANCE_TOLERANCE * moved[el]}
 
 
 def _reaction_balance_issues(spec: ModelSpec, table: ComponentTable) -> tuple[Issue, ...]:
@@ -247,12 +247,14 @@ def common_rules(spec: ModelSpec, table: ComponentTable) -> tuple[Issue, ...]:
     return (*_component_issues(spec, table), *_reaction_balance_issues(spec, table))
 
 
-def unsupported_heat_modes(spec: ModelSpec, supported: frozenset[HeatMode]) -> tuple[Issue, ...]:
-    """热模式不在这种反应器验证过的范围内时的问题。"""
+def unsupported_heat_modes(
+    spec: ModelSpec, supported: frozenset[HeatMode], what: str | None = None
+) -> tuple[Issue, ...]:
+    """热模式不在验证过的范围内时的问题；what 说明是什么只支持这些，默认是这种反应器。"""
     if spec.heat_mode in supported:
         return ()
     allowed = "、".join(sorted(mode.value for mode in supported))
-    message = f"{spec.reactor_type.value} 反应器只支持这些热模式：{allowed}"
+    message = f"{what or f'{spec.reactor_type.value} 反应器'}只支持这些热模式：{allowed}"
     return (
         Issue(
             code=ErrorCode.UNSUPPORTED, field_path="heat_mode", message=message, user_fixable=False
