@@ -11,9 +11,10 @@ import json
 import re
 from collections.abc import Iterator
 from pathlib import Path
+from types import MappingProxyType
 from typing import Annotated, Literal, Self
 
-from pydantic import Field, StringConstraints, model_validator
+from pydantic import Field, StringConstraints, field_validator, model_validator
 
 from reactor_agent.spec.base import FrozenModel
 from reactor_agent.spec.enums import HeatMode, MetricKind, PropertyPackage, ReactorType
@@ -33,17 +34,24 @@ Label = Annotated[str, StringConstraints(min_length=1, max_length=60)]
 # 字段路径的固定写法：用点分隔字段名，序列用方括号加下标，如 feeds[0].mass_flow_kg_h。
 FIELD_PATH = re.compile(r"^[A-Za-z_]\w*(\[\d+\])?(\.[A-Za-z_]\w*(\[\d+\])?)*$")
 PATH_PART = re.compile(r"([A-Za-z_]\w*)|\[(\d+)\]")
-# 热模式 → 工况里必须有的值：(出口温度, 热负荷)。其余的值不能给，不然是过规定。
-CASE_VALUES = {
-    HeatMode.SPECIFIED_OUTLET_TEMPERATURE: (True, False),
-    HeatMode.SPECIFIED_DUTY: (False, True),
-    HeatMode.ADIABATIC: (False, False),
-}
-CASE_VALUE_MEANING = {
-    HeatMode.SPECIFIED_OUTLET_TEMPERATURE: "每个工况都要有出口温度，不能有热负荷",
-    HeatMode.SPECIFIED_DUTY: "每个工况都要有热负荷，不能有出口温度",
-    HeatMode.ADIABATIC: "绝热的工况既没有出口温度也没有热负荷",
-}
+# 工况里可以给的值。热模式要求其中的哪些，见 CASE_REQUIRED；多给的值是过规定。
+CASE_VALUE_FIELDS = ("outlet_temperature_c", "duty_kw")
+CASE_REQUIRED = MappingProxyType(
+    {
+        HeatMode.SPECIFIED_OUTLET_TEMPERATURE: frozenset({"outlet_temperature_c"}),
+        HeatMode.SPECIFIED_DUTY: frozenset({"duty_kw"}),
+        HeatMode.ADIABATIC: frozenset[str](),
+    }
+)
+CASE_VALUE_MEANING = MappingProxyType(
+    {
+        HeatMode.SPECIFIED_OUTLET_TEMPERATURE: "每个工况都要有出口温度，不能有热负荷",
+        HeatMode.SPECIFIED_DUTY: "每个工况都要有热负荷，不能有出口温度",
+        HeatMode.ADIABATIC: "绝热的工况既没有出口温度也没有热负荷",
+    }
+)
+# 工况名会用来给每个工况的 .hsc 文件命名，Windows 文件名里不能出现这些字符。
+FORBIDDEN_FILE_NAME_CHARS = frozenset('\\/:*?"<>|')
 
 
 class FeedSpec(FeedConditions):
@@ -53,11 +61,21 @@ class FeedSpec(FeedConditions):
 
 
 class OperatingCase(FrozenModel):
-    """一个工况：名字，以及热模式要求的那个值（出口温度或热负荷）。"""
+    """一个工况：名字，以及热模式要求的那个值（出口温度 °C，或者热负荷 kW，吸热为正）。"""
 
     name: Label
     outlet_temperature_c: TemperatureC | None = None
     duty_kw: FiniteFloat | None = None
+
+    @field_validator("name")
+    @classmethod
+    def _name_can_be_a_file_name(cls, name: str) -> str:
+        unusable = any(c in FORBIDDEN_FILE_NAME_CHARS or not c.isprintable() for c in name)
+        if unusable or name != name.strip(" ."):
+            raise ValueError(
+                '工况名要用来给文件命名，不能含有 \\ / : * ? " < > | 和控制字符，首尾不能是空格或点'
+            )
+        return name
 
 
 class ConversionMetric(FrozenModel):
@@ -144,9 +162,13 @@ class ModelSpec(FrozenModel):
             yield f"metrics[{index}]", metric_components(metric)
 
     @model_validator(mode="after")
-    def _components_are_declared(self) -> Self:
+    def _names_are_unique(self) -> Self:
         check_unique(self.components, "组分表")
         check_unique(tuple(feed.name for feed in self.feeds), "进料名")
+        return self
+
+    @model_validator(mode="after")
+    def _components_are_declared(self) -> Self:
         known = set(self.components)
         for path, names in self._component_references():
             unknown = sorted(set(names) - known)
@@ -158,8 +180,8 @@ class ModelSpec(FrozenModel):
     def _cases_match_the_heat_mode(self) -> Self:
         check_unique(tuple(case.name for case in self.cases), "工况名")
         for index, case in enumerate(self.cases):
-            given = (case.outlet_temperature_c is not None, case.duty_kw is not None)
-            if given != CASE_VALUES[self.heat_mode]:
+            given = frozenset(f for f in CASE_VALUE_FIELDS if getattr(case, f) is not None)
+            if given != CASE_REQUIRED[self.heat_mode]:
                 meaning = CASE_VALUE_MEANING[self.heat_mode]
                 raise ValueError(f"cases[{index}]：热模式是 {self.heat_mode.value}，{meaning}")
         return self

@@ -16,6 +16,7 @@ from reactor_agent.spec.enums import (
 from reactor_agent.spec.plan import (
     BuildPlan,
     BuildStep,
+    CaseSpecs,
     assemble_plan,
     energy_stream_names,
     material_stream_names,
@@ -85,9 +86,8 @@ SPEC_STEP = (ToolName.FLOWSHEET_SET_SPEC, StepPhase.CASE)
 
 class TestAssembly:
     def test_tool_phase_and_numbers_come_from_the_kind_of_args(self):
-        plan = assemble_plan(
-            [thermo()], [feed(), outlet("Vap")], {"base": [outlet_temperature("R", 700.0)]}
-        )
+        cases = [CaseSpecs("base", (outlet_temperature("R", 700.0),))]
+        plan = assemble_plan([thermo()], [feed(), outlet("Vap")], cases)
         assert [(s.number, s.tool, s.phase, s.case_name) for s in plan.steps] == [
             (1, ToolName.BASIS_ENSURE_THERMO, StepPhase.BASIS, None),
             (2, ToolName.FLOWSHEET_ENSURE_STREAM, StepPhase.FLOWSHEET, None),
@@ -96,17 +96,20 @@ class TestAssembly:
         ]
 
     def test_cases_keep_the_order_they_were_given_in(self):
-        cases = {"hot": [outlet_temperature("R", 800.0)], "cold": [outlet_temperature("R", 500.0)]}
+        cases = [
+            CaseSpecs("hot", (outlet_temperature("R", 800.0),)),
+            CaseSpecs("cold", (outlet_temperature("R", 500.0),)),
+        ]
         plan = assemble_plan([thermo()], [feed()], cases)
         assert [s.case_name for s in plan.steps[2:]] == ["hot", "cold"]
         assert [s.args.value for s in plan.case_steps("cold")] == [500.0]
 
     def test_a_case_without_steps_has_no_case_steps(self):
-        plan = assemble_plan([thermo()], [feed()], {"base": []})
+        plan = assemble_plan([thermo()], [feed()], [CaseSpecs("base", ())])
         assert plan.case_steps("base") == ()
 
     def test_args_of_returns_one_kind_in_plan_order(self):
-        plan = assemble_plan([thermo()], [feed("A"), outlet("B"), feed("C")], {})
+        plan = assemble_plan([thermo()], [feed("A"), outlet("B"), feed("C")], [])
         assert [a.name for a in plan.args_of(EnsureStreamArgs)] == ["A", "B", "C"]
         assert plan.args_of(SetSpecArgs) == ()
 
@@ -175,14 +178,14 @@ class TestSystemStreams:
         plan = assemble_plan(
             [thermo()],
             [feed("Feed"), feed("Feed-2"), outlet("Vap"), outlet("Liq"), energy("Q-1")],
-            {},
+            [],
         )
         assert system_feed_names(plan) == ("Feed", "Feed-2")
         assert material_stream_names(plan) == ("Feed", "Feed-2", "Vap", "Liq")
         assert energy_stream_names(plan) == ("Q-1",)
 
     def test_a_plan_without_a_reactor_has_no_outlets(self):
-        plan = assemble_plan([thermo()], [feed()], {})
+        plan = assemble_plan([thermo()], [feed()], [])
         assert system_outlet_names(plan) == ()
 
     def test_energy_streams_follow_the_reactors_that_use_them(self):

@@ -122,6 +122,12 @@ def feed_molar_flow_kmol_h(feed: FeedConditions, table: ComponentTable) -> float
     return mass_flow / mean_weight
 
 
+def is_solid(table: ComponentTable, name: str) -> bool:
+    """组分在常温常压下是固体。不在组分表里的组分不算。"""
+    entry = find_component(table, name)
+    return entry is not None and entry.phase is ComponentPhase.SOLID
+
+
 def atoms_by_component(table: ComponentTable) -> Mapping[str, Mapping[str, int]]:
     """每个组分（规范名）的“元素 → 原子数”。"""
     return {entry.name: parse_formula(entry.formula) for entry in table.components}

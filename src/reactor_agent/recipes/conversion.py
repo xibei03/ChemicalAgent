@@ -10,6 +10,7 @@ from typing import NamedTuple
 from reactor_agent.errors import ErrorCode
 from reactor_agent.recipes.base import (
     common_rules,
+    fed_components,
     reaction_kind_issues,
     reactions_by_reactor,
     single_reactor_plan,
@@ -78,6 +79,21 @@ def _shared_base_issues(spec: ModelSpec) -> tuple[Issue, ...]:
     return tuple(issues)
 
 
+def _base_in_feed_issues(spec: ModelSpec) -> tuple[Issue, ...]:
+    """基准组分不在进料里，转化率就没有意义：出料里实测的转化率永远是“未知”。"""
+    fed = fed_components(spec)
+    return tuple(
+        make_issue(
+            ErrorCode.RULE,
+            f"reactions[{index}]",
+            f"转化反应的基准组分 {reaction.base_component} 不在进料里",
+            user_fixable=True,
+        )
+        for index, reaction in enumerate(spec.reactions)
+        if isinstance(reaction, ConversionReaction) and reaction.base_component not in fed
+    )
+
+
 def _measured_conversion(
     context: CheckContext, reactor: EnsureReactorArgs, base: str
 ) -> float | None:
@@ -101,9 +117,11 @@ class _ConversionRow(NamedTuple):
 def conversion_checks(context: CheckContext) -> tuple[CheckResult, ...]:
     """每台挂了转化反应的反应器：基准组分实际的转化率等于各反应转化率之和（±0.1 个百分点）。"""
     rows = [
-        _ConversionRow(reactor.name, base, wanted, _measured_conversion(context, reactor, base))
-        for reactor, named in reactions_by_reactor(context.plan)
-        for base, wanted in _totals_by_base(named.values()).items()
+        _ConversionRow(
+            entry.reactor.name, base, wanted, _measured_conversion(context, entry.reactor, base)
+        )
+        for entry in reactions_by_reactor(context.plan)
+        for base, wanted in _totals_by_base(entry.reactions.values()).items()
     ]
     if not rows:
         return ()
@@ -128,6 +146,7 @@ class ConversionRecipe:
             *unsupported_heat_modes(spec, HEAT_MODES),
             *_parallel_sum_issues(spec),
             *_shared_base_issues(spec),
+            *_base_in_feed_issues(spec),
         )
 
     def compile(self, spec: ModelSpec, _components: ComponentTable, /) -> BuildPlan:

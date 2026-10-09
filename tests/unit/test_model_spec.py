@@ -2,11 +2,11 @@
 
 import copy
 import json
-from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
 
+from builders import GOLDEN
 from reactor_agent.errors import ErrorCode, ReactorAgentError
 from reactor_agent.spec.enums import HeatMode, MetricKind, ReactorType
 from reactor_agent.spec.loading import read_document
@@ -21,7 +21,6 @@ from reactor_agent.spec.model_spec import (
     spec_hash,
 )
 
-GOLDEN = Path(__file__).resolve().parents[2] / "evals" / "golden_specs"
 SPECS = ("smr_equilibrium", "toluene_conversion", "slurry_gibbs")
 
 
@@ -179,6 +178,40 @@ class TestCasesAgainstTheHeatMode:
         rejected(data, "cases")
 
 
+class TestCaseNames:
+    """工况名会用来给每个工况的 .hsc 文件命名，来自 LLM 的输出，不能带路径。"""
+
+    @pytest.mark.parametrize("name", ["T710", "base", "工况 1", "710 °C", "case-2_a", "a.b"])
+    def test_ordinary_names_are_accepted(self, name):
+        data = changed("smr_equilibrium")
+        data["cases"][0]["name"] = name
+        assert ModelSpec.model_validate(data).cases[0].name == name
+
+    @pytest.mark.parametrize(
+        "name",
+        [
+            "..\\..\\evil",
+            "a/b",
+            "a:b",
+            "a*b",
+            "a?b",
+            'a"b',
+            "a<b",
+            "a>b",
+            "a|b",
+            " lead",
+            "trail ",
+            ".hidden",
+            "dot.",
+            "tab\there",
+        ],
+    )
+    def test_names_that_cannot_be_file_names_are_rejected(self, name):
+        data = changed("smr_equilibrium")
+        data["cases"][0]["name"] = name
+        rejected(data, "工况名")
+
+
 class TestAssumptions:
     def test_assumption_ids_must_be_unique(self):
         data = changed("toluene_conversion")
@@ -249,6 +282,15 @@ class TestLoading:
         with pytest.raises(ReactorAgentError) as caught:
             load_model_spec(path)
         assert caught.value.code is ErrorCode.SCHEMA
+
+    def test_a_file_that_is_not_utf8_is_a_schema_error_and_not_a_retryable_io_error(self, tmp_path):
+        path = tmp_path / "gbk.yaml"
+        path.write_bytes("reactor_type: 平衡\n".encode("gbk"))
+        with pytest.raises(ReactorAgentError) as caught:
+            load_model_spec(path)
+        assert caught.value.code is ErrorCode.SCHEMA
+        assert "UTF-8" in caught.value.message
+        assert not caught.value.retryable
 
     def test_an_empty_file_is_a_schema_error(self, tmp_path):
         path = tmp_path / "empty.yaml"

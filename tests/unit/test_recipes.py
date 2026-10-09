@@ -9,7 +9,6 @@ from reactor_agent.backends.hysys_com.reactor_kinds import REACTOR_KINDS
 from reactor_agent.errors import ErrorCode, ReactorAgentError
 from reactor_agent.recipes import RECIPES, recipe_for
 from reactor_agent.recipes.conversion import HEAT_MODES as CONVERSION_HEAT_MODES
-from reactor_agent.recipes.equilibrium import HEAT_MODES as EQUILIBRIUM_HEAT_MODES
 from reactor_agent.recipes.gibbs import HEAT_MODES as GIBBS_HEAT_MODES
 from reactor_agent.recipes.gibbs import TWO_STAGE_HEAT_MODES
 from reactor_agent.spec.components import ComponentEntry, ComponentTable
@@ -388,6 +387,10 @@ class TestConversionRules:
 
     def test_base_component_may_not_appear_in_a_reaction_of_another_base(self):
         data = golden_data("toluene_conversion")
+        data["feeds"][0]["composition"] = [
+            {"component": "Toluene", "mole_fraction": 0.9},
+            {"component": "m-Xylene", "mole_fraction": 0.1},
+        ]
         data["reactions"].append(
             {
                 "kind": "conversion",
@@ -408,6 +411,17 @@ class TestConversionRules:
         data.update(heat_mode="specified_duty", cases=[{"name": "base", "duty_kw": 100.0}])
         assert where(issues_of(data)) == [(ErrorCode.UNSUPPORTED, "heat_mode")]
 
+    def test_the_base_component_has_to_be_in_the_feed(self):
+        data = golden_data("toluene_conversion")
+        data["feeds"][0]["composition"] = [{"component": "Benzene", "mole_fraction": 1.0}]
+        (issue,) = issues_of(data)
+        assert (issue.code, issue.field_path, issue.user_fixable) == (
+            ErrorCode.RULE,
+            "reactions[0]",
+            True,
+        )
+        assert "Toluene" in issue.message
+
     def test_outlet_temperature_is_accepted(self):
         data = golden_data("toluene_conversion")
         data.update(heat_mode="specified_outlet_temperature")
@@ -423,6 +437,35 @@ class TestEquilibriumRules:
     def test_conversion_reactions_do_not_fit_an_equilibrium_reactor(self):
         data = {**golden_data("toluene_conversion"), "reactor_type": "equilibrium"}
         assert where(issues_of(data)) == [(ErrorCode.SET_INCOMPATIBLE, "reactions[0]")]
+
+    def test_a_reaction_with_a_solid_cannot_take_its_constant_from_gibbs_energy(self):
+        data = golden_data("smr_equilibrium")
+        data["components"] = [*data["components"], "Carbon"]
+        data["reactions"][0]["stoichiometry"] = [
+            {"component": "Carbon", "coefficient": -1.0},
+            {"component": "H2O", "coefficient": -1.0},
+            {"component": "CO", "coefficient": 1.0},
+            {"component": "Hydrogen", "coefficient": 1.0},
+        ]
+        (issue,) = issues_of(data)
+        assert (issue.code, issue.field_path) == (ErrorCode.UNSUPPORTED, "reactions[0]")
+        assert "Carbon" in issue.message
+
+    def test_a_reaction_with_a_solid_is_fine_when_the_constant_is_given(self):
+        data = golden_data("smr_equilibrium")
+        data["components"] = [*data["components"], "Carbon"]
+        data["reactions"][0] = {
+            "kind": "equilibrium",
+            "stoichiometry": [
+                {"component": "Carbon", "coefficient": -1.0},
+                {"component": "H2O", "coefficient": -1.0},
+                {"component": "CO", "coefficient": 1.0},
+                {"component": "Hydrogen", "coefficient": 1.0},
+            ],
+            "keq_source": "fixed_k",
+            "equilibrium_constant": 2.0,
+        }
+        assert issues_of(data) == ()
 
     def test_all_three_heat_modes_are_accepted(self):
         data = golden_data("smr_equilibrium")
@@ -518,7 +561,8 @@ class TestRegistry:
 
     def test_heat_modes_agree_with_what_the_backend_has_verified(self):
         assert REACTOR_KINDS[ReactorType.CONVERSION].heat_modes == CONVERSION_HEAT_MODES
-        assert REACTOR_KINDS[ReactorType.EQUILIBRIUM].heat_modes == EQUILIBRIUM_HEAT_MODES
+        # 平衡反应器三种都验证过，所以它的规则不限制热模式；后端表一旦收窄，这里提醒去给规则加限制
+        assert REACTOR_KINDS[ReactorType.EQUILIBRIUM].heat_modes == frozenset(HeatMode)
         assert REACTOR_KINDS[ReactorType.GIBBS].heat_modes == GIBBS_HEAT_MODES
         assert TWO_STAGE_HEAT_MODES <= GIBBS_HEAT_MODES
 

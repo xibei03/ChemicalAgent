@@ -50,7 +50,7 @@ def _missing_values(stream: StreamSnapshot) -> list[str]:
 
 
 def check_outputs(context: CheckContext) -> CheckResult:
-    """V5：每股出料的温度、压力、流量和组成都有值，能流的热负荷也有值。"""
+    """V5：每股出料的温度、压力、总流量有值；有流量的出料，各组分的组成也有值；能流的热负荷有值。"""
     snapshot = context.snapshot
     problems: list[str] = []
     for name in system_outlet_names(context.plan):

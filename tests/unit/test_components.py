@@ -1,10 +1,9 @@
 """组分表和分子式解析。"""
 
-from pathlib import Path
-
 import pytest
 from pydantic import ValidationError
 
+from builders import TABLE_FILE
 from reactor_agent.errors import ErrorCode, ReactorAgentError
 from reactor_agent.spec.components import (
     ComponentEntry,
@@ -12,6 +11,7 @@ from reactor_agent.spec.components import (
     atoms_by_component,
     feed_molar_flow_kmol_h,
     find_component,
+    is_solid,
     load_component_table,
     names_with_formula,
     parse_formula,
@@ -19,8 +19,6 @@ from reactor_agent.spec.components import (
 from reactor_agent.spec.enums import ComponentPhase
 from reactor_agent.spec.tool_args import CompositionEntry, FeedConditions
 
-REPO = Path(__file__).resolve().parents[2]
-TABLE_FILE = REPO / "config" / "components.yaml"
 HYSYS_NAMES_FROM_THE_LEDGER = {
     "Methane",
     "H2O",
@@ -124,6 +122,17 @@ class TestComponentTable:
     def test_non_positive_molecular_weight_is_rejected(self):
         with pytest.raises(ValidationError):
             entry("Methane", weight=0.0)
+
+
+class TestPhaseLookup:
+    def test_only_carbon_is_a_solid(self):
+        table = load_component_table(TABLE_FILE)
+        assert is_solid(table, "Carbon")
+        assert not is_solid(table, "H2O")
+        assert not is_solid(table, "Methane")
+
+    def test_a_component_that_is_not_in_the_table_is_not_a_solid(self):
+        assert not is_solid(load_component_table(TABLE_FILE), "Unobtainium")
 
 
 class TestFormulaLookup:

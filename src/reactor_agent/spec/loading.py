@@ -21,6 +21,9 @@ def read_document(path: Path) -> object:
     """读 YAML 或 JSON 文件（按扩展名），返回解析出的对象。"""
     try:
         text = path.read_text(encoding="utf-8")
+    except UnicodeDecodeError as error:
+        # 不是 IO 错误：文件本身有问题，原样重试没有意义
+        raise ReactorAgentError(ErrorCode.SCHEMA, f"{path.name} 不是 UTF-8 编码的文本") from error
     except OSError as error:
         raise ReactorAgentError(ErrorCode.IO, f"读不了文件 {path}：{error}") from error
     try:
@@ -34,7 +37,12 @@ def field_path(location: tuple[int | str, ...]) -> str:
     """把 pydantic 的出错位置写成固定的字段路径，如 feeds[0].temperature_c。"""
     path = ""
     for part in location:
-        path += f"[{part}]" if isinstance(part, int) else f".{part}" if path else str(part)
+        if isinstance(part, int):
+            path += f"[{part}]"
+        elif path:
+            path += f".{part}"
+        else:
+            path = str(part)
     return path or WHOLE_DOCUMENT
 
 

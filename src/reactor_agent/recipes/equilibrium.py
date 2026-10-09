@@ -3,25 +3,47 @@
 import math
 from typing import NamedTuple
 
+from reactor_agent.errors import ErrorCode
 from reactor_agent.recipes.base import (
     common_rules,
     reaction_kind_issues,
     reactions_by_reactor,
     single_reactor_plan,
-    unsupported_heat_modes,
 )
-from reactor_agent.spec.components import ComponentTable
-from reactor_agent.spec.enums import CheckId, HeatMode, ReactionKind
+from reactor_agent.spec.components import ComponentTable, is_solid
+from reactor_agent.spec.enums import CheckId, KeqSource, ReactionKind
 from reactor_agent.spec.model_spec import ModelSpec
 from reactor_agent.spec.plan import BuildPlan
-from reactor_agent.spec.results import CheckContext, CheckResult, Issue, check_result, describe
+from reactor_agent.spec.results import (
+    CheckContext,
+    CheckResult,
+    Issue,
+    check_result,
+    describe,
+    make_issue,
+)
 from reactor_agent.spec.snapshot import StreamSnapshot
 from reactor_agent.spec.tool_args import EquilibriumReaction
 
 REACTOR_NAME = "ERV-100"
-HEAT_MODES = frozenset(HeatMode)
 # 固定 K 的反应商与给定 K 的相对偏差上限。反应商由读回的摩尔分率算出，误差来自分率的有效位数。
 FIXED_K_TOLERANCE = 1e-3
+
+
+def _solid_equilibrium_issues(spec: ModelSpec, table: ComponentTable) -> tuple[Issue, ...]:
+    """用 Gibbs 自由能算平衡常数的反应不能含固体组分：库里固体碳的 Gibbs 数据是气态碳原子的。"""
+    issues = []
+    for index, reaction in enumerate(spec.reactions):
+        if not isinstance(reaction, EquilibriumReaction):
+            continue
+        solids = [t.component for t in reaction.stoichiometry if is_solid(table, t.component)]
+        if solids and reaction.keq_source is KeqSource.GIBBS_ENERGY:
+            message = (
+                f"含固体组分 {solids} 的反应不能用 Gibbs 自由能算平衡常数（库里固体碳的 Gibbs 数据"
+                "是气态碳原子的，台账 L25）；请直接给定平衡常数，或者改用转化反应器"
+            )
+            issues.append(make_issue(ErrorCode.UNSUPPORTED, f"reactions[{index}]", message))
+    return tuple(issues)
 
 
 def _quotient(reaction: EquilibriumReaction, outlet: StreamSnapshot | None) -> float | None:
@@ -49,9 +71,9 @@ class _QuotientRow(NamedTuple):
 def fixed_k_checks(context: CheckContext) -> tuple[CheckResult, ...]:
     """给定了平衡常数 K 的反应：气相出料算出的反应商等于 K（摩尔分率基准，台账 H10）。"""
     rows = []
-    for reactor, named in reactions_by_reactor(context.plan):
-        outlet = context.snapshot.stream(reactor.vapour_product)
-        for name, reaction in named.items():
+    for entry in reactions_by_reactor(context.plan):
+        outlet = context.snapshot.stream(entry.reactor.vapour_product)
+        for name, reaction in entry.reactions.items():
             if not isinstance(reaction, EquilibriumReaction):
                 continue
             if reaction.equilibrium_constant is not None:
@@ -71,14 +93,14 @@ def fixed_k_checks(context: CheckContext) -> tuple[CheckResult, ...]:
 
 
 class EquilibriumRecipe:
-    """平衡反应器：反应只能是平衡反应，三种热模式都验证过。"""
+    """平衡反应器：反应只能是平衡反应。三种热模式都验证过，所以规则不限制热模式。"""
 
     def rules(self, spec: ModelSpec, components: ComponentTable, /) -> tuple[Issue, ...]:
-        """至少一个平衡反应、没有转化反应。"""
+        """至少一个平衡反应、没有转化反应；Gibbs 自由能算 K 的反应不含固体。"""
         return (
             *common_rules(spec, components),
             *reaction_kind_issues(spec, ReactionKind.EQUILIBRIUM),
-            *unsupported_heat_modes(spec, HEAT_MODES),
+            *_solid_equilibrium_issues(spec, components),
         )
 
     def compile(self, spec: ModelSpec, _components: ComponentTable, /) -> BuildPlan:

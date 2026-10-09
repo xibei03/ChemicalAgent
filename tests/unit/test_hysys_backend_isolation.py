@@ -14,6 +14,8 @@ COM_ERRORS_FILE = "com_errors.py"
 VARIABLES_FILE = "variables.py"
 COM_ERROR_NAME = re.compile(r"com_error(?!s)")
 UNIT_STRINGS = frozenset({"C", "bar", "kPa", "kgmole/h", "kg/h", "kW"})
+# 个别字符串碰巧和单位字符串同名，但不是单位。每一处写明原因，同样的字符串出现在别的文件里仍然报错。
+NOT_A_UNIT = {("recipes/gibbs.py", "C"): "碳的分子式，不是摄氏度（D18）"}
 SENTINEL_MAGNITUDE = 32767
 
 
@@ -43,8 +45,14 @@ def test_unit_strings_appear_only_in_the_file_that_reads_and_writes_quantities()
         if path.name != VARIABLES_FILE
         for value in constants(path)
         if isinstance(value, str) and value in UNIT_STRINGS
+        if (path.relative_to(SRC).as_posix(), value) not in NOT_A_UNIT
     ]
     assert not offenders, f"HYSYS 的单位字符串只能出现在 {VARIABLES_FILE}：{offenders}"
+
+
+def test_every_exception_for_a_string_that_is_not_a_unit_is_still_needed():
+    for relative, value in NOT_A_UNIT:
+        assert value in set(constants(SRC / relative)), (relative, value)
 
 
 def test_the_null_sentinel_appears_only_in_the_file_that_reads_and_writes_quantities():

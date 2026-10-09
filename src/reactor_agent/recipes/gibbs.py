@@ -10,62 +10,49 @@ from collections.abc import Iterable, Mapping
 from reactor_agent.errors import ErrorCode, ReactorAgentError
 from reactor_agent.recipes.base import (
     REACTION_SET_NAME,
-    ReactorWiring,
     case_specs,
     common_rules,
+    fed_components,
     feed_names,
     feed_streams,
     reaction_args,
     reactor_block,
     single_reactor_plan,
+    staged_wiring,
     thermo_args,
     unsupported_heat_modes,
 )
+from reactor_agent.recipes.conversion import REACTOR_NAME as FIRST_STAGE_NAME
 from reactor_agent.recipes.conversion import conversion_checks
 from reactor_agent.spec.components import (
+    WATER_FORMULA,
     ComponentTable,
     atoms_by_component,
     feed_molar_flow_kmol_h,
-    find_component,
+    is_solid,
     names_with_formula,
 )
-from reactor_agent.spec.enums import ComponentPhase, HeatMode, ReactionPhase, ReactorType
+from reactor_agent.spec.enums import HeatMode, ReactionPhase, ReactorType
 from reactor_agent.spec.model_spec import ModelSpec
 from reactor_agent.spec.plan import BuildPlan, assemble_plan
 from reactor_agent.spec.results import CheckContext, CheckResult, Issue, make_issue
 from reactor_agent.spec.tool_args import ConversionReaction, StoichiometricTerm
 
 REACTOR_NAME = "GBR-100"
-FIRST_STAGE_NAME = "CRV-100"
 HEAT_MODES = frozenset({HeatMode.SPECIFIED_OUTLET_TEMPERATURE, HeatMode.ADIABATIC})
 # 两段式只验证过规定出口温度（台账 E10d）。
 TWO_STAGE_HEAT_MODES = frozenset({HeatMode.SPECIFIED_OUTLET_TEMPERATURE})
 TWO_STAGE_NAME = "含固体碳的 Gibbs 反应器（两段式）"
-# 固体碳的气化反应，系数都是 1：反应物依次是固体和水，产物依次是一氧化碳和氢气。
-GASIFICATION_EQUATION = "C + H2O -> CO + H2"
-CARBON_FORMULA, WATER_FORMULA, MONOXIDE_FORMULA, HYDROGEN_FORMULA = (
-    formula.strip() for side in GASIFICATION_EQUATION.split("->") for formula in side.split("+")
-)
+# 固体碳的气化反应 C + H2O → CO + H2，四个物质的系数都是 1。
+CARBON_FORMULA = "C"
+MONOXIDE_FORMULA = "CO"
+HYDROGEN_FORMULA = "H2"
 FULL_CONVERSION_PERCENT = 100.0
 
 
-def _fed_components(spec: ModelSpec) -> set[str]:
-    return {
-        item.component
-        for feed in spec.feeds
-        for item in feed.composition
-        if item.mole_fraction > 0.0
-    }
-
-
-def _is_solid(table: ComponentTable, name: str) -> bool:
-    entry = find_component(table, name)
-    return entry is not None and entry.phase is ComponentPhase.SOLID
-
-
 def _solid_feed_components(spec: ModelSpec, table: ComponentTable) -> tuple[str, ...]:
-    fed = _fed_components(spec)
-    return tuple(name for name in spec.components if name in fed and _is_solid(table, name))
+    fed = fed_components(spec)
+    return tuple(name for name in spec.components if name in fed and is_solid(table, name))
 
 
 def _elements(names: Iterable[str], atoms: Mapping[str, Mapping[str, int]]) -> set[str]:
@@ -75,7 +62,7 @@ def _elements(names: Iterable[str], atoms: Mapping[str, Mapping[str, int]]) -> s
 
 def _unfed_solid_issues(spec: ModelSpec, table: ComponentTable) -> tuple[Issue, ...]:
     """固体只能在进料里（两段式）。库里固体碳的热力学数据让它当不了 Gibbs 反应器的产物。"""
-    fed = _fed_components(spec)
+    fed = fed_components(spec)
     return tuple(
         make_issue(
             ErrorCode.UNSUPPORTED,
@@ -83,7 +70,7 @@ def _unfed_solid_issues(spec: ModelSpec, table: ComponentTable) -> tuple[Issue, 
             f"固体组分 {name} 不在进料里；Gibbs 反应器不能让固体作为产物生成",
         )
         for index, name in enumerate(spec.components)
-        if name not in fed and _is_solid(table, name)
+        if name not in fed and is_solid(table, name)
     )
 
 
@@ -97,8 +84,8 @@ def _reaction_issues(spec: ModelSpec) -> tuple[Issue, ...]:
 def _coverage_issues(spec: ModelSpec, table: ComponentTable) -> tuple[Issue, ...]:
     """进料里的每种元素都要有至少一个非固体的组分可以容纳，固体不能作为 Gibbs 反应器的产物。"""
     atoms = atoms_by_component(table)
-    holders = [name for name in spec.components if not _is_solid(table, name)]
-    missing = sorted(_elements(_fed_components(spec), atoms) - _elements(holders, atoms))
+    holders = [name for name in spec.components if not is_solid(table, name)]
+    missing = sorted(_elements(fed_components(spec), atoms) - _elements(holders, atoms))
     if not missing:
         return ()
     message = (
@@ -113,7 +100,7 @@ def _two_stage_issues(
 ) -> tuple[Issue, ...]:
     carbon = set(names_with_formula(table, CARBON_FORMULA))
     water = set(names_with_formula(table, WATER_FORMULA))
-    fed = _fed_components(spec)
+    fed = fed_components(spec)
     issues = []
     if not set(solids) <= carbon or not fed <= carbon | water:
         message = "含固体的 Gibbs 反应器目前只支持固体碳和水的进料"
@@ -163,12 +150,8 @@ def _two_stage_plan(spec: ModelSpec, table: ComponentTable) -> BuildPlan:
         conversion_percent=FULL_CONVERSION_PERCENT,
         phase=ReactionPhase.COMBINED,  # 进料是固液浆料，反应相要用合并相（D15 对 R4 的补充）
     )
-    first = ReactorWiring(
-        name=FIRST_STAGE_NAME, feeds=feed_names(spec), vapour="Vap-1", liquid="Liq-1", energy="Q-1"
-    )
-    second = ReactorWiring(
-        name=REACTOR_NAME, feeds=(first.vapour,), vapour="Vap-2", liquid="Liq-2", energy="Q-2"
-    )
+    first = staged_wiring(FIRST_STAGE_NAME, feed_names(spec), 1)
+    second = staged_wiring(REACTOR_NAME, (first.vapour,), 2)
     heat_mode = spec.heat_mode
     return assemble_plan(
         basis=[thermo_args(spec), *reaction_args((gasification,))],

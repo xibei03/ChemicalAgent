@@ -7,13 +7,14 @@
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+from types import MappingProxyType
 from typing import Protocol
 
 from reactor_agent.errors import ErrorCode
 from reactor_agent.spec.components import ComponentTable, atoms_by_component, find_component
 from reactor_agent.spec.enums import HeatMode, ReactionKind, ReactorType, SpecVariable, StreamKind
 from reactor_agent.spec.model_spec import FeedSpec, ModelSpec, OperatingCase
-from reactor_agent.spec.plan import BasisArgs, BuildPlan, FlowsheetArgs, assemble_plan
+from reactor_agent.spec.plan import BasisArgs, BuildPlan, CaseSpecs, FlowsheetArgs, assemble_plan
 from reactor_agent.spec.results import CheckContext, CheckResult, Issue, make_issue
 from reactor_agent.spec.tool_args import (
     EnsureReactionArgs,
@@ -33,7 +34,7 @@ ENERGY_NAME = "Q-100"
 REACTION_SET_NAME = "RxnSet-1"
 # 反应式里元素的净增量超过这个元素被搬动的总量的这个比例，就算反应式不守恒。
 STOICHIOMETRY_BALANCE_TOLERANCE = 1e-3
-KIND_NAMES = {ReactionKind.CONVERSION: "转化", ReactionKind.EQUILIBRIUM: "平衡"}
+KIND_NAMES = MappingProxyType({ReactionKind.CONVERSION: "转化", ReactionKind.EQUILIBRIUM: "平衡"})
 
 
 class ReactorRecipe(Protocol):
@@ -61,6 +62,27 @@ class ReactorWiring:
     vapour: str
     liquid: str
     energy: str
+
+
+def staged_wiring(name: str, feeds: tuple[str, ...], stage: int) -> ReactorWiring:
+    """多台反应器串联时某一段的对象名：出料和能流带段号，如 Vap-1、Liq-1、Q-1。"""
+    return ReactorWiring(
+        name=name,
+        feeds=feeds,
+        vapour=f"{VAPOUR_NAME}-{stage}",
+        liquid=f"{LIQUID_NAME}-{stage}",
+        energy=f"Q-{stage}",
+    )
+
+
+def fed_components(spec: ModelSpec) -> set[str]:
+    """进料里有量的组分（摩尔分率大于 0）。"""
+    return {
+        item.component
+        for feed in spec.feeds
+        for item in feed.composition
+        if item.mole_fraction > 0.0
+    }
 
 
 def feed_name(index: int) -> str:
@@ -150,9 +172,9 @@ def _case_steps(case: OperatingCase, reactor_names: Sequence[str]) -> list[SetSp
     return [SetSpecArgs(object_name=name, variable=variable, value=value) for name in reactor_names]
 
 
-def case_specs(spec: ModelSpec, reactor_names: Sequence[str]) -> dict[str, list[SetSpecArgs]]:
+def case_specs(spec: ModelSpec, reactor_names: Sequence[str]) -> list[CaseSpecs]:
     """每个工况要改的规定值：出口温度或热负荷，对每台反应器各一步；绝热的工况没有。"""
-    return {case.name: _case_steps(case, reactor_names) for case in spec.cases}
+    return [CaseSpecs(case.name, tuple(_case_steps(case, reactor_names))) for case in spec.cases]
 
 
 def single_reactor_plan(spec: ModelSpec, reactor_name: str) -> BuildPlan:
@@ -175,16 +197,23 @@ def single_reactor_plan(spec: ModelSpec, reactor_name: str) -> BuildPlan:
     )
 
 
-def reactions_by_reactor(
-    plan: BuildPlan,
-) -> tuple[tuple[EnsureReactorArgs, dict[str, ReactionDefinition]], ...]:
-    """计划里每台反应器，以及它的反应集里的反应（名字 → 定义）；没有挂反应集的是空的。"""
-    reactions = {args.name: args.reaction for args in plan.args_of(EnsureReactionArgs)}
+@dataclass(frozen=True)
+class ReactorReactions:
+    """一台反应器，以及它的反应集里的反应（名字 → 定义）；没有挂反应集的反应器没有反应。"""
+
+    reactor: EnsureReactorArgs
+    reactions: Mapping[str, ReactionDefinition]
+
+
+def reactions_by_reactor(plan: BuildPlan) -> tuple[ReactorReactions, ...]:
+    """计划里每台反应器，和它的反应集里的反应。"""
+    definitions = {args.name: args.reaction for args in plan.args_of(EnsureReactionArgs)}
     members = {args.name: args.reactions for args in plan.args_of(EnsureReactionSetArgs)}
-    return tuple(
-        (reactor, {n: reactions[n] for n in members.get(reactor.reaction_set or "", ())})
-        for reactor in plan.args_of(EnsureReactorArgs)
-    )
+    found = []
+    for reactor in plan.args_of(EnsureReactorArgs):
+        names = members.get(reactor.reaction_set, ()) if reactor.reaction_set else ()
+        found.append(ReactorReactions(reactor, {name: definitions[name] for name in names}))
+    return tuple(found)
 
 
 def _component_issues(spec: ModelSpec, table: ComponentTable) -> tuple[Issue, ...]:
@@ -242,7 +271,8 @@ def unsupported_heat_modes(
     if spec.heat_mode in supported:
         return ()
     allowed = "、".join(sorted(mode.value for mode in supported))
-    message = f"{what or f'{spec.reactor_type.value} 反应器'}只支持这些热模式：{allowed}"
+    subject = what or f"{spec.reactor_type.value} 反应器"
+    message = f"{subject}只支持这些热模式：{allowed}"
     return (make_issue(ErrorCode.UNSUPPORTED, "heat_mode", message),)
 
 

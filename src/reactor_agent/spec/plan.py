@@ -6,6 +6,7 @@
 """
 
 from collections.abc import Iterable, Mapping, Sequence
+from dataclasses import dataclass
 from types import MappingProxyType
 from typing import Self, TypeVar
 
@@ -90,14 +91,20 @@ def _step(number: int, args: StepArgs, case_name: str | None) -> BuildStep:
     return BuildStep(number=number, tool=tool, args=args, phase=phase, case_name=case_name)
 
 
+@dataclass(frozen=True)
+class CaseSpecs:
+    """一个工况要改的规定值：对每台反应器各一步，绝热的工况没有。"""
+
+    name: str
+    specs: tuple[SetSpecArgs, ...]
+
+
 def assemble_plan(
-    basis: Sequence[BasisArgs],
-    flowsheet: Sequence[FlowsheetArgs],
-    cases: Mapping[str, Sequence[SetSpecArgs]],
+    basis: Sequence[BasisArgs], flowsheet: Sequence[FlowsheetArgs], cases: Sequence[CaseSpecs]
 ) -> BuildPlan:
     """把 Basis、流程图和各工况的入参排成计划，编号从 1 开始。"""
     ordered: list[tuple[StepArgs, str | None]] = [(args, None) for args in (*basis, *flowsheet)]
-    ordered += [(args, name) for name, group in cases.items() for args in group]
+    ordered += [(args, case.name) for case in cases for args in case.specs]
     return BuildPlan(steps=tuple(_step(n, a, c) for n, (a, c) in enumerate(ordered, start=1)))
 
 
