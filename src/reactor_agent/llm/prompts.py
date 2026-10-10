@@ -10,8 +10,13 @@ from dataclasses import dataclass
 
 from pydantic import BaseModel
 
+from reactor_agent.llm.schema_guide import render_field_guide
+from reactor_agent.spec.components import ComponentTable, component_reference
 from reactor_agent.spec.results import Issue
 from reactor_agent.spec.selection import REACTOR_NAMES, SelectionResult
+
+FIELD_GUIDE_HEADING = "## TaskSpec 的字段说明\n\n逐项对照填写，每一节是一个结构。\n\n"
+NAMING_HEADING = "## 组分命名参考\n\n组分表里已有的组分。能对上的用规范名。\n\n"
 
 
 @dataclass(frozen=True)
@@ -23,16 +28,27 @@ class Prompt:
 
 
 def specify_prompt(
-    system_prompt: str, knowledge: Sequence[str], selection: SelectionResult, text: str
+    system_prompt: str,
+    knowledge: Sequence[str],
+    model: type[BaseModel],
+    table: ComponentTable,
+    selection: SelectionResult,
+    text: str,
 ) -> Prompt:
-    """写规格的上下文：系统提示和各种知识放 system，用户的原文和（已经确定的）选型结论放 user。"""
+    """写规格的上下文。
+
+    system：系统提示、调用方读好的知识（Skill 正文、这种反应器的参考）、由 model 的 description
+    渲染的字段说明，和由组分表生成的命名参考；user：用户的原文和（已经确定的）选型结论。
+    """
+    guide = FIELD_GUIDE_HEADING + render_field_guide(model)
+    naming = NAMING_HEADING + component_reference(table)
     reactor = "无" if selection.reactor_type is None else REACTOR_NAMES[selection.reactor_type]
     basis = "；".join(selection.rule_notes)
     user = (
         f"用户的描述（原文）：\n\n{text}\n\n---\n"
         f"选型结论（系统已经确定，不能改）：{reactor} 反应器。依据：{basis}"
     )
-    return Prompt(system="\n\n".join([system_prompt, *knowledge]), user=user)
+    return Prompt(system="\n\n".join([system_prompt, *knowledge, guide, naming]), user=user)
 
 
 def rewrite_content(prompt: Prompt, previous: BaseModel, issues: Sequence[Issue]) -> str:

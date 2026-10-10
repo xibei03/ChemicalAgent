@@ -206,9 +206,61 @@
 `skills/reactor-selection/`：`SKILL.md`、`references/selection_rules.md`、`references/pitfalls.md`、`examples/`（4 个）、`rules.yaml`。评测：`evals/cases/`（29 个）、`evals/inputs/`（三个场景的文本文件）、`evals/run_evals.py`、`scoring.py`、`demo_scenarios.py`、`interactive.py`（用户要求的交互入口：终端输入一次密钥，菜单运行探针、场景选型、评测）。
 测试：`test_selection_rules.py`（59）、`test_selection_evidence.py`、`test_select_state.py`（16）、`test_text_cli.py`（19）、`test_selection_support.py`（20）、`test_skill_content.py`（29）、`test_skill_loader.py`（15）、`test_llm_client.py`（11）、`test_dashscope_provider.py`（13）、`test_eval_cases.py`、`test_eval_runner.py`（16）、`test_interactive.py`（13）；`tests/fake_llm.py`、`tests/selection_builders.py`；`tests/llm/test_llm_smoke.py`（`-m llm`，一个）。探针 `spikes/e18_llm_structured.py`。
 
+### 阶段 2B 新增（`src/` 合计 7162 行代码，2A 之后是 5656 行）
+
+| 文件 | 职责 | 行 |
+|---|---|---|
+| `spec/task_spec.py` | `TaskSpec`：物理量（`Quantity`、`PressureQuantity`）、进料（`pure_component` 或 `composition`）、工况、反应（含 `split_products`）、三个指标列表、假设、缺失项；转化、平衡、Gibbs 三个类，`task_spec_model` 注册表，`blocking_missing` | 193 |
+| `spec/units.py` | 单位表模型、`load_unit_table`、各类换算（不认识的单位返回 None，不猜） | 77 |
+| `spec/composition.py` | 份额（分率、百分数、配比，余量组分，质量或体积基准）→ 摩尔分率；写得不对抛 `CompositionError`（带是否用户可更正） | 76 |
+| `spec/notes.py` | `Notes`：问题和假设的收集，**默认值只经过 `default()`**；`Context` | 41 |
+| `spec/quantities.py` | 组分名解析（带候选）、物理量换算（假设、单位、范围的问题）、压力基准 | 77 |
+| `spec/normalize_feeds.py` | 进料：压力（取操作压力并登记）、流量（标准体积流量、含固体或液体时登记歧义）、组成 | 118 |
+| `spec/normalize_reactions.py` | 反应式（产物拆分）、转化率、平衡常数来源、Gibbs 的候选产物、指标 | 143 |
+| `spec/normalize.py` | 工况和热模式、压降（用户给的、两个压力之差、默认 0）、物性包，拼 `ModelSpec`，`ValidationError` 转问题 | 205 |
+| `spec/rules.py` | 通用业务规则：元素守恒、默认值都有假设、气体体积单位的歧义 | 58 |
+| `spec/transcription.py` | 抄写检查：来源是用户的数值必须是原文里的数 | 71 |
+| `spec/intake.py` | 串联：抄写检查 → 规范化 → 通用规则 → Recipe 的规则（作为函数传入，`spec` 不依赖 `recipes`） | 32 |
+| `spec/components.py`（+40）、`enums.py`、`results.py`（`SpecIssues`）、`selection.py`（`chosen_type`） | 命名参考、`resolve_component`、`closest_names`；`PressureBasis`、`VALIDATE`、`CallPoint.SPECIFY`；`TASK_SPEC_SAVED` | — |
+| `llm/prompts.py` | 写规格的上下文（系统提示、Skill、参考、字段说明、命名参考，加原文和选型结论）、重写时的内容 | 43 |
+| `llm/schema_guide.py` | 从 pydantic 模型的 `description` 渲染字段说明（百炼不把 Schema 计入提示，台账 L40） | 52 |
+| `harness/calls.py` | LLM 调用的公共部分（调用、全文落盘、摘要进 Trace，失败也留痕），选型和写规格共用 | 36 |
+| `harness/specify.py` | `Specifier`：SPECIFY、VALIDATE 的处理函数（只做编排） | 86 |
+| `harness/` 的改动 | `recovery.py`（`SpecAction`、`decide_spec`）、`failures.py`（`NeedsInputError`、`terminal_status`）、`budgets.py`（`MAX_SPEC_REWRITES`）、`engine.py`（终态映射）、`selection.py`（用 `LlmCaller`）、`context.py`（只剩选型的上下文） | — |
+| `observability/render_spec.py` | 规格、假设清单、建模步骤的渲染（`--dry-run` 打印的就是它们） | 103 |
+| `state/`、`cli.py` | `ArtifactName.TASK_SPEC`、`SPEC_ISSUES`；`TaskState.spec_rewrites`、`freeze_spec`；文字入口接上两个状态，`--dry-run` 停在 PLAN 之后，缺密钥的提示指向 `set_api_key.py` | +17、+19 |
+| `config/units.yaml`、`skills/reactor-modeling/` | 单位表；Skill（`SKILL.md`、`references/` 三份） | — |
+| `evals/` | `set_api_key.py`（密钥入口）、`spec_scoring.py`、`spec_report.py`；用例里的 `params`、`assumed`、`issues`、`final`；X1 至 X4（含 X1b） | — |
+
+运行目录里新增：`artifacts/task_spec.json`、`artifacts/spec_issues.json`（VALIDATE 没通过时）、`llm/specify-<n>.json`。
+测试：`test_units_and_composition.py`（36）、`test_normalize.py`（42）、`test_rules_and_intake.py`（22）、`test_specify_state.py`（16）、`test_eval_spec_scoring.py`（18）、`test_set_api_key.py`（17）；`tests/task_builders.py` 是“理想的 LLM 会写出的 TaskSpec”。探针 `spikes/e19_taskspec_schema.py`。
+
 ## 进行中
 
-### 阶段 2B 的设计草图（2026-10-10 09:10）
+没有进行中的阶段。2B 已完成（见“当前状态”）。下面依次是：2B 的设计决定（已实现）、2B 的评测与 Skill 修改记录、2B 的设计草图（保留）、2A 的设计草图和评测记录（保留）；1C、1B 的设计决定在其后。
+
+### 阶段 2B 的设计决定（已实现）
+
+1. **每种反应器一个 `TaskSpec` 类，LLM 的输出里没有类型字段**：类型由选型结论决定，LLM 没法改；也不把联合交给 LLM（JSON Schema 只用台账 L39、L40 验证过的子集：`$defs`、`anyOf` 加 null、枚举、数组，没有 `default`、`minLength`、`oneOf`、`const`）。约束写在校验器和规范化里，不写在 Field 约束里。
+2. **字段说明由代码渲染进上下文**（`llm/schema_guide.py`）：百炼的结构化输出只用 Schema 约束生成，不把 Schema 放进提示（E19：提示只有 200 多个 token），模型看不见 `description`。
+3. **物理量三件套**：`Quantity{value, unit, source, rationale}`。可以假设的只有流量和压降（登记成假设）；进料的温度、压力、组成，转化率，工况的出口温度和热负荷，平衡常数，填成 `assumed` 是一个问题。压力另带基准（绝压、表压、未说明），单位自带基准的（barg、bara、atm）以单位为准，表压加一个标准大气压（1.01325 bar）。
+4. **压力两个字段**：这股进料自己的 `pressure`，和原文给的不属于某股进料的 `reactor_pressure`。只给了一个压力时进料压力取它，登记假设；两个都给了，压降是它们的差，反应器压力高于进料压力是一个问题。
+5. **纯物质进料写 `pure_component`，混合物写 `composition`**：开发中的第一次真实运行，场景 2 的 LLM 连续两次把“纯甲苯”的 `composition.items` 写成空数组（又把“没有写出组成”当成缺失），E_LLM 硬失败。加了 `pure_component`，空的 `items` 和余量的写法检查从校验器挪到 `composition.py`（进入重写回路，不是 E_LLM）。
+6. **组成**：基准（摩尔、质量、体积）和写法（分率、百分数、配比）分开；余量组分的份额写 null，由代码算；份额之和与总量相差不到 0.5% 按比例归一化并登记说明，超出是用户可更正的问题；体积分率只对气体成立，按理想气体当作摩尔分率。
+7. **产物拆分**：单一组分的产物在 `products`，拆给几个组分的（几种异构体）在 `split_products`，各带配比；代码按配比把系数分下去，总和不变，元素守恒不受影响。指标三个列表（转化率、收率、比值），不用联合。
+8. **默认值只经过 `Notes.default(path, value, reason)`**：返回值并同时登记假设、记下这个字段；`rules.py` 再核对每个取了默认值的字段都有假设（结构上不会漏，核对是防回归）。LLM 声明的假设（`assumptions`）的字段限于 `feeds`、`reactions`、`components`、`cases`、`metrics` 五个容器，路径一定存在，覆盖其下的子字段（`is_assumed` 本来的语义）。
+9. **抄写检查**（`spec/transcription.py`，提示词没有要求，我加的）：来源是用户的数值，必须出现在原文里（NFKC、去千分位）；只有一个组分的组成不查，原文里没有阿拉伯数字时不查。这是“照原文抄，不换算”的机械检查：LLM 把 2.5 MPa 换成 25 却保留单位 MPa 时，没有别的检查能发现。代价：原文用汉字写的数（“百分之五十”）会被当成找不到，结果是请用户补充，不是静默出错。
+10. **VALIDATE 的回路**：抄写检查、规范化、通用规则、Recipe 的规则依次做，前一步有问题就不跑后一步（Recipe 的元素守恒与通用规则重复，不让用户看到两条）。LLM 声明的缺失里有不可以假设的量，直接 `NEEDS_INPUT`，不重写；否则最多重写 2 轮（`MAX_SPEC_REWRITES`）；用完之后：有用户可更正的问题是 `NEEDS_INPUT`，有 `E_UNSUPPORTED` 是 `UNSUPPORTED`（沿用 PLAN 阶段 `rule_error` 的约定，提示词只写了 NEEDS_INPUT 和 FAILED），其余 `FAILED`。重写的提示：出在用户信息上的问题，先对照原文，是自己抄错就改正，原文本来如此就原样保留并写进歧义清单，不要替用户改。
+11. **`NeedsInputError` 和 `terminal_status`**（`harness/failures.py`）：`NEEDS_INPUT` 走和别的失败同一条路（抛 `ReactorAgentError` 的子类，`_recover` 查表中止，终态由 `terminal_status` 映射），不另开一条路径。
+12. **提示的拼装放在 `llm/prompts.py`**：纯字符串处理，不读文件；harness 只读 Skill 和参考文件。这样 `harness/` 只剩编排。
+
+### 阶段 2B 的评测与 Skill 修改记录
+
+评测门槛（完成标准第 3 条）：三个原文场景的期望参数正确率不低于 95%；经不超过 2 轮重写后规格合法的比例 100%；病态输入全部按任务 6 的条件通过（第一次校验的问题清单里有期望的问题，终态是 NEEDS_INPUT 或 FAILED 并且原因对）；2A 的选型指标不退步。另外记录：每个场景该有的假设是不是各有一条独立的假设。
+
+RESULT_TABLE_PLACEHOLDER
+
+### 阶段 2B 的设计草图（2026-10-10 09:10，保留）
 
 **任务顺序**：①`TaskSpec` 模型 → ②`config/units.yaml` 和 `spec/units.py` → ③规范化（组成、反应、进料、工况、指标、假设登记）→ ④`spec/rules.py` → ⑤组分命名参考、`llm/schema_guide.py`（字段说明渲染）→ ⑥Skill `reactor-modeling` → ⑦SPECIFY、VALIDATE 状态和重写回路 → ⑧命令行（`--dry-run` 停在 PLAN 之后并打印）→ ⑨评测用例（期望参数、X1 至 X4）和运行器 → ⑩真实 LLM 评测、调 Skill、体检、文档。每个任务提交一次。
 
@@ -226,9 +278,9 @@
 
 **风险**：①strict JSON Schema 能不能接受嵌套深一点的 `TaskSpec`（先用真实 LLM 试一次）；②LLM 在重写里“好心”改掉用户给的不合理的值（病态输入的评测测的就是这个）；③`harness/` 的行数。
 
-### 阶段 2A 的评测与 Skill 修改记录之前：2A 的设计草图（保留）
+### 阶段 2A 的设计草图和评测记录（保留）
 
-（下面是 2A 的设计草图、评测与 Skill 修改记录，后面的阶段按它们理解选型这一步；1C、1B 的设计决定在其后。）
+（下面是 2A 的设计草图、评测与 Skill 修改记录，后面的阶段按它们理解选型这一步。）
 
 ### 阶段 2A 的设计草图（2026-10-09 22:10）
 
@@ -366,22 +418,12 @@ VERIFY 的致命检查失败（`E_VALIDATION_FATAL`）也是抛 `ReactorAgentErr
 
 ## 下一步
 
-阶段 2A 已完成。下一个会话做**阶段 2B**（`docs/prompts/phase-2b.md`：把用户的描述写成规格）。开始前：
+阶段 2B 已完成。下一个会话做**阶段 2C**（`docs/prompts/phase-2c.md`：报告、`--no-llm`、端到端联调，闸门 G2）。开始前：
 
-1. **用户的事项都已处理**，没有待答复的。（“重问之后仍无原话的依据”已定：保持原状，只丢依据。）
-2. **2B 要读的**：`harness/selection.py`（`Selector`：第一个 LLM 调用点的实现，`create_task`、`run`、`_ask`、`_record`）、`harness/context.py`、`llm/client.py` 的接口、`skills/reactor-selection/` 作为 Skill 写法的样板、
-   `state/models.py`（`TaskState` 的 `spec_file`、`spec_hash`、`case_names` 现在可空）、`harness/engine.py` 的 `Dependencies.extra_handlers`、`docs/EVAL_RESULTS.md`（评测怎么写、怎么读）。
-3. **要接上的地方**：①`WorkflowState.SPECIFY` 只在枚举里，选型之后任务停在这里（`state.json` 的 `current_state` 是 `SPECIFY`，`artifacts/selection.json` 和 `input.txt` 都在）；
-   2B 写它的处理函数，用 `extra_handlers` 注册；规格冻结时给 `TaskState` 设 `spec_hash`、`case_names`、`spec_file`（可以指向 `artifacts/model_spec.json`），Trace 的 `spec_hash` 在此之前是 None。
-   ②`Selector._ask` 只服务选型；加第二个调用点时抽成通用的 `LlmCaller`（载入 Skill、调用、落 `llm/` 日志、发 Trace 事件、失败也留痕），`CallPoint` 枚举加成员（2C 的报告同理）。
-   ③`cli.py` 里两条路径各装配一套（`run_spec`、`build_text_run`），2B 合并并接上 Backend；`--dry-run` 保留。④`run_text` 现在在 `SPECIFY` 之前停下并返回 1（“规格生成还没有实现”），2B 去掉。
-   ⑤`SelectionResult.features` 里的 `equilibrium_constant_given`、`kinetics_given`、`dimensions_given`、`phase`、`polymerization` 规则不用，是给写规格用的；`dropped_evidence` 列出没有找到原文依据的判断，报告要如实说。
-   ⑥系统提示 `llm/prompts/system.md` 三个调用点共用。⑦`Engine.run` 在没有处理函数的状态上会抛 `KeyError`（命令行靠 `stop_at` 避开），2B 的状态都有了处理函数之后就不会发生。
-4. **提醒**：①LLM 即使温度 0、关闭思考，输出也会变（同一个输入重复 5 次，`black_box_system` 4 次为是 1 次为否），不能依赖单次抽取，Skill 的定义要写得足够明确，评测要重复；
-   ②百炼的 Qwen 必须关闭思考（已在 `llm/providers/dashscope.py`），否则 60 秒的超时下每次都失败；③密钥用 `python evals/interactive.py` 在终端里输入一次（菜单里有场景选型、评测、对一段描述做选型、重跑指定的评测用例），
-   助手的进程读不到用户终端里的环境变量；④评测 `python evals/run_evals.py`（需要密钥），门槛和结果见 `docs/EVAL_RESULTS.md`，Skill 内容测试对后面新增的 Skill 同样生效；
-   ⑤HYSYS 的提醒（台账 L38：同一个实例里建几十个 Case 之后偶尔不求解）、重试会重做前面的调用，仍然有效；⑥在命令行工具里用 heredoc 写 Python 脚本改文件时，双反斜杠会被合并，换行转义变成真换行（2A 里又踩了几次）；
-   改含反斜杠的行用 Edit 或 Write 工具；⑦脚本重跑会覆盖同名的输出文件（探针 E18 的第一次输出就是这样被覆盖的），证据文件用不同的 `--tag`。
+1. **待用户决定的事项**（不阻塞 2C，但最好先答复）：D21（`harness/` 580 行，超过约 520 的目标）、D22（Skill 里一句关于氧化剂的一般知识，场景 3 的“没有氧气进料”靠它）、D23（组分表只有 11 个组分，留出场景的组分要在 HYSYS 里实测规范名）。
+2. **2C 要读的**：`harness/specify.py`（第二个 LLM 调用点怎么写：`LlmCaller.ask`、`CallPoint`）、`harness/calls.py`、`harness/engine.py` 的 `_report`（现在只做收尾，`decide_outcome`）、`observability/render_spec.py`（规格、假设、建模步骤的渲染，报告的“假设”和“建模步骤”两节可以直接用它）、`spec/results.py`、`cli.py`。
+3. **要接上的地方**：①`reactor-agent run --text-file` 不带 `--dry-run` 已经接上 Backend（`_hysys()`），一直跑到终态，但这条完整路径本阶段**没有运行过**（2B 提示词：联调留给 2C）；2C 的第一件事是用三个场景的输入真实跑一遍，看 SPECIFY、VALIDATE 之后的 PLAN、PREFLIGHT……是不是接得上（单元测试里用 `FakeTools` 走通了整条路径，真实 HYSYS 上没有）。②`NEEDS_INPUT` 现在的输出是 `render_failure`（“需要补充的信息”写在详情里，退出码 4），2C 的报告要不要为它写一份“请补充这些信息”的文字，由你决定。③`TaskState.spec_rewrites`、`artifacts/task_spec.json`、`spec_issues.json` 已经有，报告的“假设和歧义”可以读 `task_spec.json` 里的 `ambiguities`（现在只进了产物，没有进规格）。④`--no-llm`：文本输入没有密钥时 `create_llm_client` 已经报错、退出码 1（有测试），2C 加选项时沿用。
+4. **提醒**：①密钥现在是用户级的永久变量（`python evals/set_api_key.py`），助手的进程读不到，要在命令里先从用户级变量补读（见记忆文件）；②LLM 对同一个输入的输出会变（场景 2 的异构体配比一次 24:52:24、两次 1:1:1，评测第 0 轮），报告里的“假设”要如实写下它这一次取的值；③组分表只有 11 个组分（D23），三个场景以外的输入多半先得到 `E_COMPONENT_NOT_FOUND`；④`evals/run_evals.py --repeats 3 --cases ...` 可以在调 Skill 时只跑几个用例；⑤HYSYS 的提醒（台账 L38）、heredoc 写 Python 的反斜杠问题，仍然有效。
 
 ## 待决策
 
@@ -409,6 +451,9 @@ VERIFY 的致命检查失败（`E_VALIDATION_FATAL`）也是抛 `ReactorAgentErr
 | D16 | **1A 里有两处与已确认的 R6、R8 措辞不完全一致的实现**：①R6 说 `solver.solve` 的 `timeout_s` 由看门狗线程实现（超时后按进程号结束）；实现只做了轮询 `IsSolving` 的超时，没有强制结束进程；②R8 说“文字白名单见 H23”；实现对任何对话框都点“确定”，已知文字只用来区分日志级别 | 按实现：①强制结束放进阶段 4 的执行器恢复策略（R1），②保持“都点”（不点会让 COM 调用永远卡住）。如果想改成只点已知文字，改 `dialogs.py` 的 `_handle` 一处即可 | **按默认**，用户若不同意请指出 |
 | D17 | **`src/` 的行数预算**：阶段 1A 结束时 `src/` 有 1971 行代码（`backends` 1280、`spec` 548、`tools` 83、`errors` 60），已经占 `CLAUDE.md` 说的全系统约 3000 行的三分之二。后面还有 `recipes`、`validation`、`state`、`observability`、`llm`、`skill_loader`、`report`、`harness`（上限 600）和 `cli`，粗估总量会到 4000 行以上。1A 的代码都有用处（Backend 要处理 HYSYS 的各种怪癖），没有发现能直接砍掉的部分 | 继续做，不在 1B 之前砍；每个阶段结束报行数，2C 结束时如果超过 4500 行再决定合并或删除哪些。预算数字只是估计，除了 `harness` 的上限没有测试强制 | **已定（用户 2026-10-09：“D17继续做”）**：按建议继续，不砍；每个阶段结束报行数，2C 结束时超过 4500 行再决定。**1C 结束时 4631 行**（`backends` 1280、`spec` 1199、`recipes` 588、`validation` 558、`harness` 353、`state` 204、`observability` 193、`cli` 113、`tools` 83、`errors` 60），已经超过 4500 行触发点，但 2A 至 2C 还要加 `llm`、`skill_loader`、`report` 和执行器的几个状态。1C 自己的新增（state、observability、harness、cli）共 862 行，没有发现能直接砍的；计划 §22.1 的参考值（Backend 约 500、规格层约 700、Recipe 约 300、验证层约 300）早在 1A、1B 就超了一倍。**已定（用户 2026-10-09：“D17继续”）**：继续，不在 2A 之前合并或删减 spec/ 和 validation/ 里的模块；每个阶段结束仍然报行数 |
 | D20 | **旧的集成测试在长会话里间歇性失败**（台账 L38）：整个测试会话共用一个 HYSYS 实例时，全量集成测试（53 个测试、约 60 个 Case）11 次运行里 7 次出现 2 至 3 个失败——新建的模型不求解（`E_NOT_SOLVED`）或转化反应器不反应，结构全部正确，把求解器关掉再放开也不解。根因没有查明，排除了 CPU、并发、内存、句柄、GDI、时间、单纯的 Case 数量。**我的做法（已做）**：把集成测试的 `backend`、`executor` 夹具从会话级改成文件级，每个测试文件一个新的 HYSYS 实例（多花约 45 秒），之后全量运行连续通过；与 1C 提示词“整个测试会话共用一个 HYSYS 连接”不同。**建议**：①保持文件级；②给 `E_NOT_SOLVED` 一次重建的机会（现在按提示词的策略表直接中止；重建只要几秒，能吃掉这类偶发的“不求解”，代价是真正欠规定的模型多重建一次才中止），改 `harness/recovery.py` 的策略表一行加一个测试 | **已定（用户 2026-10-09：“D20重建一次”）**：①文件级夹具保持；②`E_NOT_SOLVED` 不重试、重建一次、再中止，已实现（提交 51a5c49），执行器的单元测试和真实 HYSYS 上各有测试 |
+| D21 | **`harness/` 580 行，超过提示词的目标“约 520”**（测试的上限是 600，通过）。2A 结束是 454 行；2B 新增两个状态的处理函数（`specify.py` 86）、LLM 调用的公共部分（`calls.py` 36，选型也用它，`selection.py` 因此少了 9 行）、重写和终态的判定（`recovery.py` +14、`failures.py` +9）。已经把提示的拼装（约 45 行）放进 `llm/prompts.py`，没有再能直接拿掉的东西 | 建议：保持 580，不为凑数把代码写挤；2C 要在 harness 里加报告状态，到时再看是否要把 `engine.py` 里 VERIFY 一组函数（`_verify`、`_assess`、`_record_case`，约 70 行）挪出去 | 待用户决定 |
+| D22 | **场景 3 的“没有氧气进料”假设，靠 Skill 里一句一般性的工艺知识才得到**：第 0 轮（Skill 0.1.0）三次都没有登记（0/3）；在 `SKILL.md` 约定 5 里加了“问一问这类过程通常还有什么物料或条件，原文没给的写一条假设”，在 `references/gibbs.md` 里加了“气化、燃烧、部分氧化一类过程通常有氧化剂参与并提供热量，原文的进料里没有就写一条”，第 1 轮 3/3。没有场景的名字、原文和数值，Skill 内容测试通过；但提示词写了“如果必须把某个场景的内容写进 Skill 才能得到它们，停下来告诉我”，这一句是不是越界，由你判断 | 建议：保留（它是这一类高温过程的一般知识，换成别的燃烧或气化体系仍然成立）；如果认为越界，删掉 `gibbs.md` 里那一条并接受场景 3 的这一条假设靠 LLM 自己想到 | 待用户决定 |
+| D23 | **组分表只有 11 个组分**（台账里验证过规范名的）。留出场景（乙醇脱水、合成氨、甲烷与空气燃烧）需要乙醇、乙烯、氮气、氨、氧气，现在都会得到 `E_COMPONENT_NOT_FOUND`，终态 `NEEDS_INPUT`（报错清楚，不是崩溃）。加组分要在 HYSYS 里实测规范名（组分库的名字写法不能凭记忆），2B 提示词写明不运行 HYSYS | 建议：阶段 3A 之前由一个探针（用 `Components.Add` 试一批常见组分的名字，记入台账）补全，别名表由 2B 的 `config/components.yaml` 的格式承接 | 待用户决定 |
 
 ## 决策日志
 
@@ -455,6 +500,12 @@ VERIFY 的致命检查失败（`E_VALIDATION_FATAL`）也是抛 `ReactorAgentErr
 | 2026-10-10 | 重问之后依据仍不是原文原话：只丢依据，特征的取值保留并继续决定类型，不置为否/空；被丢弃的依据带上它支持的特征名 | ①依据检查只能查“是”的判断，只验证引文能不能在原文里找到，不验证判断本身对不对；找不到原话常常是引文格式的问题（LLM 引用时自动改正错别字，原文的“一样化碳”被引成“一氧化碳”，或省略号、拼接句子），置为否会把结论绑在与化学无关的引文格式上，三个考核场景的原文本来就带错别字；②2B 写规格要用 `equilibrium_constant_given`、`kinetics_given` 等特征决定抽取什么，早期丢信息比保留一个被标出的弱判断更难补救，下游自己还有规格校验；③提示词写的是“丢掉它并在 Trace 里记录”，指依据；④第一轮评测 41 次运行没有出现过找不到原话的依据（重问率 0%），实际影响很小；⑤第一道防线已经有：先带着问题重问一次，并告诉 LLM“找不到原话的特征请改成否” |
 | 2026-10-09 | 子代理的审查报告当作数据，逐条对照代码核实后再改；没有采纳的写明理由（1C 设计决定第 11 条） | `CLAUDE.md`：审查的发现逐条处理；报告里的断言（比如“覆盖上一个工况的文件”）自己读代码和写测试确认过，不是照做 |
 | 2026-10-09 | 旧集成测试间歇性失败：先查原因（花了约 1 小时 20 分），查不出来就用文件级夹具规避，并登记 D20，不改旧测试的内容、不放宽容差 | 失败的是 HYSYS 的偶发行为，不是断言太严；放宽容差或重试测试会掩盖它 |
+| 2026-10-10 | 用户要“永久设置环境变量的终端交互接口，输入 APIKEY 后先测连通”：做了 `evals/set_api_key.py`（getpass 读，走系统自己调用 LLM 的路径测一次，通过才写 HKCU 的 Environment，读回比对，不通默认不保存）；`evals/interactive.py` 在进程环境里没有密钥时补读这个用户级变量 | 用户的指示；写注册表而不是 `setx`，密钥不经过命令行。`src/` 仍然只读环境变量（`CLAUDE.md`）。已打开的终端和助手的进程读不到新变量，所以助手自己在命令里从用户级变量补读，不打印 |
+| 2026-10-10 | `TaskSpec` 每种反应器一个类、LLM 的输出里没有类型；不用联合、`Literal`、默认值 | 提示词要求“按类型做成可区分的联合，LLM 不能改类型”；台账 L39 只验证了不含这些特性的 Schema，类型又是已知的，所以把联合留给代码（`task_spec_model` 注册表），不冒 strict 模式拒绝的风险 |
+| 2026-10-10 | 抄写检查：来源是用户的数值必须在原文里找得到 | “照原文抄、不换算”只靠提示词约束不可靠，而单位和数值同时被换算时没有别的检查能发现；只有汉字数字的原文不查，所以对用中文数字写的描述会请用户补充，不会静默出错 |
+| 2026-10-10 | 评测里每个“必须是假设的字段”要有自己独立的一条假设 | 否则一条针对 `feeds` 的粗假设就能同时撑起组成、流量、压力三个期望，检查形同虚设 |
+| 2026-10-10 | 评测的三个原文场景仍各跑 5 次（2A 的 15/15 门槛要求），规格评测用同样的运行；提示词写的是“各运行 3 次” | 5 次包含 3 次；不另外多跑一轮 LLM |
+| 2026-10-10 | Recipe 的通用规则（元素守恒）保留，不挪到 `spec/rules.py` | `recipes/` 不在 2B 的范围，spec 文件直接运行的路径（没有 VALIDATE）还靠它；VALIDATE 里通用规则通过后才跑 Recipe 的规则，用户不会看到两条重复的问题 |
 
 ## 问题与解决
 
@@ -507,6 +558,12 @@ VERIFY 的致命检查失败（`E_VALIDATION_FATAL`）也是抛 `ReactorAgentErr
 | 2026-10-09 | 第 0 轮评测：场景 1 及其英文改写六次全错，其余全对 | 读 LLM 的回复：把“用文字写出两个反应”读成“没有写化学方程式”（`reaction_defined` 为否），又因为“重整”“高温”“要求探讨产物分布”把它判成黑箱（4/5）；规则和推荐一致地得出 Gibbs，所以对照没有发现，也没有触发重问 | 改两条一般性的定义（说清=反应物和产物说清，方程式或文字都行；黑箱只有两条路，催化的、温度高的、要求算产物分布的都不算），示例 3 换成类比体系；第 1 轮全对（“评测与 Skill 修改记录”） |
 | 2026-10-10 | 演示脚本在没有密钥时也改写了 `evals/out/dry_run_scenarios.txt`（把用户运行留下的真实输出覆盖成三条错误信息），我又运行了一次没有改完的旧脚本 | `git checkout` 恢复，脚本改成没有密钥时先报错退出（退出码 2）、不动输出文件；`run_evals.py` 同样 | 有测试之外的证据文件就不能在失败路径上覆盖它 |
 | 2026-10-10 | 探针 E18 被重跑（交互入口的“依次运行”），第一次的输出被第二次覆盖（同一个 tag `run1`）；我提交的是第二次跑到一半的文件 | 文件改名 `run2`，台账 L39 合并两次的读数（第一次的读数来自当时终端的输出），交互入口去掉已经跑完的探针 | 脚本重跑会覆盖同名文件，证据文件用不同的 tag |
+| 2026-10-10 | 刚保存的永久密钥，助手的进程读不到（环境变量三级里“用户级”有，进程里没有） | 用户在自己的终端里运行 `set_api_key.py`，测试通过并写入 HKCU；助手查 `[Environment]::GetEnvironmentVariable(..., 'User')` 有，`$env:` 没有（Claude 桌面应用启动得更早，子进程继承的是启动时的环境） | 助手的每条需要 LLM 的命令里先 `$env:KEY = [Environment]::GetEnvironmentVariable('...','User')` 再运行，不打印；`interactive.py` 也补读用户级变量，用户已打开的终端不用重开 |
+| 2026-10-10 | E19：strict 的 `json_schema` 接受 `TaskSpec`，但模型回复里 `composition.items` 是空数组、进料被拆成两股、`duty` 写了值为 0 的假设；提示的 token 只有 200 多 | 对比 L39 的读数（Schema 不计入提示），确认模型看不见字段的 `description` | 字段说明由代码渲染进上下文（`llm/schema_guide.py`）；空数组不是 E_LLM 的硬失败，而是规范化的问题；见台账 L40 |
+| 2026-10-10 | 第一次真实的 `--dry-run`：场景 2 两次都 E_LLM（`composition.items` 空数组，LLM 把“纯甲苯”当成“没有给出组成”，声明缺失，又写成假设） | 读 `llm/specify-1.json` 里两次回复的全文：第一次声明 `feed_composition` 缺失（会得到错误的 NEEDS_INPUT），第二次写了 `source: assumed` 却仍然空着 | 加 `pure_component`（纯物质写名字，不写份额）；Skill 写明“原文只说进料是某种物质，就是纯物质，不是缺失也不是假设”；空 `items` 挪到规范化 |
+| 2026-10-10 | 评测第 0 轮（Skill 0.1.0）：场景 3 的“没有氧气进料”假设 0/3 登记；场景 2 的异构体 LLM 取了 1:1:1（两次）和 24:52:24（一次） | 读三份 `task_spec.json`：只登记了“煤按碳处理”和候选产物，没有说进料里缺氧化剂 | Skill 0.1.1：约定 5 加上“问一问这类过程通常还有什么物料或条件”，Gibbs 参考加氧化剂的一般知识（D22），转化参考加“异构体的平衡分布通常不均等”；第 1 轮假设 9/9，LLM 的配比见评测记录 |
+| 2026-10-10 | 用命令行的 heredoc 写 Python 来改文件，又踩了几次反斜杠（`"
+"` 变成真换行：`components.py`、`cli.py`、`llm/prompts.py` 各一次；含反斜杠的旧文本静默不匹配导致整段补丁没有写入：`run_evals.py` 两次） | 每次靠 `ruff`/语法错误或 `assert old in s` 发现；改用 Edit、Write 工具 | 含反斜杠的行一律用 Edit 或 Write；补丁脚本里先 `assert`（已经在做），并且“全部替换成功才写文件”会让一处不匹配使整个补丁落空，要逐处确认 |
 
 ## 与计划的偏差
 
@@ -558,3 +615,8 @@ VERIFY 的致命检查失败（`E_VALIDATION_FATAL`）也是抛 `ReactorAgentErr
 | 2026-10-10 | 2A 提示词没有要求 | `evals/interactive.py`：终端里输入一次密钥，菜单运行场景选型、评测、对一段描述选型 | 用户 2026-10-10 的要求；`src/` 里仍然只从环境变量读密钥（`CLAUDE.md`） |
 | 2026-10-10 | 1C 的恢复策略：`E_IO` 等先重试再重建 | 还没有 Case 的状态（SELECT、SPECIFY）不重建，`decide` 加 `case_exists` | 没有可以丢弃重建的东西；否则选型阶段写不了文件会“重建”回 PREFLIGHT |
 | 2026-10-10 | 1C 的 `TaskState`：`spec_file`、`spec_hash`、`case_names` 必填；`TraceEvent.spec_hash` 必填 | 都可空（`case_names` 默认空），加 `frozen_spec_hash` 属性在规格冻结之前取它抛 `RuntimeError` | 文字描述开始的任务在规格冻结之前没有这些 |
+| 2026-10-10 | 2B 提示词任务 5：VALIDATE 没通过的终态是 NEEDS_INPUT 或 FAILED | 另外：有 `E_UNSUPPORTED`（Recipe 说系统做不了，如串联的转化反应）的是 `UNSUPPORTED`（退出码 3） | 与 PLAN 阶段 `rule_error` 的约定一致：系统做不了不是“出错” |
+| 2026-10-10 | 2B 提示词完成标准 5：`harness/` 不超过约 520 行 | 580 行（测试的上限 600 通过） | D21 |
+| 2026-10-10 | 2B 提示词任务 4：Skill 写 `SKILL.md` 和三份 `references/` | 同，另外 `SKILL.md` 约定 5 和 `gibbs.md` 各有一句关于“这类过程通常还有什么物料”的一般知识 | D22 |
+| 2026-10-10 | 2B 提示词任务 2：规范化的问题只用三个错误码 | 规范化和通用规则只用 `E_SCHEMA`、`E_COMPONENT_NOT_FOUND`、`E_RULE`；但 Recipe 的规则（1B）有自己的码（`E_UNSUPPORTED`、`E_SET_INCOMPATIBLE`……），VALIDATE 原样带出 | `recipes/` 不在 2B 的范围 |
+| 2026-10-10 | 2B 提示词任务 3：`spec/rules.py` 补 ModelSpec 没有覆盖的规则 | 另有 `spec/transcription.py`（抄写检查，不在提示词里）和 `spec/intake.py`（串联） | 设计决定 9 |

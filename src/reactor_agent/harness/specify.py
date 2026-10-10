@@ -13,12 +13,11 @@ from reactor_agent.harness.failures import NeedsInputError, rule_error
 from reactor_agent.harness.recovery import SpecAction, decide_spec
 from reactor_agent.llm.client import LlmClient
 from reactor_agent.llm.prompts import rewrite_content, specify_prompt
-from reactor_agent.llm.schema_guide import render_field_guide
 from reactor_agent.llm.system_prompt import load_system_prompt
 from reactor_agent.observability.trace import EventBody, TraceWriter, spec_issues_event
 from reactor_agent.recipes.base import ReactorRecipe
 from reactor_agent.skill_loader import REFERENCES_DIR, load_skill, read_file
-from reactor_agent.spec.components import ComponentTable, component_reference
+from reactor_agent.spec.components import ComponentTable
 from reactor_agent.spec.enums import CallPoint, Checkpoint, EventType, ReactorType, WorkflowState
 from reactor_agent.spec.intake import intake
 from reactor_agent.spec.model_spec import ModelSpec, spec_hash
@@ -30,8 +29,6 @@ from reactor_agent.state.models import TaskState
 from reactor_agent.state.store import ArtifactName, StateStore
 
 MODELING_SKILL = "reactor-modeling"
-FIELD_GUIDE_HEADING = "## TaskSpec 的字段说明\n\n逐项对照填写，每一节是一个结构。\n\n"
-NAMING_HEADING = "## 组分命名参考\n\n组分表里已有的组分。能对上的用规范名。\n\n"
 
 
 @dataclass(frozen=True)
@@ -52,14 +49,10 @@ class Specifier:
         reactor_type = selection.chosen_type()
         model = task_spec_model(reactor_type)
         skill = load_skill(self.skills_dir, MODELING_SKILL)
-        knowledge = [
-            skill.body,
-            read_file(skill, REFERENCES_DIR, f"{reactor_type.value}.md"),
-            FIELD_GUIDE_HEADING + render_field_guide(model),
-            NAMING_HEADING + component_reference(self.components),
-        ]
+        knowledge = [skill.body, read_file(skill, REFERENCES_DIR, f"{reactor_type.value}.md")]
         text = self.store.read_input(task.task_id)
-        prompt = specify_prompt(load_system_prompt(), knowledge, selection, text)
+        system = load_system_prompt()
+        prompt = specify_prompt(system, knowledge, model, self.components, selection, text)
         if task.spec_rewrites > 0:
             previous = self.store.read_artifact(task.task_id, ArtifactName.TASK_SPEC, model)
             found = self.store.read_artifact(task.task_id, ArtifactName.SPEC_ISSUES, SpecIssues)

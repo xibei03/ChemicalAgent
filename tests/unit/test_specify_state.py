@@ -241,3 +241,26 @@ def test_a_feed_with_no_pressure_anywhere_is_a_missing_pressure_problem(tmp_path
     run = specify(tmp_path, *[task] * (MAX_SPEC_REWRITES + 1))
     assert run.task.status is TaskStatus.NEEDS_INPUT
     assert "feeds[0].pressure_bar" in run.task.errors[-1].details
+
+
+def test_the_timeline_shows_the_spec_issues_and_the_llm_calls(tmp_path):
+    from reactor_agent.observability.render import render_timeline
+
+    run = specify(tmp_path, without_flow(), conversion_task())
+    text = render_timeline(run.events)
+    assert "规格有 1 个问题（已重写 0 轮）" in text
+    assert "LLM specify" in text and "LLM select" in text
+
+
+def test_a_needs_input_task_prints_what_to_supply_and_not_retries(tmp_path):
+    from reactor_agent.observability.render import render_failure
+
+    run = specify(tmp_path, *[conversion_with(120.0)] * (MAX_SPEC_REWRITES + 1))
+    report = run.task.failure_report(
+        run.run_dir / "trace.jsonl",
+        run.store.artifact_path(run.task.task_id, ArtifactName.MODEL_SPEC),
+    )
+    assert report is not None
+    text = render_failure(report)
+    assert "需要你补充或确认" in text and "reactions[0].conversion_percent" in text
+    assert "重试" not in text and "没有替你改动" in text

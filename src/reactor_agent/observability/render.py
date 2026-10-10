@@ -8,7 +8,7 @@ from itertools import groupby
 
 from reactor_agent.errors import ErrorCode
 from reactor_agent.observability.trace import TraceEvent
-from reactor_agent.spec.enums import EventType, MetricUnit
+from reactor_agent.spec.enums import EventType, MetricUnit, TaskStatus
 from reactor_agent.spec.llm import LlmCallSummary
 from reactor_agent.spec.results import FailureReport, NormalizedResult, RunResult, StreamResult
 from reactor_agent.spec.selection import REACTOR_NAMES, Decision, SelectionResult
@@ -66,7 +66,17 @@ def _llm_text(point: str, call: LlmCallSummary, duration_ms: int | None) -> str:
     return f"LLM {point}（{call.model}，{tokens} tokens，{seconds:.1f} 秒{again}）"
 
 
+def _spec_issues_text(event: TraceEvent) -> str:
+    """规格校验没通过：几个问题，已经重写了几轮。"""
+    output = event.output if isinstance(event.output, dict) else {}
+    issues = output.get("issues")
+    count = len(issues) if isinstance(issues, list) else 0
+    return f"规格有 {count} 个问题（已重写 {output.get('rewrites_used', 0)} 轮）"
+
+
 def _validation_text(event: TraceEvent) -> str:
+    if event.name == "spec_issues":
+        return _spec_issues_text(event)
     if not event.verdict:
         return "（没有检查结果）"
     failed = [check.value for check, passed in event.verdict.items() if not passed]
@@ -98,8 +108,19 @@ def render_timeline(events: Sequence[TraceEvent]) -> str:
     return "\n".join(lines)
 
 
+def _render_needs_input(report: FailureReport) -> str:
+    """需要用户补充或确认：每个字段缺什么、哪里有问题；不是系统出错，不写重试和重建。"""
+    lines = [f"任务 {report.task_id} 需要你补充或确认下面的信息（停在 {report.state.value}）："]
+    lines.extend(f"{INDENT}{key}：{value}" for key, value in report.details.items())
+    lines.append("补充之后用完整的描述重新运行。没有替你改动任何给出的数值。")
+    lines.append(f"Trace：{report.trace_path}")
+    return "\n".join(lines)
+
+
 def render_failure(report: FailureReport) -> str:
     """没有完成的任务的诊断：停在哪里、哪一步、什么错、试过什么、文件在哪里、下一步怎么办。"""
+    if report.status is TaskStatus.NEEDS_INPUT:
+        return _render_needs_input(report)
     lines = [
         f"任务 {report.task_id} 没有完成：{report.status.value}",
         f"停在状态：{report.state.value}",
