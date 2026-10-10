@@ -4,7 +4,8 @@
 
 密钥用 getpass 读（输入时不显示），只保存在这个进程的环境里，子进程继承它；不写文件、不进日志、
 不回显。系统本身（src/）仍然只从环境变量读密钥，这个入口只是替你设置那个环境变量。
-环境变量里已经有密钥时直接使用，不再询问。
+环境变量里已经有密钥时直接使用，不再询问；没有时再找 set_api_key.py 永久保存的用户级变量
+（已经打开的终端读不到它，所以这里补读一次），都没有才询问。
 """
 
 import getpass
@@ -14,6 +15,8 @@ import sys
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
+
+from set_api_key import read_user_variable
 
 from reactor_agent.cli import REPO_ROOT, SETTINGS_FILE
 from reactor_agent.spec.settings import load_settings
@@ -58,6 +61,7 @@ MENU = (
 
 Ask = Callable[[str], str]
 Run = Callable[[Sequence[str]], int]
+ReadSaved = Callable[[str], str | None]
 
 
 def run_command(command: Sequence[str]) -> int:
@@ -99,11 +103,15 @@ def choose(choice: str, ask_line: Ask, run: Run) -> bool:
     return True
 
 
-def session(ask_secret: Ask, ask_line: Ask, run: Run) -> int:
+def session(ask_secret: Ask, ask_line: Ask, run: Run, read_saved: ReadSaved) -> int:
     """读密钥，然后循环显示菜单。返回退出码：没有密钥是 2。"""
     variable = load_settings(SETTINGS_FILE).llm.api_key_env
+    saved = read_saved(variable)
     if os.environ.get(variable):
         print(f"使用环境变量 {variable} 里已有的密钥。")
+    elif saved:
+        os.environ[variable] = saved
+        print(f"使用 set_api_key.py 永久保存的用户级变量 {variable}。")
     else:
         os.environ[variable] = ask_secret(f"请输入 {variable}（输入时不显示）：").strip()
     if not os.environ[variable]:
@@ -123,7 +131,7 @@ def main() -> int:
     if not (sys.stdin.isatty() and sys.stdout.isatty()):
         print("需要在交互式终端里运行：密钥要在终端里输入。", file=sys.stderr)
         return 2
-    return session(getpass.getpass, input, run_command)
+    return session(getpass.getpass, input, run_command, read_user_variable)
 
 
 if __name__ == "__main__":

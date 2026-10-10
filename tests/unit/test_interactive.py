@@ -17,9 +17,10 @@ SECRET = "sk-secret-value-123456"
 class Console:
     """假的终端：按脚本回答密钥和每个提问，记录运行过的命令。"""
 
-    def __init__(self, answers: list[str], secret: str = SECRET) -> None:
+    def __init__(self, answers: list[str], secret: str = SECRET, saved: str | None = None) -> None:
         self.answers = answers
         self.secret = secret
+        self.saved = saved
         self.secret_prompts: list[str] = []
         self.commands: list[list[str]] = []
         self.environment_seen: list[str | None] = []
@@ -36,8 +37,11 @@ class Console:
         self.environment_seen.append(interactive.os.environ.get(VARIABLE))
         return 0
 
+    def read_saved(self, _name: str) -> str | None:
+        return self.saved
+
     def session(self) -> int:
-        return interactive.session(self.ask_secret, self.ask_line, self.run)
+        return interactive.session(self.ask_secret, self.ask_line, self.run, self.read_saved)
 
 
 @pytest.fixture(autouse=True)
@@ -70,6 +74,21 @@ def test_a_key_already_in_the_environment_is_used_without_asking(monkeypatch, ca
     console = Console(["q"])
     assert console.session() == 0
     assert console.secret_prompts == [] and "已有的密钥" in capsys.readouterr().out
+
+
+def test_a_saved_user_variable_is_used_without_asking_and_reaches_the_commands(capsys):
+    console = Console(["1", "q"], saved=SECRET)
+    assert console.session() == 0
+    assert console.secret_prompts == [] and console.environment_seen == [SECRET]
+    out = capsys.readouterr()
+    assert "永久保存" in out.out and SECRET not in out.out + out.err
+
+
+def test_the_environment_wins_over_a_saved_user_variable(monkeypatch):
+    monkeypatch.setenv(VARIABLE, SECRET)
+    console = Console(["1", "q"], saved="sk-other-value")
+    console.session()
+    assert console.environment_seen == [SECRET]
 
 
 def test_an_empty_key_ends_the_session_without_running_anything(capsys):
