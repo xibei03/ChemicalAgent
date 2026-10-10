@@ -40,11 +40,11 @@ class Step:
 
 STEPS: dict[str, Step] = {
     "1": Step(
-        "三个考核场景各做一次选型（run --dry-run），输出存进 evals/out/",
+        "三个考核场景各干跑一次（选型、规格、假设、建模步骤），输出存进 evals/out/",
         [PYTHON, str(REPO_ROOT / "evals" / "demo_scenarios.py")],
     ),
     "2": Step(
-        "选型评测（全部用例，几分钟），结果写进 docs/EVAL_RESULTS.md",
+        "选型和规格评测（全部用例，十几分钟），结果写进 docs/EVAL_RESULTS.md",
         [PYTHON, str(REPO_ROOT / "evals" / "run_evals.py")],
     ),
 }
@@ -53,7 +53,7 @@ DESCRIBE = "3"
 RERUN_CASES = "4"
 MENU = (
     *(f"  {key}  {step.title}" for key, step in STEPS.items()),
-    f"  {DESCRIBE}  对你输入的一段描述做选型（输入一行文字，或者一个文本文件的路径）",
+    f"  {DESCRIBE}  对你输入的一段描述干跑（输入一行文字，或者一个文本文件的路径）",
     f"  {RERUN_CASES}  只重跑指定的评测用例（输入编号，逗号分隔），结果不覆盖 docs/EVAL_RESULTS.md",
     "  a  依次运行 1、2",
     "  q  退出",
