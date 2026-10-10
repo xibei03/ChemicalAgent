@@ -197,13 +197,14 @@ class ModelSpec(FrozenModel):
         return self
 
 
-def _covers(assumed: str, queried: str) -> bool:
+def covers(assumed: str, queried: str) -> bool:
+    """假设登记的字段路径是不是就是被问的字段，或者包含它（登记在 feeds[0] 上覆盖它的子字段）。"""
     return queried == assumed or queried.startswith((assumed + ".", assumed + "["))
 
 
 def is_assumed(spec: ModelSpec, field_path: str) -> bool:
     """规格里的某个字段是不是假设：假设登记在这个字段本身，或者登记在包含它的字段上。"""
-    return any(_covers(item.field_path, field_path) for item in spec.assumptions)
+    return any(covers(item.field_path, field_path) for item in spec.assumptions)
 
 
 def spec_hash(spec: ModelSpec) -> str:

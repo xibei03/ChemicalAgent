@@ -1,16 +1,16 @@
 """抄写检查：LLM 写下的“用户给的数”，是不是原文里真有的数。
 
 “数值照原文抄，不换算，不做算术”是一条机械检查得出的约束：LLM 把 2.5 MPa 换成 25 却保留单位 MPa 时，
-没有别的检查能发现，HYSYS 里的压力会差一个数量级。来源是用户的数值，必须出现在原文里（全角半角统一，
-千分位去掉）。原文里没有阿拉伯数字（数字都用汉字写）时不查；只有一个组分的组成，份额恒为 1，不查。
+没有别的检查能发现，HYSYS 里的压力会差一个数量级。来源是用户的数值，必须出现在原文里；“出现”
+的读法很宽（numbers.py：全角半角、千分位和逗号列表、科学计数法、汉字数字、常压室温这类文字说的量）。
+原文里一个数都没有时不查；只有一个组分的组成，份额恒为 1，不查。
 """
 
 import math
-import re
-import unicodedata
 from collections.abc import Iterator
 
 from reactor_agent.errors import ErrorCode
+from reactor_agent.spec.numbers import candidate_numbers, has_numbers
 from reactor_agent.spec.results import Issue, make_issue
 from reactor_agent.spec.task_spec import (
     ConversionReactionTask,
@@ -21,17 +21,9 @@ from reactor_agent.spec.task_spec import (
     TaskSpec,
 )
 
-NUMBER = re.compile(r"\d+(?:\.\d+)?")
-THOUSANDS_SEPARATOR = re.compile(r"(?<=\d),(?=\d{3})")
 RELATIVE_TOLERANCE = 1e-9
 # 只有一个组分的组成，份额恒为 1，不需要在原文里出现。
 MIN_ITEMS_TO_CHECK = 2
-
-
-def numbers_in(text: str) -> tuple[float, ...]:
-    """文字里出现的全部数（非负）。"""
-    cleaned = THOUSANDS_SEPARATOR.sub("", unicodedata.normalize("NFKC", text))
-    return tuple(float(match) for match in NUMBER.findall(cleaned))
 
 
 def _quantities(task: TaskSpec) -> Iterator[tuple[str, Quantity | None]]:
@@ -81,9 +73,9 @@ def _claimed(task: TaskSpec) -> Iterator[tuple[str, float]]:
 
 def transcription_issues(task: TaskSpec, text: str) -> tuple[Issue, ...]:
     """来源是用户的数值，原文里找不到的，每个是一个问题。"""
-    found = numbers_in(text)
-    if not found:
+    if not has_numbers(text):
         return ()
+    found = candidate_numbers(text)
     return tuple(
         make_issue(
             ErrorCode.SCHEMA,

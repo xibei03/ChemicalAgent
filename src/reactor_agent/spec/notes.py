@@ -61,7 +61,10 @@ class Notes:
 
 @dataclass(frozen=True)
 class Context:
-    """规范化用到的组分表、单位表，和收集问题的 Notes。"""
+    """规范化用到的组分表和单位表（只读），和这一次规范化的 Notes。
+
+    冻结的是三个引用：各步骤共用同一个 Notes，往里记问题和假设；它只属于这一次规范化。
+    """
 
     table: ComponentTable
     units: UnitTable

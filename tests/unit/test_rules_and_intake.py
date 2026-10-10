@@ -10,6 +10,7 @@ from reactor_agent.errors import ErrorCode
 from reactor_agent.spec.enums import ReactorType
 from reactor_agent.spec.intake import intake
 from reactor_agent.spec.model_spec import ModelSpec
+from reactor_agent.spec.normalize import normalize
 from reactor_agent.spec.results import Issue, make_issue
 from reactor_agent.spec.rules import (
     general_rules,
@@ -17,7 +18,8 @@ from reactor_agent.spec.rules import (
     undeclared_default_issues,
     volume_flow_issues,
 )
-from reactor_agent.spec.transcription import numbers_in, transcription_issues
+from reactor_agent.spec.task_spec import CaseTask
+from reactor_agent.spec.transcription import transcription_issues
 from task_builders import (
     components,
     composition,
@@ -27,6 +29,7 @@ from task_builders import (
     gibbs_task,
     pressure,
     q,
+    split,
     units,
 )
 
@@ -56,8 +59,17 @@ def test_a_reaction_that_does_not_conserve_an_element_is_a_user_fixable_rule_pro
     assert "C 净增" in issue.message and "H 净增" in issue.message
 
 
-def test_fractional_isomer_coefficients_still_conserve():
-    assert reaction_balance_issues(golden_spec("toluene_conversion"), TABLE) == ()
+def test_isomer_coefficients_that_are_repeating_decimals_still_conserve():
+    reaction = conversion_reaction(
+        (("toluene", 2),),
+        (("benzene", 1),),
+        "toluene",
+        q(50, "%"),
+        (split(1, ("p-xylene", 1), ("m-xylene", 1), ("o-xylene", 1)),),
+    )
+    normalized = normalize(conversion_task(reactions=(reaction,)), CONVERSION, TABLE, units())
+    assert normalized.spec is not None, normalized.issues
+    assert reaction_balance_issues(normalized.spec, TABLE) == ()
 
 
 # ---- 默认值都有假设 ----
@@ -71,8 +83,11 @@ def test_a_defaulted_field_without_an_assumption_is_an_error():
 
 
 def test_a_field_is_covered_by_an_assumption_on_the_container_that_holds_it():
-    spec = golden_spec("slurry_gibbs")
+    spec = golden_spec("slurry_gibbs")  # 假设登记在 feeds[0].composition 上，覆盖它下面的字段
     assert undeclared_default_issues(spec, ["feeds[0].composition"]) == ()
+    assert undeclared_default_issues(spec, ["feeds[0].composition[1].mole_fraction"]) == ()
+    (issue,) = undeclared_default_issues(spec, ["feeds[0].temperature_c"])
+    assert issue.field_path == "feeds[0].temperature_c"
 
 
 # ---- 气体体积单位用于含固体或液体的进料 ----
@@ -96,17 +111,16 @@ def test_a_volume_flow_of_a_gas_needs_no_assumption():
 
 
 def test_general_rules_collects_all_three_kinds():
-    spec = unbalanced_spec()
-    found = general_rules(spec, TABLE, ["feeds[0].mass_flow_kg_h"], [])
-    assert {i.code for i in found} == {ErrorCode.RULE} and len(found) == 2
+    found = general_rules(unbalanced_spec(), TABLE, ["feeds[0].mass_flow_kg_h"], [0])
+    assert {i.code for i in found} == {ErrorCode.RULE}
+    assert [i.field_path for i in found] == [
+        "reactions[0].stoichiometry",
+        "feeds[0].mass_flow_kg_h",
+        "feeds[0].molar_flow_kmol_h",
+    ]
 
 
 # ---- 抄写检查 ----
-
-
-def test_numbers_are_found_after_width_folding_and_thousands_separators():
-    found = numbers_in("流量 10,000 kg/h，２.５MPa，转化率50%，C₇H₈")
-    assert {10000.0, 2.5, 50.0, 7.0, 8.0} <= set(found)
 
 
 TEXT = "进料 10000 kg/h，380 ℃，2.5 MPa，转化率 50%。"
@@ -129,8 +143,38 @@ def test_an_assumed_value_is_not_checked_against_the_text():
     assert transcription_issues(task.model_copy(update={"feeds": (assumed,)}), TEXT) == ()
 
 
-def test_the_check_is_skipped_when_the_text_has_no_arabic_digits():
-    assert transcription_issues(conversion_task(), "进料一万公斤每小时，温度三百八十摄氏度") == ()
+def test_the_check_is_skipped_when_the_text_has_no_numbers():
+    assert transcription_issues(conversion_task(), "把进料送进反应器，告诉我出口组成") == ()
+
+
+def test_digits_inside_formulas_do_not_switch_the_check_on():
+    assert transcription_issues(conversion_task(), "C7H8 与 H2O 在反应器里反应") == ()
+
+
+def test_chinese_numerals_in_the_text_are_numbers_the_user_gave():
+    text = "进料一万公斤每小时，温度三百八十摄氏度，两点五兆帕，转化率五十"
+    assert transcription_issues(conversion_task(), text) == ()
+    (issue,) = transcription_issues(conversion_task(), text.replace("三百八十", "三百"))
+    assert issue.field_path == "feeds[0].temperature_c"
+
+
+def test_a_pressure_said_in_words_is_accepted_as_one_atmosphere():
+    task = conversion_task(reactor_pressure=pressure(1.0, "atm"))
+    assert transcription_issues(task, "常压操作，380 ℃，10000 kg/h，转化率 50%") == ()
+
+
+def test_a_comma_list_of_values_is_accepted_value_by_value():
+    cases = tuple(
+        CaseTask(name=f"T{t}", outlet_temperature=q(t, "℃"), duty=None) for t in (600, 800)
+    )
+    task = conversion_task(cases=cases)
+    text = "出口温度 600，700，800 ℃，进料 380 ℃，10000 kg/h，2.5 MPa，转化率 50%"
+    assert transcription_issues(task, text) == ()
+
+
+def test_a_value_written_in_scientific_notation_is_accepted():
+    task = conversion_task(reactor_pressure=pressure(1.2e5, "Pa"))
+    assert transcription_issues(task, "反应压力 1.2e5 Pa，380 ℃，10000 kg/h，转化率 50%") == ()
 
 
 def test_a_single_component_amount_of_one_is_not_looked_for_in_the_text():
@@ -161,7 +205,7 @@ def test_a_conversion_in_the_reaction_is_checked_too():
 
 
 def intake_of(task, text=TEXT, rules=lambda _spec: ()):
-    return intake(task, text, CONVERSION, (components(), units()), rules)
+    return intake(task, text, CONVERSION, components(), units(), rules)
 
 
 def test_a_good_task_spec_is_taken_in_and_the_reactor_rules_are_the_last_word():
@@ -184,10 +228,21 @@ def test_the_reactor_rules_are_not_run_when_an_earlier_step_found_problems():
     assert taken.spec is None and taken.issues and not calls
 
 
-def test_transcription_problems_come_first_and_stop_the_later_steps():
-    bad = conversion_task(reactor_pressure=pressure(25.0, "MPa"))
-    taken = intake_of(bad)
-    assert taken.spec is None and taken.issues[0].code is ErrorCode.SCHEMA
+def test_transcription_problems_come_first_and_the_rules_are_not_run_after_them():
+    calls = []
+
+    def spy(spec):
+        calls.append(spec)
+        return ()
+
+    bad = conversion_task(
+        reactor_pressure=pressure(25.0, "MPa"),  # 25 不在原文里
+        feeds=(feed(q(380, "华氏"), q(10000, "kg/h"), "toluene"),),  # 单位不认识
+    )
+    taken = intake_of(bad, rules=spy)
+    assert taken.spec is None and not calls
+    paths = [issue.field_path for issue in taken.issues]
+    assert paths[0] == "reactor_pressure" and "feeds[0].temperature_c" in paths
 
 
 @pytest.mark.parametrize("name", ["smr_equilibrium", "slurry_gibbs", "toluene_conversion"])

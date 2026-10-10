@@ -27,6 +27,8 @@ from reactor_agent.spec.task_spec import (
 )
 
 Term = dict[str, object]
+# 配比小于它就当作 0：这个组分在产物里不出现。
+ZERO_SHARE = 1e-12
 
 
 @dataclass(frozen=True)
@@ -60,10 +62,11 @@ def _split_terms(ctx: Context, items: tuple[SplitProductTask, ...], path: str) -
             continue
         for k, share in enumerate(product.shares):
             name = resolve_name(ctx, share.component, f"{where}.shares[{k}].component")
-            if name is not None:
-                terms.append(
-                    {"component": name, "coefficient": product.coefficient * share.share / total}
-                )
+            if name is None or share.share < ZERO_SHARE:
+                continue  # 配比为 0 的组分不生成，系数为 0 的项没有意义
+            terms.append(
+                {"component": name, "coefficient": product.coefficient * share.share / total}
+            )
     return terms
 
 
@@ -161,20 +164,20 @@ def product_components(ctx: Context, task: TaskSpec) -> tuple[str, ...]:
 
 
 def normalize_metrics(ctx: Context, task: TaskSpec) -> list[dict[str, object]]:
-    """待求指标：转化率、收率、比值，组分名解析成规范名。"""
+    """待求指标：转化率、收率、比值，组分名解析成规范名。问题的路径是 TaskSpec 里的字段。"""
     metrics: list[dict[str, object]] = []
-    for item in task.conversion_metrics:
-        name = resolve_name(ctx, item.component, f"metrics[{len(metrics)}].component")
+    for index, item in enumerate(task.conversion_metrics):
+        name = resolve_name(ctx, item.component, f"conversion_metrics[{index}].component")
         if name is not None:
             metrics.append({"kind": MetricKind.CONVERSION, "component": name})
-    for item_y in task.yield_metrics:
-        where = f"metrics[{len(metrics)}]"
+    for index, item_y in enumerate(task.yield_metrics):
+        where = f"yield_metrics[{index}]"
         product = resolve_name(ctx, item_y.product, f"{where}.product")
-        basis = resolve_name(ctx, item_y.reference_component, f"{where}.basis")
+        basis = resolve_name(ctx, item_y.reference_component, f"{where}.reference_component")
         if product is not None and basis is not None:
             metrics.append({"kind": MetricKind.YIELD, "product": product, "basis": basis})
-    for item_r in task.ratio_metrics:
-        where = f"metrics[{len(metrics)}]"
+    for index, item_r in enumerate(task.ratio_metrics):
+        where = f"ratio_metrics[{index}]"
         top = resolve_name(ctx, item_r.numerator, f"{where}.numerator")
         bottom = resolve_name(ctx, item_r.denominator, f"{where}.denominator")
         if top is not None and bottom is not None:

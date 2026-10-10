@@ -19,8 +19,8 @@ from reactor_agent.spec.loading import parse_model, read_document
 
 
 def unit_key(text: str) -> str:
-    """单位写法比较前的规范化：全角半角统一（℃ 变成 °C，Nm³ 变成 Nm3），去掉空白，不分大小写。"""
-    return "".join(unicodedata.normalize("NFKC", text).split()).casefold()
+    """单位写法比较前的规范化：全角半角统一（℃ 变成 °C，Nm³ 变成 Nm3），去掉空白。区分大小写。"""
+    return "".join(unicodedata.normalize("NFKC", text).split())
 
 
 class UnitEntry(FrozenModel):
@@ -33,7 +33,7 @@ class UnitEntry(FrozenModel):
 
 
 class UnitTable(FrozenModel):
-    """config/units.yaml 的全部内容。同一类单位里，一个写法只能指向一个换算。"""
+    """config/units.yaml 的全部内容。同一类单位里，一个写法（区分大小写）只能指向一个换算。"""
 
     standard_molar_volume_nm3_per_kmol: Annotated[float, Field(gt=0.0)]
     atmosphere_bar: Annotated[float, Field(gt=0.0)]
@@ -48,7 +48,14 @@ class UnitTable(FrozenModel):
     @model_validator(mode="after")
     def _names_are_unambiguous(self) -> Self:
         flows = (*self.molar_flow_kmol_h, *self.mass_flow_kg_h, *self.standard_volume_flow_nm3_h)
-        for group in (self.temperature_c, self.pressure_bar, flows, self.duty_kw):
+        groups = (
+            self.temperature_c,
+            self.pressure_bar,
+            flows,
+            self.duty_kw,
+            self.conversion_percent,
+        )
+        for group in groups:
             keys = [unit_key(name) for entry in group for name in entry.names]
             if len(set(keys)) != len(keys):
                 raise ValueError("单位表里有写法重复，换算不唯一")
@@ -72,8 +79,13 @@ class FlowValue:
 
 
 def _find(entries: Sequence[UnitEntry], unit: str) -> UnitEntry | None:
+    """先按写法原样找；找不到再不分大小写找，而且只在没有歧义时采用（mW 和 MW 差 10^9，不能猜）。"""
     key = unit_key(unit)
-    return next((e for e in entries if key in {unit_key(n) for n in e.names}), None)
+    exact = [e for e in entries if key in {unit_key(n) for n in e.names}]
+    if exact:
+        return exact[0]
+    folded = [e for e in entries if key.casefold() in {unit_key(n).casefold() for n in e.names}]
+    return folded[0] if len(folded) == 1 else None
 
 
 def _convert(entries: Sequence[UnitEntry], value: float, unit: str) -> float | None:

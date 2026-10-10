@@ -43,7 +43,13 @@ ABSOLUTE, GAUGE = PressureBasis.ABSOLUTE, PressureBasis.GAUGE
     ],
 )
 def test_temperatures_become_celsius(value, unit, expected):
-    assert math.isclose(to_temperature_c(TABLE, value, unit) or math.nan, expected, abs_tol=1e-6)
+    celsius = to_temperature_c(TABLE, value, unit)
+    assert celsius is not None and math.isclose(celsius, expected, abs_tol=1e-6)
+
+
+def test_zero_kelvin_is_converted_not_mistaken_for_a_missing_value():
+    celsius = to_temperature_c(TABLE, 0.0, "K")
+    assert celsius is not None and math.isclose(celsius, -273.15)
 
 
 @pytest.mark.parametrize(
@@ -57,7 +63,8 @@ def test_temperatures_become_celsius(value, unit, expected):
     ],
 )
 def test_absolute_pressures_become_bar(value, unit, expected):
-    assert math.isclose(to_pressure_bar(TABLE, value, unit, ABSOLUTE) or 0, expected, rel_tol=1e-9)
+    bar = to_pressure_bar(TABLE, value, unit, ABSOLUTE)
+    assert bar is not None and math.isclose(bar, expected, rel_tol=1e-9)
 
 
 def test_a_gauge_pressure_gets_one_atmosphere_added():
@@ -100,19 +107,53 @@ def test_duty_and_conversion_units():
     assert to_conversion_percent(TABLE, 0.5, "") == 50.0
 
 
-def test_unit_spelling_is_compared_after_width_and_case_folding():
-    assert unit_key("Nm³ / H") == unit_key("nm3/h") and unit_key("℃") == unit_key("°C")
+def test_unit_spelling_is_compared_after_width_folding_but_keeps_the_case():
+    assert unit_key("Nm³ / h") == unit_key("Nm3/h") and unit_key("℃") == unit_key("°C")
+    assert unit_key("mW") != unit_key("MW")
 
 
-def test_a_spelling_that_belongs_to_two_conversions_is_rejected():
-    entry = UnitEntry(names=("bar",), factor=1.0)
-    other = UnitEntry(names=("BAR",), factor=2.0)
-    fields = {
-        name: (entry,) for name in UnitTable.model_fields if name.endswith(("_h", "_c", "_kw"))
-    }
-    fields.update(pressure_bar=(entry, other), conversion_percent=(entry,))
+def test_a_unit_in_another_case_is_accepted_when_only_one_unit_matches():
+    flow = to_flow(TABLE, 80000, "NM3/H")
+    assert flow is not None and flow.kind is FlowKind.STANDARD_VOLUME
+    assert to_pressure_bar(TABLE, 2.5, "mpa", ABSOLUTE) == 25.0
+
+
+def table_with(**groups: tuple[UnitEntry, ...]) -> UnitTable:
+    """真实的单位表，换掉其中几类单位，重新校验。"""
+    return UnitTable.model_validate({**TABLE.model_dump(), **groups})
+
+
+def test_a_case_difference_that_changes_the_meaning_is_never_guessed():
+    milli = UnitEntry(names=("mW",), factor=1e-6)
+    table = table_with(duty_kw=(*TABLE.duty_kw, milli))
+    assert to_duty_kw(table, 1.0, "MW") == 1000.0
+    assert to_duty_kw(table, 1.0, "mW") == pytest.approx(1e-6)
+    assert to_duty_kw(table, 1.0, "mw") is None
+
+
+@pytest.mark.parametrize(
+    "group", ["temperature_c", "pressure_bar", "molar_flow_kmol_h", "duty_kw", "conversion_percent"]
+)
+def test_a_spelling_that_belongs_to_two_conversions_is_rejected(group):
+    entries = getattr(TABLE, group)
+    repeated = UnitEntry(names=(entries[0].names[0],), factor=7.0)
     with pytest.raises(ValueError, match="重复"):
-        UnitTable(standard_molar_volume_nm3_per_kmol=22.414, atmosphere_bar=1.01325, **fields)
+        table_with(**{group: (*entries, repeated)})
+
+
+def test_a_spelling_used_by_two_kinds_of_flow_is_rejected():
+    taken = TABLE.molar_flow_kmol_h[0].names[0]
+    mass = (*TABLE.mass_flow_kg_h, UnitEntry(names=(taken,), factor=1.0))
+    with pytest.raises(ValueError, match="重复"):
+        table_with(mass_flow_kg_h=mass)
+
+
+def test_the_same_spelling_in_width_variants_counts_as_a_duplicate():
+    repeated = UnitEntry(names=("°C",), factor=1.0)
+    with pytest.raises(ValueError, match="重复"):
+        table_with(
+            temperature_c=(*TABLE.temperature_c, UnitEntry(names=("℃",), factor=2.0), repeated)
+        )
 
 
 def test_a_missing_unit_file_is_an_io_error(tmp_path: Path):
@@ -128,8 +169,7 @@ TABLE_C = components()
 
 def fractions(*items, basis=CompositionBasis.MOLE, scale=AmountScale.RATIO):
     task = composition(*items, basis=basis, scale=scale)
-    names = [TABLE_C.components[0].name] * 0 + [i for i, _ in items]
-    return mole_fractions(task, names, TABLE_C)
+    return mole_fractions(task, [name for name, _ in items], TABLE_C)
 
 
 def test_a_mole_ratio_is_normalized():

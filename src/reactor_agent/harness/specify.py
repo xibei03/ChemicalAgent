@@ -75,7 +75,8 @@ class Specifier:
             task_spec,
             self.store.read_input(task.task_id),
             reactor_type,
-            (self.components, self.units),
+            self.components,
+            self.units,
             lambda spec: recipe.rules(spec, self.components),
         )
         if taken.spec is not None:

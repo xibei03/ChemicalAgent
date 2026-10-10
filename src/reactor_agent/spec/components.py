@@ -114,8 +114,8 @@ def resolve_component(table: ComponentTable, text: str) -> ComponentEntry | None
     entry = find_component(table, text)
     if entry is not None:
         return entry
-    parts = (part for part in NAME_SEPARATORS.split(text) if part.strip())
-    found = {entry.name: entry for part in parts if (entry := find_component(table, part))}
+    matches = (find_component(table, part) for part in NAME_SEPARATORS.split(text) if part.strip())
+    found = {match.name: match for match in matches if match is not None}
     return next(iter(found.values())) if len(found) == 1 else None
 
 

@@ -28,6 +28,7 @@ from reactor_agent.spec.task_spec import (
     MissingItem,
     Source,
     TaskSpec,
+    blocking_missing,
 )
 from task_builders import (
     components,
@@ -40,6 +41,7 @@ from task_builders import (
     pressure,
     q,
     smr_task,
+    split,
     units,
 )
 
@@ -86,9 +88,11 @@ def test_pressure_flow_and_split_products_are_converted_to_canonical_values():
     spec = spec_of(conversion_task())
     feed_spec = spec.feeds[0]
     assert math.isclose(feed_spec.pressure_bar, 25.0)
-    assert feed_spec.mass_flow_kg_h == 10000.0 and feed_spec.molar_flow_kmol_h is None
+    assert feed_spec.mass_flow_kg_h == pytest.approx(10000.0)
+    assert feed_spec.molar_flow_kmol_h is None
     coefficients = {t.component: t.coefficient for t in spec.reactions[0].stoichiometry}
-    assert coefficients["Toluene"] == -2.0 and coefficients["Benzene"] == 1.0
+    assert coefficients["Toluene"] == pytest.approx(-2.0)
+    assert coefficients["Benzene"] == pytest.approx(1.0)
     assert math.isclose(coefficients["p-Xylene"], 0.24)
     assert math.isclose(coefficients["m-Xylene"], 0.52)
     assert math.isclose(coefficients["o-Xylene"], 0.24)
@@ -119,6 +123,67 @@ def test_a_gauge_pressure_is_converted_to_absolute_without_a_basis_assumption():
     assert not [a for a in spec.assumptions if "绝压" in a.reason]
 
 
+def test_a_basis_the_unit_carries_wins_over_the_basis_the_llm_filled_in():
+    contradicting = pressure(10.0, "barg", PressureBasis.ABSOLUTE)
+    spec = spec_of(conversion_task(reactor_pressure=contradicting))
+    assert math.isclose(spec.feeds[0].pressure_bar, 11.01325)
+
+
+def test_an_unstated_basis_is_assumed_once_per_pressure_even_when_the_drop_is_derived():
+    task = with_feed(
+        conversion_task(reactor_pressure=pressure(15.0, "bar")), pressure=pressure(20.0, "bar")
+    )
+    spec = spec_of(task)
+    basis = [a for a in spec.assumptions if "绝压" in a.reason]
+    assert sorted(a.field_path for a in basis) == ["feeds[0].pressure_bar", "pressure_drop_bar"]
+    assert len({a.field_path for a in spec.assumptions}) == len(spec.assumptions)
+
+
+def test_the_lowest_feed_pressure_gives_the_pressure_drop():
+    task = conversion_task(reactor_pressure=pressure(10.0, "bar"))
+    second = task.feeds[0].model_copy(update={"name": "第二股", "pressure": pressure(30.0, "bar")})
+    first = task.feeds[0].model_copy(update={"pressure": pressure(25.0, "bar")})
+    spec = spec_of(task.model_copy(update={"feeds": (second, first)}))
+    assert math.isclose(spec.pressure_drop_bar, 15.0)
+
+
+def test_a_feed_below_the_reactor_pressure_is_a_problem_even_when_it_is_not_the_first():
+    task = conversion_task(reactor_pressure=pressure(20.0, "bar"))
+    high = task.feeds[0].model_copy(update={"pressure": pressure(30.0, "bar")})
+    low = task.feeds[0].model_copy(update={"name": "低压", "pressure": pressure(5.0, "bar")})
+    issue = only_issue(task.model_copy(update={"feeds": (high, low)}))
+    assert issue.field_path == "pressure_drop_bar" and "5 bar" in issue.message
+
+
+def test_a_reactor_pressure_with_an_unknown_unit_is_reported_on_the_reactor_pressure():
+    task = with_feed(
+        conversion_task(reactor_pressure=pressure(2.0, "furlong")), pressure=pressure(20.0, "bar")
+    )
+    issue = only_issue(task)
+    assert issue.code is ErrorCode.SCHEMA and issue.field_path == "reactor_pressure"
+
+
+def test_a_pressure_drop_that_leaves_no_outlet_pressure_is_a_user_fixable_problem():
+    issue = only_issue(conversion_task(pressure_drop=q(30.0, "bar")))
+    assert issue.code is ErrorCode.RULE and issue.user_fixable
+    assert issue.field_path == "pressure_drop_bar" and "出口压力" in issue.message
+
+
+def test_a_zero_share_isomer_is_left_out_of_the_reaction():
+    reaction = conversion_reaction(
+        (("toluene", 2),),
+        (("benzene", 1),),
+        "toluene",
+        q(50, "%"),
+        (split(1, ("p-xylene", 50), ("m-xylene", 50), ("o-xylene", 0)),),
+    )
+    spec = spec_of(conversion_task(reactions=(reaction,)))
+    coefficients = {t.component: t.coefficient for t in spec.reactions[0].stoichiometry}
+    assert "o-Xylene" not in coefficients
+    assert math.isclose(coefficients["p-Xylene"], 0.5)
+    assert math.isclose(coefficients["m-Xylene"], 0.5)
+
+
 def test_a_pressure_unit_that_carries_its_own_basis_needs_no_assumption():
     spec = spec_of(conversion_task(reactor_pressure=pressure(10.0, "barg")))
     assert math.isclose(spec.feeds[0].pressure_bar, 11.01325)
@@ -127,7 +192,8 @@ def test_a_pressure_unit_that_carries_its_own_basis_needs_no_assumption():
 def test_a_feed_pressure_and_a_lower_reactor_pressure_give_the_pressure_drop():
     task = with_feed(conversion_task(), pressure=pressure(20.0, "bar"))
     spec = spec_of(task.model_copy(update={"reactor_pressure": pressure(15.0, "bar")}))
-    assert spec.feeds[0].pressure_bar == 20.0 and math.isclose(spec.pressure_drop_bar, 5.0)
+    assert math.isclose(spec.feeds[0].pressure_bar, 20.0)
+    assert math.isclose(spec.pressure_drop_bar, 5.0)
 
 
 def test_a_reactor_pressure_above_the_feed_pressure_is_a_user_fixable_problem():
@@ -139,14 +205,15 @@ def test_a_reactor_pressure_above_the_feed_pressure_is_a_user_fixable_problem():
 
 def test_a_given_pressure_drop_is_used_and_not_an_assumption():
     spec = spec_of(conversion_task(pressure_drop=q(0.5, "bar")))
-    assert spec.pressure_drop_bar == 0.5 and "pressure_drop_bar" not in assumed_paths(spec)
+    assert math.isclose(spec.pressure_drop_bar, 0.5)
+    assert "pressure_drop_bar" not in assumed_paths(spec)
 
 
 def test_a_given_equilibrium_constant_is_a_fixed_k_reaction():
     reaction = equilibrium_reaction((("CO", 1), ("water", 1)), (("CO2", 1), ("hydrogen", 1)), 4.5)
     spec = spec_of(equilibrium_task(reactions=(reaction,)))
     assert spec.reactions[0].keq_source is KeqSource.FIXED_K
-    assert spec.reactions[0].equilibrium_constant == 4.5
+    assert spec.reactions[0].equilibrium_constant == pytest.approx(4.5)
 
 
 # ---- 默认值都登记成假设 ----
@@ -203,9 +270,29 @@ def test_an_assumed_flow_and_declared_assumptions_are_registered_with_their_reas
     assert ids == [f"A{n}" for n in range(1, len(ids) + 1)]
 
 
-def test_the_property_package_defaults_to_peng_robinson_and_an_alias_is_accepted():
-    assert spec_of(conversion_task()).property_package is PropertyPackage.PENG_ROBINSON
-    spec = spec_of(conversion_task(property_package="Peng-Robinson"))
+def test_the_property_package_defaults_to_peng_robinson_and_the_default_is_an_assumption():
+    spec = spec_of(conversion_task())
+    assert spec.property_package is PropertyPackage.PENG_ROBINSON
+    assert "property_package" in assumed_paths(spec)
+
+
+@pytest.mark.parametrize(
+    "written",
+    [
+        "Peng-Robinson",
+        "peng robinson",
+        "Peng–Robinson",  # en dash
+        "Peng-Robinson EOS",
+        "Peng-Robinson 方程",
+        "Peng Robinson equation of state",
+        "PR",
+        "PR 状态方程",
+        "彭罗宾逊",
+    ],
+)
+def test_the_ways_of_writing_peng_robinson_are_the_same_package_and_need_no_assumption(written):
+    spec = spec_of(conversion_task(property_package=written))
+    assert spec.property_package is PropertyPackage.PENG_ROBINSON
     assert "property_package" not in assumed_paths(spec)
 
 
@@ -275,7 +362,7 @@ def test_a_conversion_outside_zero_to_one_hundred_is_reported_with_the_given_val
     issue = only_issue(conversion_task(reactions=(reaction,)))
     assert issue.code is ErrorCode.RULE and issue.user_fixable
     assert issue.field_path == "reactions[0].conversion_percent"
-    assert f"{percent:g}" in issue.message
+    assert f"{percent:g} %" in issue.message
 
 
 def test_missing_required_values_are_each_a_user_fixable_problem():
@@ -333,13 +420,22 @@ def test_a_case_with_both_an_outlet_temperature_and_a_duty_is_a_schema_problem()
 def test_a_duty_case_gives_the_specified_duty_mode():
     cases = (CaseTask(name="A", outlet_temperature=None, duty=q(2, "MW")),)
     spec = spec_of(conversion_task(cases=cases))
-    assert spec.heat_mode is HeatMode.SPECIFIED_DUTY and spec.cases[0].duty_kw == 2000.0
+    assert spec.heat_mode is HeatMode.SPECIFIED_DUTY
+    assert spec.cases[0].duty_kw == pytest.approx(2000.0)
 
 
-def test_an_unsupported_property_package_is_reported_for_the_user_to_confirm():
-    issue = only_issue(conversion_task(property_package="SRK"))
+@pytest.mark.parametrize("written", ["SRK", "Soave-Redlich-Kwong", "PRSV", "NRTL"])
+def test_an_unsupported_property_package_is_reported_for_the_user_to_confirm(written):
+    issue = only_issue(conversion_task(property_package=written))
     assert issue.code is ErrorCode.RULE and issue.user_fixable
-    assert issue.field_path == "property_package"
+    assert issue.field_path == "property_package" and written in issue.message
+
+
+def test_adiabatic_stated_together_with_an_outlet_temperature_is_a_conflict_not_a_guess():
+    cases = (CaseTask(name="A", outlet_temperature=q(500, "℃"), duty=None),)
+    issue = only_issue(conversion_task(adiabatic_stated=True, cases=cases))
+    assert issue.code is ErrorCode.SCHEMA and issue.field_path == "cases"
+    assert "绝热" in issue.message
 
 
 def test_no_feeds_and_no_reactions_are_problems():
@@ -365,6 +461,17 @@ def test_a_metric_on_a_component_that_is_not_in_the_system_is_reported():
     assert issue.field_path.startswith("metrics[0]") and "不在 components" in issue.message
 
 
+def test_every_unknown_component_in_the_metrics_is_reported_on_its_own_path():
+    metrics = (
+        ConversionMetricTask(component="unobtainium"),
+        ConversionMetricTask(component="toluene"),
+        ConversionMetricTask(component="mystery"),
+    )
+    found = issues_of(conversion_task(conversion_metrics=metrics))
+    paths = [i.field_path for i in found if i.code is ErrorCode.COMPONENT_NOT_FOUND]
+    assert paths == ["conversion_metrics[0].component", "conversion_metrics[2].component"]
+
+
 def test_reactor_type_comes_from_the_caller_and_the_spec_carries_it():
     for task, kind in ((conversion_task(), CONVERSION), (smr_task(), EQUILIBRIUM)):
         spec = normalize(task, kind, components(), units()).spec
@@ -378,32 +485,46 @@ def declared(field: MissingField) -> tuple[MissingItem, ...]:
     return (MissingItem(field=field, feed_index=0, description="声明缺失"),)
 
 
-def test_declared_missing_counts_only_when_the_field_is_really_absent():
-    from reactor_agent.spec.task_spec import blocking_missing
+def no_conversion() -> TaskSpec:
+    reaction = conversion_reaction((("toluene", 2),), (("benzene", 1),), "toluene", None)
+    return conversion_task(reactions=(reaction,))
 
-    absent = [
-        (with_feed(conversion_task(), temperature=None), MissingField.FEED_TEMPERATURE),
-        (
-            with_feed(conversion_task(reactor_pressure=None), pressure=None),
-            MissingField.FEED_PRESSURE,
-        ),
-        (
-            with_feed(conversion_task(), pure_component=None, composition=None),
-            MissingField.FEED_COMPOSITION,
-        ),
-        (conversion_task(reactions=()), MissingField.REACTIONS),
-    ]
-    for task, field in absent:
-        assert blocking_missing(task.model_copy(update={"missing": declared(field)})), field
-    present = [
-        (conversion_task(), MissingField.FEED_TEMPERATURE),
-        (conversion_task(), MissingField.FEED_PRESSURE),
-        (conversion_task(), MissingField.FEED_COMPOSITION),
-        (conversion_task(), MissingField.CONVERSION),
-        (conversion_task(), MissingField.REACTIONS),
-    ]
-    for task, field in present:
-        assert not blocking_missing(task.model_copy(update={"missing": declared(field)})), field
+
+ABSENT = [
+    (with_feed(conversion_task(), temperature=None), MissingField.FEED_TEMPERATURE),
+    (with_feed(conversion_task(reactor_pressure=None), pressure=None), MissingField.FEED_PRESSURE),
+    (
+        with_feed(conversion_task(), pure_component=None, composition=None),
+        MissingField.FEED_COMPOSITION,
+    ),
+    (with_feed(gibbs_task(), composition=None), MissingField.FEED_COMPOSITION),
+    (no_conversion(), MissingField.CONVERSION),
+    (conversion_task(reactions=()), MissingField.REACTIONS),
+    (equilibrium_task(reactions=()), MissingField.REACTIONS),
+    (conversion_task(), MissingField.OTHER),
+]
+PRESENT = [
+    (conversion_task(), MissingField.FEED_TEMPERATURE),
+    (conversion_task(), MissingField.FEED_PRESSURE),
+    (conversion_task(), MissingField.FEED_COMPOSITION),
+    (conversion_task(), MissingField.CONVERSION),
+    (conversion_task(), MissingField.REACTIONS),
+    (gibbs_task(), MissingField.REACTIONS),  # Gibbs 反应器没有反应式，不算缺
+    (gibbs_task(), MissingField.CONVERSION),  # 也没有转化率
+    (equilibrium_task(), MissingField.CONVERSION),
+]
+
+
+@pytest.mark.parametrize(("task", "field"), ABSENT)
+def test_declared_missing_counts_when_the_field_is_really_absent(task, field):
+    declared_task = task.model_copy(update={"missing": declared(field)})
+    assert blocking_missing(declared_task)
+
+
+@pytest.mark.parametrize(("task", "field"), PRESENT)
+def test_declared_missing_is_ignored_when_the_field_is_filled_in(task, field):
+    declared_task = task.model_copy(update={"missing": declared(field)})
+    assert not blocking_missing(declared_task)
 
 
 def test_an_empty_composition_with_a_declared_missing_is_sent_back_not_asked_of_the_user():

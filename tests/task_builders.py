@@ -205,20 +205,15 @@ def gibbs_task(**changes: object) -> GibbsTaskSpec:
 
 
 def smr_task(**changes: object) -> EquilibriumTaskSpec:
-    """理想的 LLM 为“两个可逆反应、两个出口温度、流量自定”的描述写出的 TaskSpec。"""
+    """同一个平衡体系，另一组数：入口温度、操作压力、流量和两个出口温度都不同。"""
     mix = composition(("methane", 1.0), ("water", 2.7))
     data: dict[str, object] = {
-        **COMMON,
         "feeds": (feed(q(520, "℃"), q(3700, "kmol/h", assumed="取一个中等规模"), mix),),
         "reactor_pressure": pressure(13.5, "bar"),
         "cases": (
             CaseTask(name="T710", outlet_temperature=q(710, "°C"), duty=None),
             CaseTask(name="T600", outlet_temperature=q(600, "℃"), duty=None),
         ),
-        "reactions": (
-            equilibrium_reaction((("methane", 1), ("water", 1)), (("CO", 1), ("hydrogen", 3))),
-            equilibrium_reaction((("CO", 1), ("water", 1)), (("CO2", 1), ("hydrogen", 1))),
-        ),
         **changes,
     }
-    return EquilibriumTaskSpec.model_validate(data)
+    return equilibrium_task(**data)

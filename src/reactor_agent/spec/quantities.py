@@ -80,8 +80,14 @@ def convert_value(ctx: Context, quantity: Quantity, path: str, kind: QuantityKin
     return value
 
 
-def convert_pressure(ctx: Context, quantity: PressureQuantity, path: str) -> float | None:
-    """压力换算成绝压 bar。原文没有说明基准（单位也不带）时按绝压，并登记假设。"""
+def convert_pressure(
+    ctx: Context, quantity: PressureQuantity, path: str, assume_at: str | None = None
+) -> float | None:
+    """压力换算成绝压 bar。问题记在 path 上；原文没有说明基准（单位也不带）时按绝压。
+
+    单位自带的基准（barg、bara、atm）比 LLM 填的基准可靠，以它为准。按绝压是一条假设，登记在
+    assume_at 上；assume_at 为 None 表示别处已经登记过（同一个压力不重复登记）。
+    """
     if quantity.source is Source.ASSUMED:
         _assumed(ctx, "压力", path)
         return None
@@ -90,10 +96,12 @@ def convert_pressure(ctx: Context, quantity: PressureQuantity, path: str) -> flo
         message = f"压力的单位 {quantity.unit!r} 不认识"
         ctx.notes.problem(ErrorCode.SCHEMA, path, message, user_fixable=True)
         return None
-    basis = quantity.basis if quantity.basis is not PressureBasis.UNSTATED else unit_basis
+    basis = unit_basis if unit_basis is not PressureBasis.UNSTATED else quantity.basis
     if basis is PressureBasis.UNSTATED:
-        reason = "原文没有说明压力是绝压还是表压，按绝压"
-        basis = ctx.notes.default(path, PressureBasis.ABSOLUTE, reason)
+        basis = PressureBasis.ABSOLUTE
+        if assume_at is not None:
+            reason = "原文没有说明压力是绝压还是表压，按绝压"
+            ctx.notes.default(assume_at, basis, reason)
     bar = to_pressure_bar(ctx.units, quantity.value, quantity.unit, basis)
     if bar is None or bar <= 0:
         message = f"压力 {quantity.value:g} {quantity.unit} 换算后不是正数"

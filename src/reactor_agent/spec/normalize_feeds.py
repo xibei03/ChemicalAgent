@@ -19,10 +19,19 @@ from reactor_agent.spec.units import FlowKind, to_flow
 
 @dataclass(frozen=True)
 class FeedData:
-    """一股进料的规格（字典，最后由 ModelSpec 校验），和它用到的组分。"""
+    """一股进料的规格（字典，最后由 ModelSpec 校验）、它用到的组分和换算后的进料压力。"""
 
     spec: dict[str, object]
     components: tuple[str, ...]
+    pressure_bar: float
+
+
+@dataclass(frozen=True)
+class FlowSpec:
+    """换算后的流量：规格里的字段名（摩尔流量或质量流量）和规范值。"""
+
+    field: str
+    value: float
 
 
 def _feed_pressure(
@@ -34,7 +43,7 @@ def _feed_pressure(
     if given is None:
         ctx.notes.problem(ErrorCode.RULE, path, "进料压力没有给出", user_fixable=True)
         return None
-    bar = convert_pressure(ctx, given, path)
+    bar = convert_pressure(ctx, given, path, assume_at=path)
     if bar is None or own is not None:
         return bar
     reason = "原文只给了一个不属于某股进料的压力（操作压力），进料压力取它"
@@ -81,8 +90,8 @@ def _has_non_gas(ctx: Context, names: Mapping[str, float]) -> bool:
 
 def _flow(
     ctx: Context, index: int, feed: FeedTask, composition: MoleComposition
-) -> tuple[str, float] | None:
-    """进料流量：返回规格里的字段名（摩尔流量或质量流量）和规范值。"""
+) -> FlowSpec | None:
+    """进料流量换算成规格里的字段和规范值。没有给、单位不认识、不是正数都是问题。"""
     path = f"feeds[{index}].flow"
     quantity = feed.flow
     if quantity is None:
@@ -104,7 +113,7 @@ def _flow(
         if _has_non_gas(ctx, composition.fractions):
             reason = "Nm3/h 是气体体积单位，进料含固体或液体，按标准状态下的理想气体折算成摩尔流量"
             ctx.notes.declare(target, f"{given}按摩尔流量理解", reason)
-    return name, converted.value
+    return FlowSpec(name, converted.value)
 
 
 def _feed(
@@ -132,9 +141,9 @@ def _feed(
             {"component": name, "mole_fraction": fraction}
             for name, fraction in composition.fractions.items()
         ],
-        flow[0]: flow[1],
+        flow.field: flow.value,
     }
-    return FeedData(spec, tuple(composition.fractions))
+    return FeedData(spec, tuple(composition.fractions), pressure)
 
 
 def normalize_feeds(
