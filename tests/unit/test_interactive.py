@@ -78,10 +78,7 @@ def test_an_empty_key_ends_the_session_without_running_anything(capsys):
     assert console.commands == [] and "没有输入密钥" in capsys.readouterr().err
 
 
-@pytest.mark.parametrize(
-    ("choice", "script"),
-    [("1", "e18_llm_structured.py"), ("2", "demo_scenarios.py"), ("3", "run_evals.py")],
-)
+@pytest.mark.parametrize(("choice", "script"), [("1", "demo_scenarios.py"), ("2", "run_evals.py")])
 def test_a_menu_choice_runs_its_script(choice, script):
     console = Console([choice, "q"])
     console.session()
@@ -93,11 +90,12 @@ def test_all_runs_the_scenario_demo_and_the_evaluation_and_reports_each_exit_cod
     console = Console(["a", "q"])
     console.session()
     assert script_names(console) == ["demo_scenarios.py", "run_evals.py"]
-    assert "步骤 2：退出码 0" in capsys.readouterr().out
+    out = capsys.readouterr().out
+    assert "步骤 1：退出码 0" in out and "步骤 2：退出码 0" in out
 
 
 def test_a_description_typed_in_runs_a_dry_run_selection_with_the_text_as_an_argument():
-    console = Console(["4", "我想模拟一个反应釜里的酯化反应", "q"])
+    console = Console(["3", "我想模拟一个反应釜里的酯化反应", "q"])
     console.session()
     [command] = console.commands
     assert command[-3:] == ["run", "我想模拟一个反应釜里的酯化反应", "--dry-run"]
@@ -107,21 +105,21 @@ def test_a_description_typed_in_runs_a_dry_run_selection_with_the_text_as_an_arg
 def test_a_path_typed_in_is_passed_as_a_description_file(tmp_path):
     description = tmp_path / "描述.txt"
     description.write_text("一段描述", encoding="utf-8")
-    console = Console(["4", f'"{description}"', "q"])
+    console = Console(["3", f'"{description}"', "q"])
     console.session()
     [command] = console.commands
     assert command[-4:] == ["run", "--text-file", str(description.resolve()), "--dry-run"]
 
 
 def test_specific_eval_cases_are_rerun_with_the_cases_option_only():
-    console = Console(["5", "L1-S1, L1-K1", "q"])
+    console = Console(["4", "L1-S1, L1-K1", "q"])
     console.session()
     [command] = console.commands
     assert command[-2:] == ["--cases", "L1-S1,L1-K1"] and "--output" not in command
 
 
 def test_empty_answers_and_unknown_choices_run_nothing_and_stay_in_the_menu(capsys):
-    console = Console(["4", "", "5", "", "zzz", "q"])
+    console = Console(["3", "", "4", "", "zzz", "q"])
     assert console.session() == 0
     assert console.commands == [] and "不认识的选择" in capsys.readouterr().out
 

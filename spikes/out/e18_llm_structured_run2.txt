@@ -63,3 +63,14 @@
       校验通过，推荐 gibbs，黑箱=True
 == Q5 温度 0 下重复 3 次（json_object，思考默认）==
   第 1 次：90.01 秒，APITimeoutError Request timed out.
+  第 2 次：90.25 秒，APITimeoutError Request timed out.
+  第 3 次：74.30 秒，用量 1309+3250，finish_reason=stop，含 reasoning_content 回复 1431 字
+  3 次的 JSON 不完全相同
+  推荐的类型：[None, None, 'gibbs']
+== Q6 SDK 的超时和重试 ==
+  timeout=0.5、max_retries=0：0.74 秒后抛 APITimeoutError
+  timeout=0.5、max_retries=2：3.56 秒后抛 APITimeoutError
+== Q7 错误的密钥和不存在的模型名 ==
+  错误的密钥：0.27 秒，AuthenticationError，状态 401，{'message': 'Incorrect API key provided. For details, see: https://help.aliyun.com/zh/model-studio/error-code#apikey-error', 'type': 'invalid_request_error', 'param': None, 'code': 'invalid_api_key'}
+  不存在的模型：0.29 秒，NotFoundError，状态 404，{'message': 'The model `qwen-no-such-model` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}
+== E18 结束，结论由人读上面的输出后写进台账 ==

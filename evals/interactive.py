@@ -37,24 +37,22 @@ class Step:
 
 STEPS: dict[str, Step] = {
     "1": Step(
-        "探针 E18：测 LLM 客户端要用的能力（json_schema、温度 0、关闭思考、超时、错误类型）",
-        [PYTHON, str(REPO_ROOT / "spikes" / "e18_llm_structured.py"), "--tag", "run1"],
-    ),
-    "2": Step(
         "三个考核场景各做一次选型（run --dry-run），输出存进 evals/out/",
         [PYTHON, str(REPO_ROOT / "evals" / "demo_scenarios.py")],
     ),
-    "3": Step(
+    "2": Step(
         "选型评测（全部用例，几分钟），结果写进 docs/EVAL_RESULTS.md",
         [PYTHON, str(REPO_ROOT / "evals" / "run_evals.py")],
     ),
 }
-RUN_ALL = ("2", "3")  # 探针 E18 已经跑过，结果在台账 L39
+RUN_ALL = ("1", "2")
+DESCRIBE = "3"
+RERUN_CASES = "4"
 MENU = (
     *(f"  {key}  {step.title}" for key, step in STEPS.items()),
-    "  4  对你输入的一段描述做选型（输入一行文字，或者一个文本文件的路径）",
-    "  5  只重跑指定的评测用例（输入编号，逗号分隔），结果不覆盖 docs/EVAL_RESULTS.md",
-    "  a  依次运行 2、3",
+    f"  {DESCRIBE}  对你输入的一段描述做选型（输入一行文字，或者一个文本文件的路径）",
+    f"  {RERUN_CASES}  只重跑指定的评测用例（输入编号，逗号分隔），结果不覆盖 docs/EVAL_RESULTS.md",
+    "  a  依次运行 1、2",
     "  q  退出",
 )
 
@@ -72,7 +70,7 @@ def run_command(command: Sequence[str]) -> int:
 
 
 def describe(text: str) -> list[str]:
-    """第 4 项的命令：存在的文件当作描述文件，否则当作描述文字。"""
+    """输入一段描述的命令：存在的文件当作描述文件，否则当作描述文字。"""
     given = text.strip().strip('"')
     is_file = bool(given) and Path(given).is_file()
     source = ["--text-file", str(Path(given).resolve())] if is_file else [given]
@@ -88,11 +86,11 @@ def choose(choice: str, ask_line: Ask, run: Run) -> bool:
         print("\n".join(f"  步骤 {key}：退出码 {code}" for key, code in results.items()))
     elif choice in STEPS:
         run(STEPS[choice].command)
-    elif choice == "4":
+    elif choice == DESCRIBE:
         text = ask_line("描述（一行文字，或文本文件的路径）：")
         if text.strip():
             run(describe(text))
-    elif choice == "5":
+    elif choice == RERUN_CASES:
         cases = ask_line("评测用例编号（逗号分隔，如 L1-S1,L1-K1）：").replace(" ", "")
         if cases:
             run([PYTHON, str(REPO_ROOT / "evals" / "run_evals.py"), "--cases", cases])

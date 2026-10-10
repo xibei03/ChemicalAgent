@@ -1027,13 +1027,13 @@ R1 至 R12 在阶段 1A 已经按"已确认"的内容实现，`src/reactor_agent
 ### L39 E18：LLM 客户端要用的能力——结构化输出、温度 0、关闭思考、超时重试、错误类型（2026-10-09，2A）
 
 - **目的**：L35 只确认了三个模型能调通、主模型的 `json_object` 和 `tools` 可用。2A 的客户端要用 openai SDK 连百炼的 OpenAI 兼容接口，要求温度 0、供应商原生的结构化输出、明确的超时、有限的网络重试，这些都没有验证过。
-- **做法**：`spikes/e18_llm_structured.py`，用 2A 真实的输出模型 `SelectionDraft` 的 JSON Schema（含 `$defs`、`anyOf` 加 null、`additionalProperties: false`，没有 `default` 和 `minLength`）和一段真实的选型提示（场景 3 的原文），主模型 `qwen3.8-max`，openai SDK 3.27.0。由用户在自己的终端里通过 `evals/interactive.py` 运行，运行 1 次（run1）。
-- **结果**（`spikes/out/e18_llm_structured_run1.txt`）：
-  - **思考默认开着时，请求 90 秒还没有回完**：Q1（`json_object`）、Q2（`json_schema`）、Q3（`json_object`）各一次，Q5 的三次重复，共 6 次，全部 `APITimeoutError`（探针的超时是 90 秒）。**`extra_body={"enable_thinking": False}` 被接受**，关掉之后 7.6 至 13.0 秒返回（`json_object` 7.58 秒、`json_schema` 13.02 秒、Schema 写在提示里的 `json_object` 10.81 秒），回复都通过了 `SelectionDraft` 的校验。
+- **做法**：`spikes/e18_llm_structured.py`，用 2A 真实的输出模型 `SelectionDraft` 的 JSON Schema（含 `$defs`、`anyOf` 加 null、`additionalProperties: false`，没有 `default` 和 `minLength`）和一段真实的选型提示（场景 3 的原文），主模型 `qwen3.8-max`，openai SDK 3.27.0。由用户在自己的终端里通过 `evals/interactive.py` 运行，运行了 2 次：第 1 次的输出文件被第 2 次覆盖（交互入口重跑时用了同一个 tag），保留下来的是第 2 次（`run2`）；第 1 次的读数是当时在终端上看到的，一起写在下面。
+- **结果**（保留的文件是 `spikes/out/e18_llm_structured_run2.txt`；括号里“第 1 次”是被覆盖的那次的读数）：
+  - **思考默认开着时，请求很慢，60 秒的超时下每次都会失败**：两次运行里思考默认的请求共 12 个（Q1、Q2、Q3 各一个，Q5 三个，每次运行各 6 个），11 个在 90 秒时 `APITimeoutError`，只有 1 个完成，用了 74.30 秒（回复 3250 个 token，带 `reasoning_content`）。**`extra_body={"enable_thinking": False}` 被接受**，关掉思考之后的 6 个请求都在 7.6 至 14.4 秒返回，回复通过 `SelectionDraft` 的校验（第 2 次：`json_object` 8.82 秒、`json_schema` 14.37 秒、Schema 写在提示里的 `json_object` 8.50 秒；第 1 次：7.58、13.02、10.81 秒）。
   - **`temperature=0` 被接受**（思考开着或关着都没有报错）。
-  - **`response_format=json_schema`（`strict: true`）可用**（关闭思考时）：回复通过校验；用量 316+536 tokens，比 Schema 写在提示里的 `json_object`（1273+397）的提示少约 950 个 token——百炼没有把 Schema 计入提示。
-  - **SDK 的超时和重试**：`timeout=0.5, max_retries=0` 0.81 秒后抛 `APITimeoutError`；`max_retries=2` 3.37 秒后抛同样的异常，也就是超时会被重试，总用时约 (1 + 重试次数) × 超时 加上退避。生产配置读超时 60 秒、重试 2 次，最坏是服务器接受了连接却一直不回复，约 3 分钟；所以另外给连接设了 10 秒的短超时（连不上的网络约 30 秒就放弃）。
-  - **错误类型**：错误的密钥 → `AuthenticationError`，状态 401，`code: invalid_api_key`（0.31 秒）；不存在的模型 → `NotFoundError`，状态 404，`code: model_not_found`（0.28 秒）。都是 `APIStatusError` 的子类，`body` 里是字典；消息里没有密钥。
-  - **温度 0 不保证确定**：Q5 本来要测同一个请求重复 3 次是否相同，但三次都因为思考开着而超时，**“3 次的 JSON 完全相同”是空洞的（三个都是 None），不能当作证据**。真正的证据来自评测：同一个输入（场景 1）温度 0、关闭思考重复 5 次，`black_box_system` 有 4 次为是、1 次为否——输出会变。所以选型不能依赖单次抽取的稳定，要靠 Skill 里明确的定义和规则与推荐的对照。
+  - **`response_format=json_schema`（`strict: true`）可用**（关闭思考时）：回复通过校验；用量 316+540 tokens（第 1 次 316+536），比 Schema 写在提示里的 `json_object`（1273+368）的提示少约 950 个 token——百炼没有把 Schema 计入提示。
+  - **SDK 的超时和重试**：`timeout=0.5, max_retries=0` 0.74 秒后抛 `APITimeoutError`（第 1 次 0.81 秒）；`max_retries=2` 3.56 秒后抛同样的异常（第 1 次 3.37 秒），也就是超时会被重试，总用时约 (1 + 重试次数) × 超时 加上退避。生产配置读超时 60 秒、重试 2 次，最坏是服务器接受了连接却一直不回复，约 3 分钟；所以另外给连接设了 10 秒的短超时（连不上的网络约 30 秒就放弃）。
+  - **错误类型**：错误的密钥 → `AuthenticationError`，状态 401，`code: invalid_api_key`（0.27 秒）；不存在的模型 → `NotFoundError`，状态 404，`code: model_not_found`（0.29 秒）。都是 `APIStatusError` 的子类，`body` 里是字典；消息里没有密钥。
+  - **温度 0 不保证确定**：Q5 本来要测同一个请求重复 3 次是否相同，但思考开着时 3 次里至多只有 1 次完成（第 2 次运行是 [None, None, gibbs]），**“3 次的 JSON 完全相同”或“不完全相同”都不能当作证据**。真正的证据来自评测：同一个输入（场景 1）温度 0、关闭思考重复 5 次，`black_box_system` 有 4 次为是、1 次为否——输出会变。所以选型不能依赖单次抽取的稳定，要靠 Skill 里明确的定义和规则与推荐的对照。
 - **结论**：①供应商实现用 openai SDK、`temperature=0`、`response_format=json_schema`（strict）、`extra_body={"enable_thinking": False}`，**关闭思考是必须的**（否则 60 秒的超时下每次都失败）；②SDK 自带的重试 2 次，加 10 秒的连接超时；③SDK 的各种异常（`APIStatusError`、`APITimeoutError`、`APIConnectionError`）在供应商里统一转成 `E_LLM`，消息里带状态码、不带密钥；④`json_object` 加提示里写 Schema 的退路验证过也能用，但目前不需要。**没有测试**：流式输出、429 限流时的表现（评测 41 次调用没有遇到）、另外两个模型（`qwen3.8-flash`、`qwen3.7-plus`）的 `json_schema`。
-- **脚本与输出**：`spikes/e18_llm_structured.py`；`spikes/out/e18_llm_structured_run1.txt`。
+- **脚本与输出**：`spikes/e18_llm_structured.py`；`spikes/out/e18_llm_structured_run2.txt`。
