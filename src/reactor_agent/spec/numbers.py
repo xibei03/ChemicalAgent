@@ -12,6 +12,10 @@ from types import MappingProxyType
 PLAIN = re.compile(r"\d+(?:\.\d+)?|\.\d+")
 THOUSANDS = re.compile(r"\d{1,3}(?:,\d{3})+(?:\.\d+)?")
 SCIENTIFIC = re.compile(r"(\d+(?:\.\d+)?)\s*(?:[eE]|[×xX*]\s*10\s*\^?)\s*([+\-−]?\d+)")
+# “10^5 Pa”：只写了十的幂。
+POWER_OF_TEN = re.compile(r"(?<![\d.])10\s*\^\s*([+\-−]?\d+)")
+# “2,5 MPa”：小数点写成逗号；逗号后面是三位数字的是千分位，不在这里。
+DECIMAL_COMMA = re.compile(r"(?<![\d,.])(\d+),(\d{1,2})(?!\d)")
 # 紧贴字母的数字（H2O、C7H8、Nm3）是分子式或单位的一部分，不算原文给的数。
 STANDALONE_DIGIT = re.compile(r"(?<![A-Za-z])\d")
 CHINESE_RUN = re.compile(r"[零〇一二两三四五六七八九十百千万亿点]+")
@@ -68,6 +72,8 @@ def _arabic(flat: str) -> list[float]:
     numbers += [float(match.replace(",", "")) for match in THOUSANDS.findall(flat)]
     for mantissa, exponent in SCIENTIFIC.findall(flat):
         numbers.append(float(mantissa) * 10 ** int(exponent.replace("−", "-")))
+    numbers += [10.0 ** int(exponent.replace("−", "-")) for exponent in POWER_OF_TEN.findall(flat)]
+    numbers += [float(f"{whole}.{fraction}") for whole, fraction in DECIMAL_COMMA.findall(flat)]
     return numbers
 
 

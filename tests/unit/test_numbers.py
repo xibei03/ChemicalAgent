@@ -35,10 +35,23 @@ def test_a_comma_list_is_read_as_separate_numbers():
         ("压力 1.5×10^5 Pa", 150000.0),
         ("压力 2 x 10^-3 bar", 0.002),
         ("常数 3.0E2", 300.0),
+        ("压力 10^5 Pa", 100000.0),
+        ("浓度 10^-3 mol/L", 0.001),
     ],
 )
 def test_scientific_notation_is_read_as_its_value(text, value):
     assert value in found(text)
+
+
+@pytest.mark.parametrize(("text", "value"), [("压力 2,5 MPa", 2.5), ("转化率 33,3 %", 33.3)])
+def test_a_decimal_comma_is_read_as_a_decimal_point(text, value):
+    assert value in found(text)
+
+
+def test_a_comma_followed_by_three_digits_is_a_thousands_separator_not_a_decimal():
+    numbers = found("流量 1,500 kg/h")
+    assert 1500.0 in numbers
+    assert 1.5 not in numbers
 
 
 def test_a_leading_decimal_point_is_read():
