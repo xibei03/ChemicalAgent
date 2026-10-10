@@ -1,8 +1,8 @@
 """E19（2B）：TaskSpec 的 JSON Schema 能不能被百炼的 json_schema（strict）接受，回复长什么样。
 
 台账 L39 验证过 SelectionDraft 的 Schema（$defs、anyOf 加 null、additionalProperties: false，
-没有 default 和 minLength）。2B 的 TaskSpec 嵌套更深（进料 → 组成 → 各项；反应 → 拆分产物 → 配比），要先确认
-strict 模式照样接受，再把客户端和 Skill 建在它上面。
+没有 default 和 minLength）。2B 的 TaskSpec 嵌套更深（进料 → 组成 → 各项；反应 → 拆分产物 → 配比），
+要先确认 strict 模式照样接受，再把客户端和 Skill 建在它上面。
 
 要回答的问题：
   Q1 三个 TaskSpec 类（转化、平衡、Gibbs）的 Schema 各自被接受吗？
@@ -87,8 +87,8 @@ def main() -> None:
         content = reply.choices[0].message.content or ""
         usage = reply.usage
         log.say(
-            f"  {time.time() - started:.1f} 秒，用量 {usage.prompt_tokens}+{usage.completion_tokens}，"
-            f"回复 {len(content)} 字"
+            f"  {time.time() - started:.1f} 秒，"
+            f"用量 {usage.prompt_tokens}+{usage.completion_tokens}，回复 {len(content)} 字"
         )
         try:
             model.model_validate_json(content)
