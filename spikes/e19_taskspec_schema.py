@@ -1,7 +1,7 @@
 """E19（2B）：TaskSpec 的 JSON Schema 能不能被百炼的 json_schema（strict）接受，回复长什么样。
 
-台账 L39 验证过 SelectionDraft 的 Schema（$defs、anyOf 加 null、additionalProperties: false，没有 default
-和 minLength）。2B 的 TaskSpec 嵌套更深（进料 → 组成 → 各项；反应 → 拆分产物 → 配比），要先确认
+台账 L39 验证过 SelectionDraft 的 Schema（$defs、anyOf 加 null、additionalProperties: false，
+没有 default 和 minLength）。2B 的 TaskSpec 嵌套更深（进料 → 组成 → 各项；反应 → 拆分产物 → 配比），要先确认
 strict 模式照样接受，再把客户端和 Skill 建在它上面。
 
 要回答的问题：
@@ -17,7 +17,6 @@ strict 模式照样接受，再把客户端和 Skill 建在它上面。
 import argparse
 import os
 import time
-from pathlib import Path
 
 import openai
 from _common import Log, use_utf8
@@ -96,7 +95,9 @@ def main() -> None:
             log.say("  校验通过")
         except ValidationError as error:
             first = error.errors()[0]
-            log.say(f"  校验失败（{error.error_count()} 处，第一处 {first['loc']}：{first['msg']}）")
+            log.say(
+                f"  校验失败（{error.error_count()} 处，第一处 {first['loc']}：{first['msg']}）"
+            )
         log.say(f"  回复：{content[:REPLY_LIMIT]}")
     log.conclude("见上面每个类的接受情况、校验结果和回复。")
 

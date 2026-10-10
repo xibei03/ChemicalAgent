@@ -3,7 +3,7 @@
 和 `run --dry-run` 同一条路径，不碰 HYSYS；打分，写评测结果文件。
 
 三个原文场景各重复 5 次，其余用例各 1 次（次数写在用例文件里）。
-  python evals/run_evals.py [--cases L1-S1,L1-K1] [--output 结果文件]
+  python evals/run_evals.py [--cases L1-S1,L1-K1] [--output 结果文件] [--repeats N]
 需要 LLM 密钥，只从环境变量读（名字在 config/settings.yaml）。没有设置环境变量时，用
 `python evals/interactive.py` 在终端里输入一次密钥，再从菜单运行评测。
 每次运行的目录在 runs/evals-<时间>/ 下，有 LLM 的提示和回复全文。
@@ -196,6 +196,9 @@ def parse_arguments() -> argparse.Namespace:
     )
     parser.add_argument("--cases", help="只跑这些用例（逗号分隔的编号），默认全部")
     parser.add_argument("--output", help="结果文件，默认见上面的说明")
+    parser.add_argument(
+        "--repeats", type=int, help="每个用例最多重复几次（调试用，默认按用例文件）"
+    )
     return parser.parse_args()
 
 
@@ -211,6 +214,8 @@ def main() -> int:
         return EXIT_NO_KEY
     wanted = set(args.cases.split(",")) if args.cases else None
     cases = [case for case in load_cases(CASES_DIR) if wanted is None or case.id in wanted]
+    if args.repeats:
+        cases = [c.model_copy(update={"repeats": min(c.repeats, args.repeats)}) for c in cases]
     skill = load_skill(SKILLS_DIR, SELECTION_SKILL)
     runs_dir = REPO_ROOT / "runs" / f"evals-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
     runs_dir.mkdir(parents=True)
