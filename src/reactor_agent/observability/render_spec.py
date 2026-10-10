@@ -93,7 +93,7 @@ def render_assumptions(spec: ModelSpec) -> str:
         return "假设：没有"
     lines = [f"假设（{len(spec.assumptions)} 条）："]
     lines.extend(
-        f"{INDENT}{item.id} [{item.field_path}] {item.value}。{item.reason}"
+        f"{INDENT}{item.id} [{item.field_path}] {item.value.rstrip('。')}。{item.reason}"
         for item in spec.assumptions
     )
     return "\n".join(lines)
