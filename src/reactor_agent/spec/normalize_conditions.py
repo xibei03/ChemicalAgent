@@ -7,7 +7,7 @@
 
 import re
 import unicodedata
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 
 from reactor_agent.errors import ErrorCode
@@ -34,10 +34,10 @@ GENERIC_SUFFIXES = ("equationofstate", "propertypackage", "eos", "状态方程",
 
 @dataclass(frozen=True)
 class CaseSet:
-    """工况：热模式，和每个工况的规格（字典，最后由 ModelSpec 校验）。"""
+    """工况：热模式，和每个工况的规格（还没有校验，最后由 ModelSpec 校验）。"""
 
     heat_mode: HeatMode
-    cases: tuple[dict[str, object], ...]
+    cases: tuple[Mapping[str, object], ...]
 
 
 def _case_values(ctx: Context, case: CaseTask, path: str) -> dict[str, float] | None:

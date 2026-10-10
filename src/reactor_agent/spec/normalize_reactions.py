@@ -5,6 +5,7 @@
 Gibbs 反应器没有反应式，组分表是进料的组分加上候选产物。
 """
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 
 from reactor_agent.errors import ErrorCode
@@ -33,9 +34,9 @@ ZERO_SHARE = 1e-12
 
 @dataclass(frozen=True)
 class ReactionData:
-    """一个反应的规格（字典，最后由 ModelSpec 校验），和它用到的组分。"""
+    """一个反应的规格（还没有校验，最后由 ModelSpec 校验），和它用到的组分。"""
 
-    spec: dict[str, object]
+    spec: Mapping[str, object]
     components: tuple[str, ...]
 
 
@@ -163,9 +164,9 @@ def product_components(ctx: Context, task: TaskSpec) -> tuple[str, ...]:
     return tuple(name for name in names if name is not None)
 
 
-def normalize_metrics(ctx: Context, task: TaskSpec) -> list[dict[str, object]]:
+def normalize_metrics(ctx: Context, task: TaskSpec) -> list[Mapping[str, object]]:
     """待求指标：转化率、收率、比值，组分名解析成规范名。问题的路径是 TaskSpec 里的字段。"""
-    metrics: list[dict[str, object]] = []
+    metrics: list[Mapping[str, object]] = []
     for index, item in enumerate(task.conversion_metrics):
         name = resolve_name(ctx, item.component, f"conversion_metrics[{index}].component")
         if name is not None:

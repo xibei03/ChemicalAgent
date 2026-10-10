@@ -19,9 +19,9 @@ from reactor_agent.spec.units import FlowKind, to_flow
 
 @dataclass(frozen=True)
 class FeedData:
-    """一股进料的规格（字典，最后由 ModelSpec 校验）、它用到的组分和换算后的进料压力。"""
+    """一股进料的规格（还没有校验，最后由 ModelSpec 校验）、它用到的组分和换算后的进料压力。"""
 
-    spec: dict[str, object]
+    spec: Mapping[str, object]
     components: tuple[str, ...]
     pressure_bar: float
 
