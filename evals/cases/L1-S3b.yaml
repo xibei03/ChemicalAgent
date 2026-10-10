@@ -8,3 +8,13 @@ expected:
     named_reactor: null
     conversion_data_given: false
     black_box_system: true
+  params:
+    feeds:
+      - temperature_c: 40
+        pressure_bar: 40
+        composition: {Carbon: 0.7099, H2O: 0.2901}
+    heat_mode: specified_outlet_temperature
+    cases: [{outlet_temperature_c: 1400}]
+    metrics: [{kind: yield, components: [CO, Carbon]}]
+  # 没有给流量：由 LLM 假设
+  assumed: ["feeds[0].composition", "feeds[0].molar_flow_kmol_h", "feeds[0].pressure_bar"]

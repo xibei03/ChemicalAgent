@@ -1,4 +1,6 @@
-"""运行选型评测：每个用例跑真实的选型（和 `run --dry-run` 同一条路径），打分，写评测结果文件。
+"""运行评测：每个用例跑真实的选型，有期望参数或期望问题的接着写规格、校验、编译计划。
+
+和 `run --dry-run` 同一条路径，不碰 HYSYS；打分，写评测结果文件。
 
 三个原文场景各重复 5 次，其余用例各 1 次（次数写在用例文件里）。
   python evals/run_evals.py [--cases L1-S1,L1-K1] [--output 结果文件]
@@ -6,7 +8,7 @@
 `python evals/interactive.py` 在终端里输入一次密钥，再从菜单运行评测。
 每次运行的目录在 runs/evals-<时间>/ 下，有 LLM 的提示和回复全文。
 默认：跑全部用例写 docs/EVAL_RESULTS.md；只跑部分用例写在运行目录里，不覆盖完整的结果。
-退出码：门槛通过是 0，没通过是 1，没有密钥是 2。
+退出码：选型和规格两个门槛都通过是 0，没通过是 1，没有密钥是 2。
 """
 
 import argparse
@@ -17,6 +19,8 @@ from datetime import datetime
 from pathlib import Path
 
 from scoring import EvalCase, RunRecord, load_cases, render_report, summarize
+from spec_report import render_spec_report, spec_gate
+from spec_scoring import STOPPED, IssueKey, SpecRecord
 
 from reactor_agent.cli import (
     REPO_ROOT,
@@ -28,9 +32,11 @@ from reactor_agent.cli import (
 from reactor_agent.errors import ReactorAgentError
 from reactor_agent.harness.selection import SELECTION_SKILL
 from reactor_agent.llm.client import LlmClient
+from reactor_agent.observability.trace import TRACE_FILE, read_events
 from reactor_agent.skill_loader import Skill, load_rules, load_skill
 from reactor_agent.spec.enums import WorkflowState
 from reactor_agent.spec.llm import LlmCallRecord
+from reactor_agent.spec.model_spec import ModelSpec
 from reactor_agent.spec.selection import SelectionDraft, SelectionResult, SelectionRules
 from reactor_agent.spec.selection_rules import check_rules
 from reactor_agent.spec.settings import LlmSettings, load_settings
@@ -42,10 +48,35 @@ DEFAULT_OUTPUT = REPO_ROOT / "docs" / "EVAL_RESULTS.md"
 EXIT_NO_KEY = 2
 
 
-def read_logs(run_dir: Path) -> list[LlmCallRecord]:
-    """这次运行里按顺序的全部 LLM 调用记录（select-1、select-2……）。"""
-    files = sorted((run_dir / "llm").glob("select-*.json"), key=lambda p: int(p.stem.split("-")[1]))
-    return [LlmCallRecord.model_validate_json(f.read_text(encoding="utf-8")) for f in files]
+def read_logs(run_dir: Path, point: str = "select") -> list[LlmCallRecord]:
+    """这次运行里某个调用点按顺序的全部 LLM 调用记录（select-1、select-2……）。"""
+    files = (run_dir / "llm").glob(f"{point}-*.json")
+    ordered = sorted(files, key=lambda p: int(p.stem.split("-")[1]))
+    return [LlmCallRecord.model_validate_json(f.read_text(encoding="utf-8")) for f in ordered]
+
+
+def spec_record_of(task: TaskState, store: StateStore) -> SpecRecord:
+    """规格这一步的结果：冻结出的规格、重写轮数、第一次校验的问题、最终的原因。"""
+    spec = None
+    if store.artifact_path(task.task_id, ArtifactName.MODEL_SPEC).is_file():
+        spec = store.read_artifact(task.task_id, ArtifactName.MODEL_SPEC, ModelSpec)
+    events = read_events(store.run_dir(task.task_id) / TRACE_FILE)
+    first = next((e for e in events if e.name == "spec_issues"), None)
+    listed = first.output.get("issues", []) if first and isinstance(first.output, dict) else []
+    issues = tuple(
+        IssueKey(code=item["code"], field_path=item["field_path"])
+        for item in listed
+        if isinstance(item, dict)
+    )
+    stopped = task.status in STOPPED and bool(task.errors)
+    paths = tuple(task.errors[-1].details) if stopped else ()
+    return SpecRecord(
+        status=task.status,
+        spec=spec,
+        rewrites=task.spec_rewrites,
+        first_issues=issues,
+        final_paths=paths,
+    )
 
 
 def first_answer(logs: list[LlmCallRecord]) -> SelectionDraft | None:
@@ -64,6 +95,7 @@ def record_of(
     if saved.is_file():
         selection = store.read_artifact(task.task_id, ArtifactName.SELECTION, SelectionResult)
     logs = read_logs(store.run_dir(task.task_id))
+    spec_logs = read_logs(store.run_dir(task.task_id), "specify")
     first = first_answer(logs)
     return RunRecord(
         case_id=case.id,
@@ -75,22 +107,37 @@ def record_of(
         else None,
         has_first_answer=first is not None,
         error=task.errors[-1].message if task.errors else None,
-        tokens=sum(log.total_tokens for log in logs),
+        tokens=sum(log.total_tokens for log in [*logs, *spec_logs]),
         seconds=0.0,
         reasked=len(logs) > 1,
+        spec=spec_record_of(task, store) if case.runs_spec else None,
     )
 
 
 def run_one(
     llm: LlmClient, case: EvalCase, repeat: int, runs_dir: Path, rules: SelectionRules
 ) -> RunRecord:
-    """跑一次选型，返回打分需要的记录。"""
+    """跑一次选型（有期望参数或期望问题的用例接着写规格），返回打分需要的记录。"""
     run = build_text_run(llm, runs_dir)
     started = time.monotonic()
     task = run.selector.create_task(case.input)
-    run.engine.run(task, stop_at=WorkflowState.SPECIFY)
+    stop_at = WorkflowState.PREFLIGHT if case.runs_spec else WorkflowState.SPECIFY
+    run.engine.run(task, stop_at=stop_at)
     seconds = time.monotonic() - started
     return record_of(case, repeat, task, run.store, rules).model_copy(update={"seconds": seconds})
+
+
+def _spec_tail(record: RunRecord) -> str:
+    """进度行里规格这一步的结果。"""
+    spec = record.spec
+    if spec is None:
+        return ""
+    state = (
+        "规格合法"
+        if spec.spec is not None
+        else f"终态 {spec.status.value if spec.status else '无'}"
+    )
+    return f"，{state}，重写 {spec.rewrites} 轮"
 
 
 def run_all(
@@ -105,7 +152,8 @@ def run_all(
             mark = "✓" if record.selection and record.final_type == case.expected.reactor else "✗"
             where = f"第 {repeat}/{case.repeats} 次"
             print(
-                f"{mark} {case.id} {where}：{record.final_type}（{record.seconds:.1f} 秒）",
+                f"{mark} {case.id} {where}：{record.final_type}{_spec_tail(record)}"
+                f"（{record.seconds:.1f} 秒）",
                 flush=True,
             )
     return records
@@ -169,10 +217,10 @@ def main() -> int:
     records = run_all(llm, cases, runs_dir, load_rules(skill, SelectionRules))
     output = output_file(args.output, runs_dir, partial=wanted is not None)
     report = render_report(cases, records, metadata(settings, skill, runs_dir))
-    output.write_text(report, encoding="utf-8")
-    summary = summarize(cases, records)
-    print(f"\n{'门槛通过' if summary.gate_passed else '门槛没有通过'}，结果写在 {output}")
-    return 0 if summary.gate_passed else 1
+    output.write_text(report + render_spec_report(cases, records), encoding="utf-8")
+    passed = summarize(cases, records).gate_passed and spec_gate(cases, records)
+    print(f"\n{'门槛通过' if passed else '门槛没有通过'}，结果写在 {output}")
+    return 0 if passed else 1
 
 
 if __name__ == "__main__":

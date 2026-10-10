@@ -15,8 +15,9 @@ from pathlib import Path
 
 import yaml
 from pydantic import BaseModel, ConfigDict, field_validator
+from spec_scoring import ExpectedIssue, ExpectedParams, SpecRecord
 
-from reactor_agent.spec.enums import ReactorType
+from reactor_agent.spec.enums import ReactorType, TaskStatus
 from reactor_agent.spec.selection import (
     REACTOR_NAMES,
     Decision,
@@ -62,10 +63,17 @@ class ExpectedFeatures(BaseModel):
 
 
 class Expected(BaseModel):
+    """期望：选型（reactor、features），和规格这一步（阶段 2B）：params 与 assumed 是正常输入的
+    期望，issues 与 final 是病态输入的期望。四项都没有的用例只做选型。"""
+
     model_config = ConfigDict(extra="forbid")
 
     reactor: ReactorType | None
     features: ExpectedFeatures
+    params: ExpectedParams | None = None
+    assumed: tuple[str, ...] = ()
+    issues: tuple[ExpectedIssue, ...] = ()
+    final: tuple[TaskStatus, ...] = ()
 
     @field_validator("reactor", mode="before")
     @classmethod
@@ -83,6 +91,11 @@ class EvalCase(BaseModel):
     scenario: bool = False  # 是不是三个考核场景的原文：门槛要求它们全部正确
     repeats: int = 1
     expected: Expected
+
+    @property
+    def runs_spec(self) -> bool:
+        """这个用例要接着往下写规格（有期望的参数或者期望的问题）。"""
+        return self.expected.params is not None or bool(self.expected.issues)
 
 
 def load_cases(directory: Path) -> list[EvalCase]:
@@ -107,6 +120,7 @@ class RunRecord(BaseModel):
     tokens: int
     seconds: float
     reasked: bool
+    spec: SpecRecord | None = None
 
     @property
     def final_type(self) -> ReactorType | None:

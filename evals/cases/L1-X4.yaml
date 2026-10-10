@@ -1,0 +1,10 @@
+id: L1-X4
+purpose: "不存在的组分（组分表里没有）：组分解析失败，报错清晰"
+input: |-
+  丙烷在反应器中脱氢生成丙烯和氢气，按丙烷的转化率 40% 计算。进料为纯丙烷，流量 100 kmol/h，温度 550 °C，压力 1.5 bar。请给出出口物流的组成。
+expected:
+  reactor: conversion
+  features:
+    conversion_data_given: true
+  issues: [{code: E_COMPONENT_NOT_FOUND, field_path: ""}]
+  final: [needs_input]

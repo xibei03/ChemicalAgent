@@ -10,3 +10,15 @@ expected:
     reaction_defined: true
     black_box_system: false
     phase: gas
+  # 单位换成 K 和 MPa、语言换成英文：规范化之后的参数与 L1-S1 一致（K 的换算带来约 0.15 °C 的差，在容差内）。
+  params:
+    feeds:
+      - temperature_c: 520
+        pressure_bar: 13.5
+        composition: {Methane: 0.2703, H2O: 0.7297}
+    reactions:
+      - {kind: equilibrium, stoichiometry: {Methane: -1, H2O: -1, CO: 1, Hydrogen: 3}}
+      - {kind: equilibrium, stoichiometry: {CO: -1, H2O: -1, CO2: 1, Hydrogen: 1}}
+    heat_mode: specified_outlet_temperature
+    cases: [{outlet_temperature_c: 710}, {outlet_temperature_c: 600}]
+  assumed: ["feeds[0].molar_flow_kmol_h", "feeds[0].pressure_bar", "feeds[0].pressure_bar"]

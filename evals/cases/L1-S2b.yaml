@@ -10,3 +10,18 @@ expected:
     kinetics_given: false
     conversion_data_given: true
     reaction_defined: true
+  params:
+    feeds:
+      - temperature_c: 380
+        pressure_bar: 25
+        mass_flow_kg_h: 10000
+        composition: {Toluene: 1.0}
+    reactions:
+      - kind: conversion
+        stoichiometry: {Toluene: -2, Benzene: 1}
+        sums: [{components: [p-Xylene, m-Xylene, o-Xylene], total: 1.0}]
+        base_component: Toluene
+        conversion_percent: 50
+    heat_mode: adiabatic
+    cases: [{}]
+  assumed: ["reactions[0].stoichiometry", "heat_mode", "feeds[0].pressure_bar", "feeds[0].pressure_bar"]

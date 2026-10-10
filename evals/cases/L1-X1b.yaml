@@ -1,0 +1,10 @@
+id: L1-X1b
+purpose: "缺少进料温度：明确指出缺温度，不静默补值"
+input: |-
+  一氧化碳变换：CO + H2O → CO2 + H2，在转化反应器里按 CO 的转化率 70% 计算。进料中 CO 与水蒸气的摩尔比为 1:3，总流量 500 kmol/h，压力 20 bar。请给出出口物流的组成。
+expected:
+  reactor: conversion
+  features:
+    conversion_data_given: true
+  issues: [{code: E_RULE, field_path: "feeds[0].temperature_c"}]
+  final: [needs_input]

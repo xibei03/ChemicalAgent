@@ -14,3 +14,20 @@ expected:
     conversion_data_given: true
     reaction_defined: true
     black_box_system: false
+  params:
+    feeds:
+      - temperature_c: 380
+        pressure_bar: 25
+        mass_flow_kg_h: 10000
+        composition: {Toluene: 1.0}
+    reactions:
+      # 三种二甲苯的分配是假设：只比较它们的系数之和
+      - kind: conversion
+        stoichiometry: {Toluene: -2, Benzene: 1}
+        sums: [{components: [p-Xylene, m-Xylene, o-Xylene], total: 1.0}]
+        base_component: Toluene
+        conversion_percent: 50
+    heat_mode: adiabatic
+    cases: [{}]
+  # 必须登记成假设的字段：三种异构体的分配；绝热；进料压力取操作压力；压力按绝压。
+  assumed: ["reactions[0].stoichiometry", "heat_mode", "feeds[0].pressure_bar", "feeds[0].pressure_bar"]

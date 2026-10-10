@@ -37,7 +37,7 @@ RULES = load_rules(load_skill(SKILLS_DIR, SELECTION_SKILL), SelectionRules)
 
 def test_every_case_file_loads_and_scenarios_come_first():
     cases = load_cases(CASES_DIR)
-    assert len(cases) == 29
+    assert len(cases) == 34
     assert [c.id for c in cases[:3]] == ["L1-S1", "L1-S2", "L1-S3"]
     assert all(c.scenario for c in cases[:3]) and not any(c.scenario for c in cases[3:])
 
