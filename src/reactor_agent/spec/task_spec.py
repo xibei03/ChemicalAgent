@@ -315,6 +315,32 @@ def task_spec_model(reactor_type: ReactorType) -> type[TaskSpec]:
     return model
 
 
+def _is_absent(task: TaskSpec, item: MissingItem) -> bool:
+    """声明缺失的那个字段，在 TaskSpec 里是不是真的没有填（写 null、没有这一项）。"""
+    index = item.feed_index or 0
+    feed = task.feeds[index] if 0 <= index < len(task.feeds) else None
+    if item.field is MissingField.FEED_TEMPERATURE:
+        return feed is None or feed.temperature is None
+    if item.field is MissingField.FEED_PRESSURE:
+        return (feed is None or feed.pressure is None) and task.reactor_pressure is None
+    if item.field is MissingField.FEED_COMPOSITION:
+        return feed is None or (feed.pure_component is None and feed.composition is None)
+    if item.field is MissingField.CONVERSION:
+        if not isinstance(task, ConversionTaskSpec):
+            return False
+        return not task.reactions or any(r.conversion is None for r in task.reactions)
+    if item.field is MissingField.REACTIONS:
+        return not isinstance(task, GibbsTaskSpec) and not task.reactions
+    return True
+
+
 def blocking_missing(task: TaskSpec) -> tuple[MissingItem, ...]:
-    """缺失信息里不可以假设的那些：重写也变不出信息，只能请用户补充。"""
-    return tuple(item for item in task.missing if item.field not in ASSUMABLE_MISSING)
+    """缺失信息里不可以假设、而且字段真的没有填的那些：重写也变不出信息，只能请用户补充。
+
+    声明缺失、字段却已经填了（哪怕是空的）是自相矛盾的输出，不当作用户要补充的信息，交回去重写。
+    """
+    return tuple(
+        item
+        for item in task.missing
+        if item.field not in ASSUMABLE_MISSING and _is_absent(task, item)
+    )

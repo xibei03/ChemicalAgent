@@ -37,7 +37,7 @@ class MoleComposition:
 def _check_items(task: CompositionTask) -> None:
     """各项写得合不合格：至少一项，余量组分最多一个，余量的 amount 是空、其余的不是。"""
     if not task.items:
-        raise CompositionError("组成里没有任何组分", user_fixable=False)
+        raise CompositionError("组成里没有任何组分", user_fixable=True)
     if sum(item.is_remainder for item in task.items) > 1:
         raise CompositionError("余量组分最多一个", user_fixable=False)
     for item in task.items:

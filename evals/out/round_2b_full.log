@@ -1,0 +1,48 @@
+✓ L1-S1 第 1/5 次：equilibrium，规格合法，重写 0 轮（21.1 秒）
+✓ L1-S1 第 2/5 次：equilibrium，规格合法，重写 0 轮（19.3 秒）
+✓ L1-S1 第 3/5 次：equilibrium，规格合法，重写 0 轮（22.0 秒）
+✓ L1-S1 第 4/5 次：equilibrium，规格合法，重写 0 轮（21.2 秒）
+✓ L1-S1 第 5/5 次：equilibrium，规格合法，重写 0 轮（18.7 秒）
+✓ L1-S2 第 1/5 次：conversion，规格合法，重写 0 轮（28.9 秒）
+✓ L1-S2 第 2/5 次：conversion，规格合法，重写 0 轮（26.8 秒）
+✓ L1-S2 第 3/5 次：conversion，规格合法，重写 0 轮（18.1 秒）
+✓ L1-S2 第 4/5 次：conversion，规格合法，重写 0 轮（27.0 秒）
+✓ L1-S2 第 5/5 次：conversion，规格合法，重写 0 轮（26.0 秒）
+✓ L1-S3 第 1/5 次：gibbs，规格合法，重写 0 轮（21.5 秒）
+✓ L1-S3 第 2/5 次：gibbs，规格合法，重写 0 轮（19.8 秒）
+✓ L1-S3 第 3/5 次：gibbs，规格合法，重写 0 轮（19.4 秒）
+✓ L1-S3 第 4/5 次：gibbs，规格合法，重写 0 轮（21.6 秒）
+✓ L1-S3 第 5/5 次：gibbs，规格合法，重写 0 轮（22.1 秒）
+✓ L1-A1 第 1/1 次：gibbs（9.6 秒）
+✓ L1-A2 第 1/1 次：equilibrium（8.9 秒）
+✓ L1-C1 第 1/1 次：conversion（10.1 秒）
+✓ L1-C2 第 1/1 次：conversion（9.8 秒）
+✓ L1-C4 第 1/1 次：conversion（8.8 秒）
+✓ L1-E1 第 1/1 次：equilibrium（8.3 秒）
+✓ L1-E2 第 1/1 次：equilibrium（8.5 秒）
+✓ L1-E3 第 1/1 次：equilibrium（8.4 秒）
+✓ L1-E4 第 1/1 次：gibbs（9.5 秒）
+✓ L1-G1 第 1/1 次：gibbs（7.4 秒）
+✓ L1-G2 第 1/1 次：gibbs（7.8 秒）
+✓ L1-G3 第 1/1 次：gibbs（7.8 秒）
+✓ L1-K1 第 1/1 次：pfr（9.3 秒）
+✓ L1-K1b 第 1/1 次：pfr（9.3 秒）
+✓ L1-K1c 第 1/1 次：pfr（9.7 秒）
+✓ L1-K2 第 1/1 次：cstr（11.0 秒）
+✓ L1-K2b 第 1/1 次：cstr（9.8 秒）
+✓ L1-K3 第 1/1 次：conversion（9.3 秒）
+✓ L1-N1 第 1/1 次：conversion（9.2 秒）
+✓ L1-N2 第 1/1 次：gibbs（8.0 秒）
+✓ L1-N3 第 1/1 次：cstr（8.9 秒）
+✓ L1-S1b 第 1/1 次：equilibrium，规格合法，重写 0 轮（23.0 秒）
+✓ L1-S2b 第 1/1 次：conversion，规格合法，重写 0 轮（26.6 秒）
+✓ L1-S3b 第 1/1 次：gibbs，规格合法，重写 0 轮（21.6 秒）
+✓ L1-X1 第 1/1 次：conversion，终态 needs_input，重写 0 轮（17.3 秒）
+✓ L1-X1b 第 1/1 次：conversion，终态 needs_input，重写 0 轮（26.6 秒）
+✓ L1-X2 第 1/1 次：conversion，终态 needs_input，重写 2 轮（37.6 秒）
+✓ L1-X3 第 1/1 次：conversion，终态 needs_input，重写 2 轮（35.6 秒）
+✓ L1-X4 第 1/1 次：conversion，终态 needs_input，重写 2 轮（34.1 秒）
+✓ L1-X5 第 1/1 次：None（4.8 秒）
+✓ L1-X6 第 1/1 次：None（6.2 秒）
+
+门槛通过，结果写在 evals\out\round_2b_full.md

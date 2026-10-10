@@ -369,3 +369,47 @@ def test_reactor_type_comes_from_the_caller_and_the_spec_carries_it():
     for task, kind in ((conversion_task(), CONVERSION), (smr_task(), EQUILIBRIUM)):
         spec = normalize(task, kind, components(), units()).spec
         assert spec is not None and spec.reactor_type is kind
+
+
+# ---- 声明缺失，字段却已经填了：自相矛盾，不当作要用户补充的信息 ----
+
+
+def declared(field: MissingField) -> tuple[MissingItem, ...]:
+    return (MissingItem(field=field, feed_index=0, description="声明缺失"),)
+
+
+def test_declared_missing_counts_only_when_the_field_is_really_absent():
+    from reactor_agent.spec.task_spec import blocking_missing
+
+    absent = [
+        (with_feed(conversion_task(), temperature=None), MissingField.FEED_TEMPERATURE),
+        (
+            with_feed(conversion_task(reactor_pressure=None), pressure=None),
+            MissingField.FEED_PRESSURE,
+        ),
+        (
+            with_feed(conversion_task(), pure_component=None, composition=None),
+            MissingField.FEED_COMPOSITION,
+        ),
+        (conversion_task(reactions=()), MissingField.REACTIONS),
+    ]
+    for task, field in absent:
+        assert blocking_missing(task.model_copy(update={"missing": declared(field)})), field
+    present = [
+        (conversion_task(), MissingField.FEED_TEMPERATURE),
+        (conversion_task(), MissingField.FEED_PRESSURE),
+        (conversion_task(), MissingField.FEED_COMPOSITION),
+        (conversion_task(), MissingField.CONVERSION),
+        (conversion_task(), MissingField.REACTIONS),
+    ]
+    for task, field in present:
+        assert not blocking_missing(task.model_copy(update={"missing": declared(field)})), field
+
+
+def test_an_empty_composition_with_a_declared_missing_is_sent_back_not_asked_of_the_user():
+    empty = composition(("methane", 1.0)).model_copy(update={"items": ()})
+    task = with_feed(smr_task(), composition=empty, pure_component=None)
+    task = task.model_copy(update={"missing": declared(MissingField.FEED_COMPOSITION)})
+    issue = only_issue(task)
+    assert issue.field_path == "feeds[0].composition" and "没有任何组分" in issue.message
+    assert "缺少关键信息" not in issue.message

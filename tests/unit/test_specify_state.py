@@ -264,3 +264,19 @@ def test_a_needs_input_task_prints_what_to_supply_and_not_retries(tmp_path):
     text = render_failure(report)
     assert "需要你补充或确认" in text and "reactions[0].conversion_percent" in text
     assert "重试" not in text and "没有替你改动" in text
+
+
+def test_a_declared_missing_composition_that_was_filled_in_anyway_is_rewritten(tmp_path):
+    from reactor_agent.spec.task_spec import CompositionTask
+
+    empty = CompositionTask(basis="mole", scale="ratio", items=(), source="user", rationale=None)
+    first = (
+        conversion_task().feeds[0].model_copy(update={"pure_component": None, "composition": empty})
+    )
+    missing = MissingItem(
+        field=MissingField.FEED_COMPOSITION, feed_index=0, description="不知道是哪个组分的份额"
+    )
+    confused = conversion_task(feeds=(first,), missing=(missing,))
+    run = specify(tmp_path, confused, conversion_task())
+    assert run.task.current_state is WorkflowState.PREFLIGHT
+    assert run.task.spec_rewrites == 1 and run.llm.calls == 3
