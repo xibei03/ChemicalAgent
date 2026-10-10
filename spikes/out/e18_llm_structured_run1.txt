@@ -1,11 +1,11 @@
 接口 https://dashscope.aliyuncs.com/compatible-mode/v1，模型 qwen3.8-max，openai SDK 3.27.0，密钥长度 117
 == Q1 temperature=0 ==
-  temperature=0 + json_object + 思考默认：90.39 秒，APITimeoutError Request timed out.
-  temperature=0 + json_object + 关闭思考：7.58 秒，用量 1273+361，finish_reason=stop，回复 1052 字
+  temperature=0 + json_object + 思考默认：90.32 秒，APITimeoutError Request timed out.
+  temperature=0 + json_object + 关闭思考：8.82 秒，用量 1273+367，finish_reason=stop，回复 1059 字
       校验通过，推荐 gibbs，黑箱=True
 == Q2 response_format=json_schema（strict）==
   json_schema + 思考默认：90.01 秒，APITimeoutError Request timed out.
-  json_schema + 关闭思考：13.02 秒，用量 316+536，finish_reason=stop，回复 1380 字
+  json_schema + 关闭思考：14.37 秒，用量 316+540，finish_reason=stop，回复 1406 字
       校验通过，推荐 gibbs，黑箱=True
       回复前 2000 字：{
   "features": {
@@ -49,27 +49,17 @@
     }
   },
   "recommended_type": "gibbs",
-  "rationale": "用户明确要求模拟气化过程（属于黑箱类体系），且特别提示“希望考虑到里面有副反应的情况”，说明产物分布复杂、不完全已知，也没有给出动力学参数或设备尺寸。Gibbs反应器通过最小化系统吉布斯自由能来预测多组分平衡组成，无需指定所有具体反应和动力学，最适合此类气化过程的模拟。",
+  "rationale": "用户明确要求模拟气化过程（属于黑箱类体系），且特别提示“希望考虑到里面有副反应的情况”，说明产物分布复杂、不完全已知。Gibbs反应器无需指定具体反应方程式和动力学参数，通过最小化系统吉布斯自由能即可自动计算多组分平衡组成，最适合此类气化过程的模拟。",
   "alternatives": [
-    {"reactor_type": "conversion", "why_not": "用户明确指出存在副反应且未给出各反应的转化率数值，无法使用固定转化率的模型。"},
-    {"reactor_type": "equilibrium", "why_not": "用户未提供平衡常数，且气化过程中副反应众多，难以逐一列出并定义所有平衡反应。"},
-    {"reactor_type": "pfr", "why_not": "用户未提供任何动力学参数和设备尺寸，无法建立平推流反应器模型。"},
-    {"reactor_type": "cstr", "why_not": "用户未提供任何动力学参数和设备尺寸，无法建立全混流反应器模型。"}
+    {"reactor_type": "conversion", "why_not": "用户要求考虑副反应，而conversion反应器需要为每个反应手动指定转化率，在副反应未知的情况下无法使用。"},
+    {"reactor_type": "equilibrium", "why_not": "equilibrium反应器需要明确列出所有发生的反应及其平衡常数，用户未给出平衡常数且副反应情况未知，难以穷举所有反应。"},
+    {"reactor_type": "pfr", "why_not": "PFR需要详细的反应动力学参数和设备尺寸，用户均未提供。"},
+    {"reactor_type": "cstr", "why_not": "CSTR同样需要完整的动力学参数和设备尺寸信息，用户均未提供。"}
   ]
 }
 == Q3 json_object（Schema 写在提示里）== Q4 关闭思考的影响 ==
-  json_object + 思考默认：90.01 秒，APITimeoutError Request timed out.
-  json_object + 关闭思考：10.81 秒，用量 1273+397，finish_reason=stop，回复 1117 字
+  json_object + 思考默认：90.00 秒，APITimeoutError Request timed out.
+  json_object + 关闭思考：8.50 秒，用量 1273+368，finish_reason=stop，回复 1068 字
       校验通过，推荐 gibbs，黑箱=True
 == Q5 温度 0 下重复 3 次（json_object，思考默认）==
-  第 1 次：90.00 秒，APITimeoutError Request timed out.
-  第 2 次：90.24 秒，APITimeoutError Request timed out.
-  第 3 次：90.28 秒，APITimeoutError Request timed out.
-  3 次的 JSON 完全相同
-== Q6 SDK 的超时和重试 ==
-  timeout=0.5、max_retries=0：0.81 秒后抛 APITimeoutError
-  timeout=0.5、max_retries=2：3.37 秒后抛 APITimeoutError
-== Q7 错误的密钥和不存在的模型名 ==
-  错误的密钥：0.31 秒，AuthenticationError，状态 401，{'message': 'Incorrect API key provided. For details, see: https://help.aliyun.com/zh/model-studio/error-code#apikey-error', 'type': 'invalid_request_error', 'param': None, 'code': 'invalid_api_key'}
-  不存在的模型：0.28 秒，NotFoundError，状态 404，{'message': 'The model `qwen-no-such-model` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}
-== E18 结束，结论由人读上面的输出后写进台账 ==
+  第 1 次：90.01 秒，APITimeoutError Request timed out.

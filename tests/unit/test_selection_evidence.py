@@ -44,18 +44,19 @@ def test_evidence_that_differs_only_in_width_script_or_spaces_is_accepted(eviden
     "evidence", ["乙酸转化率为50%", "反应温度为70℃", "操作压力1.2MPa，温度65℃，", "…反应温度为65℃…"]
 )
 def test_evidence_that_is_not_in_the_text_is_rejected(evidence):
-    assert invalid_evidence(features_citing(evidence), TEXT) == (evidence,)
+    assert [q.text for q in invalid_evidence(features_citing(evidence), TEXT)] == [evidence]
 
 
 def test_an_empty_or_blank_evidence_is_rejected():
-    assert invalid_evidence(features_citing("  "), TEXT) == ("  ",)
+    assert [q.text for q in invalid_evidence(features_citing("  "), TEXT)] == ["  "]
 
 
 def test_the_named_reactor_evidence_is_checked_too():
     features = make_features(reaction_process=False).model_copy(
         update={"named_reactor": NamedReactor(reactor_type=ReactorType.GIBBS, evidence="吉布斯")}
     )
-    assert invalid_evidence(features, TEXT) == ("吉布斯",)
+    [rejected] = invalid_evidence(features, TEXT)
+    assert (rejected.label, rejected.text) == ("用户点名的反应器", "吉布斯")
     assert invalid_evidence(features, TEXT + "吉布斯反应器") == ()
 
 
@@ -109,3 +110,8 @@ def test_a_draft_that_names_a_reactor_without_evidence_is_invalid():
 
 def test_a_draft_with_all_evidence_present_is_valid():
     SelectionDraft.model_validate(draft_with(make_features()))
+
+
+def test_a_rejected_quote_says_which_feature_it_was_meant_to_support():
+    [rejected] = invalid_evidence(features_citing("原文里没有的话"), TEXT)
+    assert (rejected.label, rejected.text) == ("给出了动力学参数", "原文里没有的话")

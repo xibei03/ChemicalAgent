@@ -299,7 +299,10 @@ def test_evidence_that_is_not_in_the_text_makes_the_answer_unsettled_even_when_t
     draft = make_draft(features, EQUILIBRIUM)
     assessment = assess(draft, "原文里没有那句话", RULES)
     assert assessment.agrees and not assessment.settled
-    assert set(assessment.invalid_evidence) == {"原文reaction_defined", "原文is_reaction_process"}
+    assert {q.text for q in assessment.invalid_evidence} == {
+        "原文reaction_defined",
+        "原文is_reaction_process",
+    }
 
 
 def test_invalid_evidence_is_dropped_from_the_final_result_but_the_feature_value_stays():

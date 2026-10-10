@@ -179,9 +179,10 @@ def test_evidence_that_is_still_not_in_the_text_is_dropped_and_recorded_in_the_t
     result = run.result()
     assert result.reactor_type is EQUILIBRIUM and result.decision is Decision.AGREED_AFTER_REASK
     assert result.features.reaction_defined == Flag(value=True, evidence=None)
-    assert result.dropped_evidence == ("原文里没有的话",)
+    [dropped] = result.dropped_evidence
+    assert (dropped.label, dropped.text) == ("反应已明确", "原文里没有的话")
     saved = next(e for e in run.events if e.name == Checkpoint.SELECTION_SAVED.value)
-    assert saved.output["dropped_evidence"] == ["原文里没有的话"]
+    assert saved.output["dropped_evidence"] == [{"feature": "反应已明确", "text": "原文里没有的话"}]
 
 
 def test_the_original_text_is_stored_and_the_prompt_keeps_it_apart_from_the_instructions(tmp_path):

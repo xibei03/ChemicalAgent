@@ -252,7 +252,8 @@ class SelectionSummary(FrozenModel):
 class SelectionResult(FrozenModel):
     """选型的最终结果。rule_notes 由代码生成，所以 LLM 的推荐被推翻时，理由也和结论对得上。
 
-    dropped_evidence 是重问之后仍然不是原文原话、被丢弃的依据。
+    dropped_evidence 是重问之后仍然不是原文原话、被丢弃的依据（带着它支持的特征）。特征的取值保留，
+    只是这几个判断没有找到原文依据，报告里应当如实说明。
     """
 
     reactor_type: ReactorType | None
@@ -262,7 +263,7 @@ class SelectionResult(FrozenModel):
     llm_rationale: str
     features: SelectionFeatures
     alternatives: tuple[Alternative, ...]
-    dropped_evidence: tuple[str, ...] = ()
+    dropped_evidence: tuple[Quote, ...] = ()
 
     @property
     def summary(self) -> SelectionSummary:

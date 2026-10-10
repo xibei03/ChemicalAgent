@@ -135,6 +135,8 @@ def selection_saved_event(result: SelectionResult) -> EventBody:
         output={
             "reactor_type": None if result.reactor_type is None else result.reactor_type.value,
             "decision": result.decision.value,
-            "dropped_evidence": list(result.dropped_evidence),
+            "dropped_evidence": [
+                {"feature": quote.label, "text": quote.text} for quote in result.dropped_evidence
+            ],
         },
     )

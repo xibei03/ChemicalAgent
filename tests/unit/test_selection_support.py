@@ -88,7 +88,7 @@ def test_the_feedback_lists_each_evidence_that_is_not_in_the_text_and_numbers_th
     draft = make_draft(FEATURES, GIBBS)
     feedback = reask_feedback(draft, assess(draft, "没有依据", load_rules()))
     assert feedback.startswith("1. ") and "\n2. " in feedback
-    assert "“原文reaction_defined”" in feedback and "改成“否”" in feedback
+    assert "[反应已明确] “原文reaction_defined”" in feedback and "改成“否”" in feedback
 
 
 # ---------- 运行目录 ----------
@@ -154,9 +154,10 @@ def test_the_selection_saved_event_records_type_decision_and_dropped_evidence():
     assert isinstance(event, EventBody) and event.name == "selection_saved"
     assert event.output["reactor_type"] == "equilibrium"
     assert event.output["decision"] == "rules_prevailed"
-    assert set(event.output["dropped_evidence"]) == {
-        "原文reaction_defined",
-        "原文is_reaction_process",
+    dropped = event.output["dropped_evidence"]
+    assert {(item["feature"], item["text"]) for item in dropped} == {
+        ("反应已明确", "原文reaction_defined"),
+        ("是反应过程的模拟请求", "原文is_reaction_process"),
     }
 
 
@@ -211,8 +212,9 @@ def test_a_non_reaction_has_no_alternatives_and_says_no_conclusion():
 
 def test_dropped_evidence_is_listed_at_the_end():
     text = render_selection(settle(FEATURES, EQUILIBRIUM, text="没有依据"))
-    assert "已丢弃的依据（在原文里找不到原话）：" in text
-    assert text.index("已丢弃的依据") > text.index("备选类型")
+    assert "没有找到原文依据的判断" in text
+    assert "[反应已明确] “原文reaction_defined”" in text
+    assert text.index("没有找到原文依据的判断") > text.index("备选类型")
 
 
 def test_a_kinetic_result_mentions_the_missing_size_in_the_rule_steps():

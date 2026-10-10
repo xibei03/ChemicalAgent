@@ -23,6 +23,7 @@ from reactor_agent.spec.selection import (
     Flag,
     PriorityRule,
     PriorityRuleId,
+    Quote,
     RuleVerdict,
     SelectionDraft,
     SelectionFeatures,
@@ -69,9 +70,9 @@ def _quoted(evidence: str, text: str) -> bool:
     return bool(wanted) and wanted in normalize_text(text)
 
 
-def invalid_evidence(features: SelectionFeatures, text: str) -> tuple[str, ...]:
-    """引用了但在原文里找不到的依据。"""
-    return tuple(quote.text for quote in features.quotes() if not _quoted(quote.text, text))
+def invalid_evidence(features: SelectionFeatures, text: str) -> tuple[Quote, ...]:
+    """引用了但在原文里找不到的依据，带着它支持的是哪个特征。"""
+    return tuple(quote for quote in features.quotes() if not _quoted(quote.text, text))
 
 
 def drop_invalid_evidence(features: SelectionFeatures, text: str) -> SelectionFeatures:
@@ -265,7 +266,7 @@ def check_rules(
 class Assessment(FrozenModel):
     """对一次 LLM 输出的评估：哪些依据不是原文，规则结论是什么，是否与推荐一致。"""
 
-    invalid_evidence: tuple[str, ...]
+    invalid_evidence: tuple[Quote, ...]
     verdict: RuleVerdict
     agrees: bool
 
@@ -347,7 +348,7 @@ def reask_feedback(draft: SelectionDraft, assessment: Assessment) -> str:
             f"结论是 {_type_text(assessment.verdict.reactor_type)}。规则的推导：\n{steps}"
         )
     if assessment.invalid_evidence:
-        quoted = "；".join(f"“{text}”" for text in assessment.invalid_evidence)
+        quoted = "；".join(f"[{q.label}] “{q.text}”" for q in assessment.invalid_evidence)
         problems.append(
             f"这些依据在原文里找不到原话：{quoted}。依据必须逐字摘自原文；"
             "找不到原话支持的特征，请改成“否”。"

@@ -197,6 +197,6 @@ def render_selection(result: SelectionResult) -> str:
             name = REACTOR_NAMES[item.reactor_type]
             lines.append(f"{INDENT}{name}（{'，'.join(marks)}）：{item.reason}")
     if result.dropped_evidence:
-        lines.append("已丢弃的依据（在原文里找不到原话）：")
-        lines.extend(f"{INDENT}“{text}”" for text in result.dropped_evidence)
+        lines.append("没有找到原文依据的判断（依据在原文里找不到原话，判断本身保留）：")
+        lines.extend(f"{INDENT}[{quote.label}] “{quote.text}”" for quote in result.dropped_evidence)
     return "\n".join(lines)
