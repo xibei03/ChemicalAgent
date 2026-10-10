@@ -3,7 +3,7 @@ $ reactor-agent run --text-file evals/inputs/scenario-1.txt --dry-run
 规则的推导：
   - 能建的类型：Equilibrium、Gibbs。不能建的类型：Conversion（缺：给出了转化率、收率或选择性的数值）、PFR（缺：给出了动力学参数）、CSTR（缺：给出了动力学参数）。
   - 命中第二层第 5 条：反应已明确，平衡由 Keq 或 Gibbs 自由能确定，选 Equilibrium。
-LLM 的理由：原文用文字说清了两个反应的反应物和产物（主反应和副反应），没有要求考虑未列出的其他反应，因此反应已明确。没有给出动力学参数，也没有给出转化率数值作为已知条件。甲烷蒸汽重整是工业上典型的催化可逆反应，产物种类确定，不属于黑箱体系。按选择逻辑，反应明确且无动力学、无给定转化率时选 Equilibrium，由 Gibbs 自由能计算平衡常数来确定不同温度下的产物分布。
+LLM 的理由：原文用文字说清了两个反应的反应物和产物（主反应甲烷和水反应生成一氧化碳和氢气；副反应一样化碳和水蒸汽反应生成二氧化碳和氢气），没有要求考虑未列出的其他反应，因此反应已明确。原文没有给出动力学参数，也没有给出转化率数值作为已知条件。甲烷蒸汽重整是工业上典型的催化可逆反应，产物种类确定，不属于黑箱体系。按选择逻辑，反应明确且无动力学、无给定转化率时选 Equilibrium，由 Gibbs 自由能计算平衡常数来确定反应终点。
 原文依据：
   [是反应过程的模拟请求] “我需要模拟甲烷蒸汽重整”
   [反应已明确] “有两个反应，主反应甲烷和水反应生成一氧化碳和氢气；副反应一样化碳和水蒸汽反应生成二氧化碳和氢气”
@@ -16,21 +16,20 @@ LLM 的理由：原文用文字说清了两个反应的反应物和产物（主�
 规格（已换算成规范单位：°C、bar 绝压、kmol/h 或 kg/h、摩尔分率）：
   反应器：Equilibrium；物性包：peng_robinson；热模式：规定出口温度；压降：0 bar
   组分：Methane、H2O、CO、Hydrogen、CO2
-  进料 进料：520 °C，13.5 bar，100000 kmol/h；摩尔分率 Methane 0.2703、H2O 0.7297
+  进料 进料：520 °C，13.5 bar，1000 kmol/h；摩尔分率 Methane 0.2703、H2O 0.7297
   反应 1：1 Methane + 1 H2O → 1 CO + 3 Hydrogen（平衡反应，平衡常数由 Gibbs 自由能计算）
   反应 2：1 CO + 1 H2O → 1 CO2 + 1 Hydrogen（平衡反应，平衡常数由 Gibbs 自由能计算）
   工况 T710：出口温度 710 °C
   工况 T600：出口温度 600 °C
 
-假设（8 条）：
+假设（7 条）：
   A1 [feeds[0].pressure_bar] absolute。原文没有说明压力是绝压还是表压，按绝压
   A2 [feeds[0].pressure_bar] 13.5。原文只给了一个不属于某股进料的压力（操作压力），进料压力取它
-  A3 [feeds[0].molar_flow_kmol_h] 100000 kmol/h。用户允许自定，要求符合工厂一年正常处理量。工业大型制氢装置甲烷进料约数十至百 kmol/h 量级，取 100000 kmol/h 作为总摩尔流量基准
+  A3 [feeds[0].molar_flow_kmol_h] 1000 kmol/h。原文允许自定，要求符合一个工厂一年正常的处理量。取甲烷与水蒸气总进料 1000 kmol/h（其中甲烷约 270 kmol/h），按每年运行 8000 小时折算，年处理量约 3.6 万吨，属于单套工业装置的常见规模。
   A4 [reactions[0].keq_source] gibbs_energy。原文没有给平衡常数，由 Gibbs 自由能计算
   A5 [reactions[1].keq_source] gibbs_energy。原文没有给平衡常数，由 Gibbs 自由能计算
   A6 [pressure_drop_bar] 0。原文没有给压降，按 0
   A7 [property_package] peng_robinson。原文没有指定物性包，取 Peng-Robinson（目前唯一验证过的）
-  A8 [feeds] 进料总流量假设为 100000 kmol/h。用户允许自定，要求符合一个工厂一年正常的处理量，取此值作为典型工业规模基准
 
 建模步骤（11 步）：
    1 basis.ensure_thermo：组分 Methane、H2O、CO、Hydrogen、CO2，物性包 peng_robinson
@@ -45,7 +44,7 @@ LLM 的理由：原文用文字说清了两个反应的反应物和产物（主�
   10 flowsheet.set_spec [T710]：ERV-100 的 outlet_temperature_c = 710
   11 flowsheet.set_spec [T600]：ERV-100 的 outlet_temperature_c = 600
 
-干跑：到建模步骤为止，没有连接 HYSYS。运行目录：C:\Users\azureuser\Desktop\ChemicalAgent\runs\20261010-053601-ea
+干跑：到建模步骤为止，没有连接 HYSYS。运行目录：C:\Users\azureuser\Desktop\ChemicalAgent\runs\20261010-063219-02
 退出码：0
 
 $ reactor-agent run --text-file evals/inputs/scenario-2.txt --dry-run
@@ -53,18 +52,17 @@ $ reactor-agent run --text-file evals/inputs/scenario-2.txt --dry-run
 规则的推导：
   - 能建的类型：Conversion、Equilibrium、Gibbs。不能建的类型：PFR（缺：给出了动力学参数）、CSTR（缺：给出了动力学参数）。
   - 命中第二层第 1 条：用户点名了 Conversion，必要输入齐备，采纳。
-LLM 的理由：用户明确点名了“转化率反应器”，且给出了该类型所需的必要输入——“甲苯转化率为50%”作为已知条件，按选择逻辑第1条直接采纳。同时原文写明了反应方程式并声明“不考虑其他副反应”，反应已明确，但既然用户指定了模型且输入齐全，优先遵循点名。
+LLM 的理由：用户明确点名使用“转化率反应器”，且给出了该类型所需的必要输入“甲苯转化率为50%”。按选择逻辑第1条，用户点名了反应器模型并且它需要的输入都有，直接采纳。同时原文写出了反应方程式“发生歧化反应：2C₇H₈ → C₆H₆ + C₈H₁₀”并声明“不考虑其他副反应”，反应已定义清楚。
 原文依据：
   [是反应过程的模拟请求] “甲苯歧化反应”
   [给出了转化率、收率或选择性的数值] “甲苯转化率为50%”
-  [用户点名的反应器] “甲苯原料进入转化率反应器”
+  [反应已明确] “发生歧化反应：2C₇H₈ → C₆H₆ + C₈H₁₀”
+  [用户点名的反应器] “转化率反应器”
 备选类型：
-  Equilibrium（能建）：用户已点名转化率反应器并给出了转化率数值，不需要用平衡反应器去求反应终点
-  Gibbs（能建）：反应已明确且不是黑箱体系，Gibbs优先级更低；用户也已点名转化率反应器
+  Equilibrium（能建）：用户已点名转化率反应器并给出了转化率数值，不需要用平衡反应器求反应终点
+  Gibbs（能建）：反应已明确写出且指定了转化率，不是黑箱体系，优先级低于 Conversion
   PFR（不能建）：缺少必要输入：给出了动力学参数
   CSTR（不能建）：缺少必要输入：给出了动力学参数
-没有找到原文依据的判断（依据在原文里找不到原话，判断本身保留）：
-  [反应已明确] “发生歧化反应：2C₇H₈ → C₆H₆ + C₈H₁₀。……不考虑其他副反应”
 
 规格（已换算成规范单位：°C、bar 绝压、kmol/h 或 kg/h、摩尔分率）：
   反应器：Conversion；物性包：peng_robinson；热模式：绝热；压降：0 bar
@@ -79,7 +77,7 @@ LLM 的理由：用户明确点名了“转化率反应器”，且给出了该�
   A3 [pressure_drop_bar] 0。原文没有给压降，按 0
   A4 [heat_mode] adiabatic。原文没有给出口温度，也没有给热负荷，按绝热，出口温度作为结果
   A5 [property_package] peng_robinson。原文没有指定物性包，取 Peng-Robinson（目前唯一验证过的）
-  A6 [reactions] 产物 C₈H₁₀ 拆分为邻二甲苯、间二甲苯、对二甲苯，配比取 o-Xylene : m-Xylene : p-Xylene = 24 : 52 : 24。原文未给出三种异构体的比例，按规则采用反应温度下的热力学平衡分布近似值；甲苯歧化在约380℃附近，间二甲苯占优，邻、对位接近，取常见近似配比 24:52:24
+  A6 [reactions] 产物 C₈H₁₀ 拆分为邻二甲苯、间二甲苯、对二甲苯，配比取 o-Xylene : m-Xylene : p-Xylene = 24 : 52 : 24。原文未给出三种异构体的比例。甲苯歧化反应在约 380 ℃ 下接近热力学平衡时，间二甲苯占比最高（约 50%~55%），邻位和对位相近（各约 22%~25%）。此处取常见近似值 24:52:24。
 
 建模步骤（7 步）：
    1 basis.ensure_thermo：组分 Toluene、Benzene、o-Xylene、m-Xylene、p-Xylene，物性包 peng_robinson
@@ -90,7 +88,7 @@ LLM 的理由：用户明确点名了“转化率反应器”，且给出了该�
    6 flowsheet.ensure_stream：Liq（material）
    7 flowsheet.ensure_reactor：CRV-100（Conversion）：Feed → Vap、Liq
 
-干跑：到建模步骤为止，没有连接 HYSYS。运行目录：C:\Users\azureuser\Desktop\ChemicalAgent\runs\20261010-053624-15
+干跑：到建模步骤为止，没有连接 HYSYS。运行目录：C:\Users\azureuser\Desktop\ChemicalAgent\runs\20261010-063238-00
 退出码：0
 
 $ reactor-agent run --text-file evals/inputs/scenario-3.txt --dry-run
@@ -98,7 +96,7 @@ $ reactor-agent run --text-file evals/inputs/scenario-3.txt --dry-run
 规则的推导：
   - 能建的类型：Gibbs。不能建的类型：Conversion（缺：给出了转化率、收率或选择性的数值）、Equilibrium（缺：反应已明确）、PFR（缺：给出了动力学参数）、CSTR（缺：给出了动力学参数）。
   - 命中第二层第 4 条：黑箱类体系，产物分布由热力学平衡决定，选 Gibbs。
-LLM 的理由：原文明确要模拟的是“水煤浆的气化过程”，气化属于黑箱类体系，高温、不靠催化剂、机理复杂，会生成许多事先列不全的产物。虽然用户写出了一个主要反应式，但实际产物分布不是这一个反应能描述的；而且用户还要求“考虑到里面有副反应的情况”却没有列出具体副反应，进一步说明反应未明确。按选择逻辑，黑箱类体系选 Gibbs。“CO的收率”是要求计算的结果，不是已知条件。
+LLM 的理由：原文明确要模拟的是“水煤浆的气化过程”，气化属于黑箱类体系，高温、不靠催化剂、机理复杂，会生成许多事先列不全的产物。虽然用户写出了一个主要反应式，但同时也要求“考虑到里面有副反应的情况”而没有把副反应说清，实际产物分布不是这一个反应能描述的。按选择逻辑，黑箱类体系选 Gibbs。“CO的收率”是要求计算的结果，不是已知条件。
 原文依据：
   [是反应过程的模拟请求] “我要模拟水煤浆的气化过程”
   [黑箱类体系] “我要模拟水煤浆的气化过程”
@@ -120,8 +118,8 @@ LLM 的理由：原文明确要模拟的是“水煤浆的气化过程”，气�
   A2 [feeds[0].molar_flow_kmol_h] 80000 Nm3/h按摩尔流量理解。Nm3/h 是气体体积单位，进料含固体或液体，按标准状态下的理想气体折算成摩尔流量
   A3 [pressure_drop_bar] 0。原文没有给压降，按 0
   A4 [property_package] peng_robinson。原文没有指定物性包，取 Peng-Robinson（目前唯一验证过的）
-  A5 [feeds] 用 Carbon 代表原文中的煤炭，且按提示不考虑灰分，将其视为纯碳。。原文说明灰分不做考虑，Gibbs 反应器需用最接近的纯组分代表非纯物质。
-  A6 [feeds] 进料中没有氧化剂（氧气或空气），按原文建模，所需热量由外部供给，热负荷为计算结果。。气化过程在实际装置中通常需要氧气或空气作为氧化剂参与反应并提供热量，但原文进料只给了煤炭和水，未提及氧化剂，故不添加。
+  A5 [feeds] 用 Carbon 代表原文中的煤炭，灰分按用户要求不做考虑。原文指明进料为煤炭且灰分不做考虑，故用最接近的纯组分 Carbon 代表煤炭。
+  A6 [feeds] 进料中没有氧化剂（氧气或空气），按原文建模，所需热量由外部供给，热负荷是计算结果。气化过程在实际装置中通常通入氧气或空气作为氧化剂参与反应并提供热量；原文只给了煤炭和水，未提及氧化剂，故不添加，按原文建模。
 
 建模步骤（14 步）：
    1 basis.ensure_thermo：组分 Carbon、H2O、CO、Hydrogen、CO2、Methane，物性包 peng_robinson
@@ -139,5 +137,5 @@ LLM 的理由：原文明确要模拟的是“水煤浆的气化过程”，气�
   13 flowsheet.set_spec [基准工况]：CRV-100 的 outlet_temperature_c = 1400
   14 flowsheet.set_spec [基准工况]：GBR-100 的 outlet_temperature_c = 1400
 
-干跑：到建模步骤为止，没有连接 HYSYS。运行目录：C:\Users\azureuser\Desktop\ChemicalAgent\runs\20261010-053652-f4
+干跑：到建模步骤为止，没有连接 HYSYS。运行目录：C:\Users\azureuser\Desktop\ChemicalAgent\runs\20261010-063304-19
 退出码：0
