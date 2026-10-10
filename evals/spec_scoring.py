@@ -16,7 +16,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from reactor_agent.errors import ErrorCode
 from reactor_agent.spec.enums import HeatMode, MetricKind, ReactionKind, TaskStatus
-from reactor_agent.spec.model_spec import ConversionMetric, ModelSpec, RatioMetric, YieldMetric
+from reactor_agent.spec.model_spec import ModelSpec, covers, metric_components
 from reactor_agent.spec.tool_args import ConversionReaction, ReactionDefinition
 
 RELATIVE_TOLERANCE = 1e-3
@@ -28,7 +28,9 @@ Leaf = tuple[str, bool]  # 一项比较：说明，是否一致
 
 
 class Strict(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    """评测里的数据模型：多余的字段是错误，创建之后不可修改。"""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
 
 
 class ExpectedFeed(Strict):
@@ -198,14 +200,6 @@ def _reaction_leaves(index: int, wanted: ExpectedReaction, spec: ModelSpec | Non
     return leaves + _conversion_leaves(label, wanted, actual)
 
 
-def _metric_components(metric: ConversionMetric | YieldMetric | RatioMetric) -> tuple[str, ...]:
-    if isinstance(metric, ConversionMetric):
-        return (metric.component,)
-    if isinstance(metric, YieldMetric):
-        return (metric.product, metric.basis)
-    return (metric.numerator, metric.denominator)
-
-
 def _case_and_metric_leaves(wanted: ExpectedParams, spec: ModelSpec | None) -> list[Leaf]:
     cases = spec.cases if spec is not None else ()
     leaves: list[Leaf] = []
@@ -218,7 +212,7 @@ def _case_and_metric_leaves(wanted: ExpectedParams, spec: ModelSpec | None) -> l
             (f"cases.{key}[{k}]", k < len(found_values) and _close(found_values[k], value))
             for k, value in enumerate(wanted_values)
         ]
-    actual = {(m.kind, _metric_components(m)) for m in spec.metrics} if spec is not None else set()
+    actual = {(m.kind, metric_components(m)) for m in spec.metrics} if spec is not None else set()
     leaves += [
         (f"metrics {m.kind.value} {'/'.join(m.components)}", (m.kind, m.components) in actual)
         for m in wanted.metrics
@@ -240,10 +234,6 @@ def score_params(wanted: ExpectedParams, spec: ModelSpec | None) -> ParamScore:
     return ParamScore(len(leaves) - len(misses), len(leaves), misses)
 
 
-def _covers(assumed: str, wanted: str) -> bool:
-    return wanted == assumed or wanted.startswith((assumed + ".", assumed + "["))
-
-
 def missing_assumptions(wanted: Sequence[str], spec: ModelSpec | None) -> tuple[str, ...]:
     """期望登记成假设、但没有被登记的字段。
 
@@ -253,7 +243,7 @@ def missing_assumptions(wanted: Sequence[str], spec: ModelSpec | None) -> tuple[
     available = [item.field_path for item in spec.assumptions] if spec is not None else []
     missing = []
     for path in wanted:
-        candidates = [a for a in available if _covers(a, path)]
+        candidates = [a for a in available if covers(a, path)]
         if not candidates:
             missing.append(path)
             continue
