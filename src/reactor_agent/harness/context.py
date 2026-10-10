@@ -1,25 +1,17 @@
-"""组装给 LLM 的上下文：系统提示、Skill、用户原文。
+"""选型的上下文：系统提示、Skill、用户原文。
 
 每次调用都是“系统提示 + Skill + 状态视图”的纯函数，不带之前的对话（计划 §11）。
-系统提示和 Skill 放在 system 里，用户的原文放在 user 里，不混在一起。
+系统提示和 Skill 放在 system 里，用户的原文放在 user 里，不混在一起。写规格的上下文在
+llm/prompts.py，它不读文件；选型要读 Skill 的参考文件和示例，所以放在这里。
 """
 
-from dataclasses import dataclass
-
+from reactor_agent.llm.prompts import Prompt
 from reactor_agent.skill_loader import EXAMPLES_DIR, REFERENCES_DIR, Skill, list_files, read_file
 from reactor_agent.spec.selection import SelectionDraft
 from reactor_agent.spec.selection_rules import Assessment, reask_feedback
 
 # 选型要读的参考文件，按这个顺序放进上下文；示例全部放进去。
 SELECTION_REFERENCES = ("selection_rules.md", "pitfalls.md")
-
-
-@dataclass(frozen=True)
-class Prompt:
-    """给 LLM 的一次提问：system 是系统提示和 Skill，user 是用户的原文。"""
-
-    system: str
-    user: str
 
 
 def selection_prompt(system_prompt: str, skill: Skill, text: str) -> Prompt:

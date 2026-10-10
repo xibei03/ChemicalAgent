@@ -5,20 +5,29 @@ LLM 用桩，ToolExecutor 是空的：这些路径不需要 HYSYS，也不需要
 
 import pytest
 
+from builders import conversion_scenario
 from fake_llm import FakeLlm
+from fake_tools import FakeTools
 from reactor_agent import cli
 from reactor_agent.cli import EXIT_FAILED, EXIT_OK, EXIT_UNSUPPORTED, main, run_text
 from reactor_agent.errors import ErrorCode, ReactorAgentError
 from reactor_agent.spec.enums import ReactorType
 from reactor_agent.spec.selection import FeatureName as F
 from selection_builders import evidence_text, make_draft, make_features
+from task_builders import conversion_task, equilibrium_task
 
 EQUILIBRIUM_FEATURES = make_features(F.REACTION_DEFINED)
 TEXT = evidence_text(EQUILIBRIUM_FEATURES)
+CONVERSION_FEATURES = make_features(F.CONVERSION_DATA_GIVEN, F.REACTION_DEFINED)
+# 原文里要有 TaskSpec 里用户给的那些数：抄写检查会核对。
+CONVERSION_TEXT = (
+    evidence_text(CONVERSION_FEATURES) + "。进料 10000 kg/h，380 ℃，2.5 MPa，转化率 50%。"
+)
 
 
 def equilibrium_llm() -> FakeLlm:
-    return FakeLlm([make_draft(EQUILIBRIUM_FEATURES, ReactorType.EQUILIBRIUM)])
+    """先回选型，再回 TaskSpec。TEXT 里没有数字，抄写检查不查。"""
+    return FakeLlm([make_draft(EQUILIBRIUM_FEATURES, ReactorType.EQUILIBRIUM), equilibrium_task()])
 
 
 def only_run(runs_dir):
@@ -32,15 +41,27 @@ def test_a_dry_run_prints_the_type_the_reasons_the_evidence_and_the_alternatives
     assert "选型结论：Equilibrium" in out and "规则的推导" in out and "LLM 的理由" in out
     assert "原文依据：" in out and "“原文reaction_defined”" in out
     assert "备选类型：" in out and "Gibbs（能建）" in out and "PFR（不能建）" in out
-    assert "运行目录：" in out
+    assert "规格（已换算成规范单位" in out and "假设（" in out and "建模步骤（" in out
+    assert "运行目录：" in out and "没有连接 HYSYS" in out
 
 
-def test_without_dry_run_the_task_also_stops_after_selection_and_says_why(tmp_path, capsys):
-    code = run_text(equilibrium_llm(), TEXT, tmp_path, dry_run=False)
-    captured = capsys.readouterr()
-    assert code == EXIT_FAILED
-    assert "选型结论：Equilibrium" in captured.out
-    assert "还没有实现" in captured.err
+def test_a_dry_run_stops_before_any_tool_is_called_and_ends_at_the_plan(tmp_path):
+    run = cli.build_text_run(equilibrium_llm(), tmp_path)
+    task = run.selector.create_task(TEXT)
+    run.engine.run(task, stop_at=cli.WorkflowState.PREFLIGHT)
+    assert task.status is None and task.current_state is cli.WorkflowState.PREFLIGHT
+    assert task.spec_hash is not None and task.case_names == ("T700", "T600")
+
+
+def test_without_dry_run_the_task_goes_on_to_the_tools_and_completes(tmp_path, capsys):
+    scenario = conversion_scenario()
+    llm = FakeLlm([make_draft(CONVERSION_FEATURES, ReactorType.CONVERSION), conversion_task()])
+    tools = FakeTools([scenario.snapshot])
+    code = run_text(llm, CONVERSION_TEXT, tmp_path, dry_run=False, tools=tools)
+    out = capsys.readouterr().out
+    assert code == EXIT_OK
+    assert "选型结论：Conversion" in out and "complete" in out
+    assert tools.solves == 1
 
 
 def test_a_request_that_is_not_a_reaction_prints_the_selection_and_exits_unsupported(
@@ -125,7 +146,7 @@ def test_a_missing_api_key_names_the_variable_and_how_to_set_it_without_a_traceb
     code = main([*arguments, "--runs-dir", str(tmp_path / "runs")])
     err = capsys.readouterr().err
     assert code == EXIT_FAILED
-    assert "E_LLM" in err and "DASHSCOPE_API_KEY" in err and "Read-Host -AsSecureString" in err
+    assert "E_LLM" in err and "DASHSCOPE_API_KEY" in err and "set_api_key.py" in err
     assert "Traceback" not in err
     assert not (tmp_path / "runs").exists()
 

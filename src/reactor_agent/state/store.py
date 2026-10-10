@@ -35,6 +35,8 @@ class ArtifactName(StrEnum):
 
     INPUT = "input.txt"
     SELECTION = "selection.json"
+    TASK_SPEC = "task_spec.json"
+    SPEC_ISSUES = "spec_issues.json"
     MODEL_SPEC = "model_spec.json"
     PLAN = "plan.json"
     RESULT = "result.json"

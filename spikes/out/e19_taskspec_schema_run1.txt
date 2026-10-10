@@ -1,0 +1,391 @@
+== equilibrium（scenario-1.txt）==
+  Schema 的顶层字段：['feeds', 'reactor_pressure', 'pressure_drop', 'cases', 'adiabatic_stated', 'property_package', 'conversion_metrics', 'yield_metrics', 'ratio_metrics', 'assumptions', 'ambiguities', 'missing', 'reactions']
+  58.1 秒，用量 234+2096，回复 5167 字
+  校验失败（2 处，第一处 ('feeds', 0, 'composition')：Value error, 组成至少要有一个组分；原文没有给组成就写 null）
+  回复：{
+  "feeds": [
+    {
+      "name": "甲烷",
+      "temperature": {
+       "value": 520,
+       "unit": "℃"
+      ,
+      "source": "user"
+      ,
+      "rationale": null
+      },
+      "pressure": {
+       "value": 13.5,
+       "unit": "bar",
+       "source": "assumed",
+       "rationale": "原文仅给出重整炉出口压力为 13.5 bar，未单独给出进料压力，故假设进料压力与出口压力一致"
+      ,
+      "basis": "absolute"
+      },
+      "flow": {
+       "value": 100000,
+       "unit": "kmol/h",
+       "source": "assumed",
+       "rationale": "用户要求'进料流量可以自定，要求符合一个工厂一年正常的处理量'。按年运行8000小时、年产约80万吨合成气（折合甲烷进料约8×10^8 kmol/a）的工业规模估算，取整为 100000 kmol/h"
+      },
+      "composition": {
+       "basis": "mole",
+       "scale": "ratio",
+       "items": [
+       ],
+       "source": "user",
+       "rationale": null
+      }
+    },
+    {
+      "name": "水蒸气",
+      "temperature": {
+       "value": 520,
+       "unit": "℃",
+       "source": "user",
+       "rationale": null
+      },
+      "pressure": {
+       "value": 13.5,
+       "unit": "bar",
+       "source": "assumed",
+       "rationale": "同甲烷进料，原文未单独给出，假设与出口压力一致"
+      ,
+      "basis": "absolute"
+      },
+      "flow": {
+       "value": 270000,
+       "unit": "kmol/h",
+       "source": "assumed",
+       "rationale": "根据用户给定的甲烷与水蒸气摩尔比 1:2.7，由假设的甲烷流量 100000 kmol/h 计算得出"
+      },
+      "composition": {
+       "basis": "mole",
+       "scale": "ratio",
+       "items": [
+       ],
+       "source": "user",
+       "rationale": null
+      }
+    }
+  ],
+  "reactor_pressure": {
+    "value": 13.5,
+    "unit": "bar",
+    "source": "user",
+    "rationale": null
+  ,
+  "basis": "absolute"
+  },
+  "pressure_drop": {
+    "value": 0,
+    "unit": "bar",
+    "source": "assumed",
+    "rationale": "原文未提及压降，假设为理想等压过程"
+  },
+  "cases": [
+    {
+      "name": "情况1",
+      "outlet_temperature": {
+       "value": 710,
+       "unit": "°C",
+       "source": "user",
+       "rationale": null
+      }
+    ,
+    "duty": {
+      "value": 0,
+      "unit": "kW",
+      "source": "assumed",
+      "rationale": "原文指定了出口气温度，未给定热负荷，故采用指定温度模式，热负荷作为计算结果而非输入"
+    }
+    },
+    {
+      "name": "情况2",
+      "outlet_temperature": {
+       "value": 600,
+       "unit": "℃",
+       "source": "user",
+       "rationale": null
+      }
+    ,
+    "duty": {
+      "value": 0,
+      "unit": "kW",
+      "source": "assumed",
+      "rationale": "同情况1，采用指定温度模式"
+    }
+    }
+  ],
+  "adiabatic_stated": false,
+  "property_package": null,
+  "conversion_metrics": [
+    {
+      "component": "甲烷 (CH4)"
+    },
+    {
+      "component": "一氧化碳 (CO)"
+    },
+
+== conversion（scenario-2.txt）==
+  Schema 的顶层字段：['feeds', 'reactor_pressure', 'pressure_drop', 'cases', 'adiabatic_stated', 'property_package', 'conversion_metrics', 'yield_metrics', 'ratio_metrics', 'assumptions', 'ambiguities', 'missing', 'reactions']
+  37.6 秒，用量 217+1429，回复 3432 字
+  校验失败（1 处，第一处 ('feeds', 0, 'composition')：Value error, 组成至少要有一个组分；原文没有给组成就写 null）
+  回复：{
+  "feeds": [
+    {
+      "name": "甲苯原料",
+      "temperature": {
+       "value": 380,
+       "unit": "℃"
+      ,
+       "source": "user"
+      ,
+       "rationale": null
+      },
+      "pressure": {
+       "value": 2.5,
+       "unit": "MPa",
+       "source": "user",
+       "rationale": null
+      ,
+       "basis": "unstated"
+      },
+      "flow": {
+       "value": 10000,
+       "unit": "kg/h",
+       "source": "user",
+       "rationale": null
+      },
+      "composition": {
+       "basis": "mass",
+       "scale": "fraction",
+       "items": [
+       ],
+       "source": "assumed",
+       "rationale": "原文仅提及“甲苯原料”且未给出其他组分，故假设进料为纯甲苯（质量分数1.0）"
+      }
+    }
+  ],
+  "reactor_pressure": {
+    "value": 2.5,
+    "unit": "MPa",
+    "source": "user",
+    "rationale": null
+  ,
+    "basis": "unstated"
+  },
+  "pressure_drop": {
+    "value": 0,
+    "unit": "MPa",
+    "source": "assumed",
+    "rationale": "原文未提供反应器压降信息，默认等压操作"
+  },
+  "cases": [
+    {
+      "name": "case_1",
+      "outlet_temperature": {
+       "value": 380,
+       "unit": "℃",
+       "source": "assumed",
+       "rationale": "原文未指定出口温度或热负荷，假设为等温反应器"
+      },
+      "duty": {
+       "value": 0,
+       "unit": "kW",
+       "source": "assumed",
+       "rationale": "原文未指定热负荷，假设为等温反应器"
+      }
+    }
+  ],
+  "adiabatic_stated": false,
+  "property_package": null,
+  "conversion_metrics": [
+    {
+      "component": "C₇H₈ (甲苯) / 甲苯原料流股中的甲苯总量"
+    }
+  ],
+  "yield_metrics": [],
+  "ratio_metrics": [],
+  "assumptions": [
+    {
+      "field": "feeds",
+      "statement": "进料组成为纯甲苯（质量分数1.0）",
+      "rationale": "原文仅提及“甲苯原料”且未给出其他组分，故假设进料为纯甲苯"
+    },
+    {
+      "field": "cases",
+      "statement": "反应器为等温操作，出口温度为380℃",
+      "rationale": "原文未指定出口温度或热负荷，假设为等温反应器"
+    },
+    {
+      "field": "cases",
+      "statement": "反应器压降为0 MPa",
+      "rationale": "原文未提供反应器压降信息，默认等压操作"
+    },
+    {
+      "field": "reactions",
+      "statement": "二甲苯产物中邻、间、对三种异构体的分布比例按热力学平衡或等摩尔分配处理",
+      "rationale": "原文明确指出不对反应动力学进行深入探讨，且未给出三种异构体的具体选择性或比例"
+    }
+  ],
+  "ambiguities": [
+    "原文未明确说明反应器是等温还是绝热操作。",
+    "原文未给出二甲苯产物中邻、间、对三种异构体的具体分布比例或选择性。",
+    "原文未明确说明转化率是基于摩尔还是质量（通常默认为摩尔转化率）。"
+  ],
+  "missing": [
+    {
+      "field": "feed_composition",
+      "feed_index": 0,
+      "description": "甲苯原料的具体组成（是否含有杂质或其他组分）"
+    },
+    {
+      "field": "reactions",
+      "feed_index": null,
+      "description": "二甲苯产物中邻、间、对三种异构体的具体分布比例或选择性"
+    },
+    {
+      "field": "reactions",
+      "feed_index": null,
+      "description": "转化率的基准（摩尔转化率或质量转化率）"
+    },
+ 
+== gibbs（scenario-3.txt）==
+  Schema 的顶层字段：['feeds', 'reactor_pressure', 'pressure_drop', 'cases', 'adiabatic_stated', 'property_package', 'conversion_metrics', 'yield_metrics', 'ratio_metrics', 'assumptions', 'ambiguities', 'missing', 'product_components']
+  46.5 秒，用量 200+1789，回复 4188 字
+  校验失败（1 处，第一处 ('feeds', 0, 'composition')：Value error, 组成至少要有一个组分；原文没有给组成就写 null）
+  回复：{
+  "feeds": [
+    {
+      "name": "水煤浆",
+      "temperature": {
+       "value": 40,
+       "unit": "摄氏度"
+      ,
+       "source": "user"
+      ,
+       "rationale": null
+      },
+      "pressure": {
+       "value": 40,
+       "unit": "bar"
+      ,
+       "source": "user"
+      ,
+       "rationale": null
+      ,
+       "basis": "absolute"
+      },
+      "flow": {
+       "value": 80000,
+       "unit": "Nm3/h"
+      ,
+       "source": "user"
+      ,
+       "rationale": null
+      },
+      "composition": {
+       "basis": "mass",
+       "scale": "fraction",
+       "items": [
+       ],
+       "source": "user",
+       "rationale": null
+      }
+    }
+  ],
+  "reactor_pressure": {
+    "value": 40,
+    "unit": "bar"
+  ,
+    "source": "user"
+  ,
+    "rationale": null
+  ,
+    "basis": "absolute"
+  },
+  "pressure_drop": {
+    "value": 0,
+    "unit": "bar"
+  ,
+    "source": "assumed"
+  ,
+    "rationale": "原文未给，按无压降假设"
+  },
+  "cases": [
+    {
+      "name": "case1",
+      "outlet_temperature": {
+       "value": 1400,
+       "unit": "度"
+      ,
+       "source": "user"
+      ,
+       "rationale": null
+      }
+    ,
+      "duty": {
+       "value": 0,
+       "unit": "W"
+      ,
+       "source": "assumed"
+      ,
+       "rationale": "指定了出口温度，热负荷由模型计算得出，此处填0占位"
+      }
+    }
+  ],
+  "adiabatic_stated": false,
+  "property_package": null,
+  "conversion_metrics": [
+    {
+      "component": "CO收率（煤炭有多少转化成CO）"
+    }
+  ],
+  "yield_metrics": [],
+  "ratio_metrics": [],
+  "assumptions": [
+    {
+      "field": "reactions",
+      "statement": "主反应：C+H2O → CO+H2；副反应：需考虑（如变换反应、甲烷化等），具体反应式及动力学/平衡参数待补充",
+      "rationale": "用户要求考虑到里面有副反应的情况"
+    },
+    {
+      "field": "feeds",
+      "statement": "进料为煤炭和水，流量80000Nm3/h，压力40bar，浓度62wt%，温度40摄氏度",
+      "rationale": "原文直接给出"
+    },
+    {
+      "field": "cases",
+      "statement": "气化炉出口温度为1400度",
+      "rationale": "原文直接给出"
+    },
+    {
+      "field": "reactions",
+      "statement": "反应器灰分不做考虑",
+      "rationale": "原文直接给出"
+    },
+    {
+      "field": "feeds",
+      "statement": "煤炭的具体元素分析（C、H、O、N、S含量）未知，无法将质量分数转化为摩尔组成",
+      "rationale": "原文未给"
+    },
+    {
+      "field": "feeds",
+      "statement": "流量80000Nm3/h的基准物质不明确（是水煤浆总体积、载气体积还是其他），且与质量浓度62wt%之间的换算关系缺失",
+      "rationale": "原文未给"
+    },
+    {
+      "field": "reactions",
+      "statement": "副反应的具体种类、化学计量数、转化率或平衡常数未知",
+      "rationale": "原文未给"
+    },
+    {
+      "field": "cases",
+      "statement": "出口压力未单独给出，假设等于进口压力40bar",
+      "rationale": "原文未给"
+    },
+    {
+      "field": "cases",
+  
+结论: 见上面每个类的接受情况、校验结果和回复。

@@ -25,7 +25,9 @@ from reactor_agent.spec.selection import SelectionSummary
 # 在这些状态里，事件和诊断要带上正在处理的工况名。
 PER_CASE_STATES = frozenset({WorkflowState.SOLVE, WorkflowState.VERIFY})
 # 这些状态还没有碰过 HYSYS 的 Case，出错时没有什么可以丢弃重建。
-BEFORE_CASE_STATES = frozenset({WorkflowState.SELECT, WorkflowState.SPECIFY})
+BEFORE_CASE_STATES = frozenset(
+    {WorkflowState.SELECT, WorkflowState.SPECIFY, WorkflowState.VALIDATE}
+)
 UNKNOWN_VERSION = "未知"
 SUCCESS_STATUSES = frozenset({TaskStatus.COMPLETE, TaskStatus.COMPLETE_WITH_WARNINGS})
 
@@ -86,6 +88,7 @@ class TaskState(BaseModel):
     spec_hash: str | None = None
     case_names: tuple[str, ...] = ()
     selection: SelectionSummary | None = None
+    spec_rewrites: int = 0
     current_state: WorkflowState = WorkflowState.INIT
     status: TaskStatus | None = None
     steps: tuple[StepRecord, ...] = ()
@@ -154,6 +157,16 @@ class TaskState(BaseModel):
     def record_selection(self, summary: SelectionSummary) -> None:
         """记录选型的结论：类型和它是怎么定的。完整的结果在 artifacts/selection.json。"""
         self.selection = summary
+
+    def count_rewrite(self) -> None:
+        """记一次 TaskSpec 的重写（VALIDATE 把问题清单交回给 SPECIFY）。"""
+        self.spec_rewrites += 1
+
+    def freeze_spec(self, spec_file: Path, spec_hash: str, case_names: tuple[str, ...]) -> None:
+        """规格冻结：记下规格文件、哈希和工况名，之后的状态都按它执行。"""
+        self.spec_file = spec_file
+        self.spec_hash = spec_hash
+        self.case_names = case_names
 
     def set_session(self, version: str, process_id: int | None) -> None:
         """记录连接上的 HYSYS。"""

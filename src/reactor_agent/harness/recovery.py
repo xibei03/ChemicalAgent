@@ -5,13 +5,15 @@
 每个错误码最多重试几次写在这张表里；其余的上限（求解等待、重建次数）在 budgets.py。
 """
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+from enum import StrEnum
 from types import MappingProxyType
 
 from reactor_agent.errors import ErrorCode
-from reactor_agent.harness.budgets import MAX_REBUILDS
+from reactor_agent.harness.budgets import MAX_REBUILDS, MAX_SPEC_REWRITES
 from reactor_agent.spec.enums import RecoveryAction
+from reactor_agent.spec.results import Issue
 
 
 @dataclass(frozen=True)
@@ -60,3 +62,24 @@ def decide(
     if policy.rebuild and case_exists and rebuilds_used < MAX_REBUILDS:
         return RecoveryAction.REBUILD
     return RecoveryAction.ABORT
+
+
+class SpecAction(StrEnum):
+    """规格没有通过校验之后：交回给 LLM 重写、请用户补充或更正、中止。"""
+
+    REWRITE = "rewrite"
+    ASK_USER = "ask_user"
+    ABORT = "abort"
+
+
+def decide_spec(issues: Sequence[Issue], missing_declared: bool, rewrites_used: int) -> SpecAction:
+    """规格没有通过校验之后做什么。
+
+    不可以假设的信息缺失，重写也变不出来，直接请用户补充；否则重写，轮数用完了再看问题出在哪：
+    出在用户给的信息上请用户确认，别的中止。
+    """
+    if missing_declared:
+        return SpecAction.ASK_USER
+    if rewrites_used < MAX_SPEC_REWRITES:
+        return SpecAction.REWRITE
+    return SpecAction.ASK_USER if any(i.user_fixable for i in issues) else SpecAction.ABORT

@@ -1,4 +1,4 @@
-"""求解等待、干净重建和选型重问的上限，写成具名常量。
+"""求解等待、干净重建、选型重问和规格重写的上限，写成具名常量。
 
 各错误码的重试次数在 recovery.py 的策略表里。
 """
@@ -9,3 +9,5 @@ SOLVE_TIMEOUT_S = 120.0
 MAX_REBUILDS = 1
 # 选型时分歧或无效依据的重问次数。只问一次：再问下去，LLM 只是在迎合规则的结论。
 MAX_SELECTION_REASKS = 1
+# VALIDATE 把问题清单交回给 SPECIFY 重写的轮数。再多，LLM 只是在改措辞，信息还是那些。
+MAX_SPEC_REWRITES = 2

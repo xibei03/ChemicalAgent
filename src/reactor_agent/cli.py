@@ -1,8 +1,8 @@
 """命令行入口，也是唯一的装配点：创建具体的 Backend 和 LLM 客户端，连起工具、状态存储和执行器。
 
 reactor-agent run --spec <规格文件>            建模、求解、验证，打印结果摘要
-reactor-agent run --text-file <描述文件>       读一段反应过程的描述，选型（目前到选型为止）
-reactor-agent run --text-file <文件> --dry-run 只选型：打印类型、理由、原文依据和备选，不碰 HYSYS
+reactor-agent run --text-file <描述文件>       读一段反应过程的描述：选型、写规格、建模、求解、验证
+reactor-agent run --text-file <文件> --dry-run 干跑：打印选型、规格、假设和建模步骤，不碰 HYSYS
 reactor-agent trace <task_id>                  打印一次运行的时间线
 
 其他模块都不导入这个文件。HYSYS 的 Backend 和 LLM 供应商在装配函数里才导入，所以没有 HYSYS 或者
@@ -23,6 +23,7 @@ from reactor_agent.backends.base import SimBackend
 from reactor_agent.errors import ErrorCode, ReactorAgentError
 from reactor_agent.harness.engine import Dependencies, Engine, Handler
 from reactor_agent.harness.selection import Selector
+from reactor_agent.harness.specify import Specifier
 from reactor_agent.llm.client import LlmClient, StructuredClient
 from reactor_agent.observability.render import (
     render_failure,
@@ -30,15 +31,22 @@ from reactor_agent.observability.render import (
     render_summary,
     render_timeline,
 )
+from reactor_agent.observability.render_spec import (
+    render_assumptions,
+    render_model_spec,
+    render_plan,
+)
 from reactor_agent.observability.trace import TRACE_FILE, TraceWriter, read_events
 from reactor_agent.recipes import RECIPES
 from reactor_agent.spec.components import load_component_table
 from reactor_agent.spec.enums import TaskStatus, WorkflowState
 from reactor_agent.spec.loading import read_text_file
 from reactor_agent.spec.model_spec import ModelSpec, load_model_spec
+from reactor_agent.spec.plan import BuildPlan
 from reactor_agent.spec.results import RunResult
 from reactor_agent.spec.selection import SelectionResult
 from reactor_agent.spec.settings import LlmSettings, load_settings
+from reactor_agent.spec.units import load_unit_table
 from reactor_agent.state.models import TaskState
 from reactor_agent.state.store import ArtifactName, StateStore
 from reactor_agent.tools.definitions import register_tools
@@ -48,13 +56,11 @@ from reactor_agent.tools.registry import ToolExecutor
 REPO_ROOT = Path(__file__).resolve().parents[2]
 COMPONENTS_FILE = REPO_ROOT / "config" / "components.yaml"
 SETTINGS_FILE = REPO_ROOT / "config" / "settings.yaml"
+UNITS_FILE = REPO_ROOT / "config" / "units.yaml"
 SKILLS_DIR = REPO_ROOT / "skills"
 DEFAULT_RUNS_DIR = REPO_ROOT / "runs"
 # 在没有设置密钥时告诉用户怎么在自己的终端里设置：输入时不回显，密钥只留在这个终端会话里。
-API_KEY_HINT = (
-    "$key = Read-Host -AsSecureString '{variable}'; "
-    "$env:{variable} = [System.Net.NetworkCredential]::new('', $key).Password"
-)
+API_KEY_HINT = "python evals/set_api_key.py（输入一次，测试连通后永久保存，新开的终端就能读到）"
 
 EXIT_OK = 0
 EXIT_FAILED = 1
@@ -138,21 +144,35 @@ class TextRun:
     store: StateStore
 
 
-def build_text_run(llm: LlmClient, runs_dir: Path) -> TextRun:
-    """装配文字描述的运行。没有 Backend：目前只做到选型。"""
+def build_text_run(llm: LlmClient, runs_dir: Path, tools: ToolExecutor | None = None) -> TextRun:
+    """装配文字描述的运行：选型、写规格、校验三个调用 LLM 或规格的状态，加上建模用的工具。
+
+    没有给工具时是空工具集：只能走到建模之前（干跑和评测用），不创建 Backend。
+    """
     store = StateStore(runs_dir)
     trace = TraceWriter(runs_dir)
+    components = load_component_table(COMPONENTS_FILE)
     selector = Selector(llm, store, trace, RECIPES, SKILLS_DIR)
-    handlers = {WorkflowState.SELECT: selector.run}
-    return TextRun(selector, _engine(ToolExecutor({}), store, trace, handlers), store)
+    specifier = Specifier(
+        llm, store, trace, RECIPES, SKILLS_DIR, components, load_unit_table(UNITS_FILE)
+    )
+    handlers = {
+        WorkflowState.SELECT: selector.run,
+        WorkflowState.SPECIFY: specifier.specify,
+        WorkflowState.VALIDATE: specifier.validate,
+    }
+    engine = _engine(tools or ToolExecutor({}), store, trace, handlers)
+    return TextRun(selector, engine, store)
 
 
-def run_text(llm: LlmClient, text: str, runs_dir: Path, *, dry_run: bool) -> int:
-    """选型：打印结果，返回退出码。阶段 2B 之前不会往下走，所以不带 dry_run 时也在这里停下。"""
-    run = build_text_run(llm, runs_dir)
+def run_text(
+    llm: LlmClient, text: str, runs_dir: Path, *, dry_run: bool, tools: ToolExecutor | None = None
+) -> int:
+    """文字描述的任务：干跑停在建模之前（PLAN 之后），否则跑到终态；打印并返回退出码。"""
+    run = build_text_run(llm, runs_dir, tools)
     task = run.selector.create_task(text)
-    run.engine.run(task, stop_at=WorkflowState.SPECIFY)
-    return _print_selection_outcome(run.store, task, dry_run=dry_run)
+    run.engine.run(task, stop_at=WorkflowState.PREFLIGHT if dry_run else None)
+    return _print_text_outcome(run.store, task, dry_run=dry_run)
 
 
 def _text_of(args: argparse.Namespace) -> str:
@@ -177,7 +197,11 @@ def _run_command(args: argparse.Namespace) -> int:
             return run_spec(ToolExecutor(register_tools(backend)), spec, spec_path, runs_dir)
     text = _text_of(args)  # 先读描述，再去连 LLM
     llm = create_llm_client(load_settings(SETTINGS_FILE).llm)
-    return run_text(llm, text, runs_dir, dry_run=args.dry_run)
+    if args.dry_run:
+        return run_text(llm, text, runs_dir, dry_run=True)
+    with _hysys() as backend:
+        tools = ToolExecutor(register_tools(backend))
+        return run_text(llm, text, runs_dir, dry_run=False, tools=tools)
 
 
 def _print_outcome(store: StateStore, task: TaskState) -> int:
@@ -192,23 +216,21 @@ def _print_outcome(store: StateStore, task: TaskState) -> int:
     return EXIT_FAILED if task.status is None else EXIT_CODES[task.status]  # 没走到终态不算成功
 
 
-def _print_selection_outcome(store: StateStore, task: TaskState, *, dry_run: bool) -> int:
-    """打印选型结果和失败诊断（有的话）。到了终态按终态返回，停在选型之后则看是不是 dry-run。"""
-    run_dir = store.run_dir(task.task_id)
+def _print_text_outcome(store: StateStore, task: TaskState, *, dry_run: bool) -> int:
+    """打印选型结论、换算后的规格、假设清单和建模步骤（哪一步有就打印哪一步）；然后按终态返回。"""
     if store.artifact_path(task.task_id, ArtifactName.SELECTION).is_file():
         selection = store.read_artifact(task.task_id, ArtifactName.SELECTION, SelectionResult)
         print(render_selection(selection))
-    spec_path = store.artifact_path(task.task_id, ArtifactName.MODEL_SPEC)
-    report = task.failure_report(run_dir / TRACE_FILE, spec_path)
-    if report is not None:
-        print(render_failure(report), file=sys.stderr)
-    print(f"运行目录：{run_dir}")
-    if task.status is not None:
-        return EXIT_CODES[task.status]
-    if dry_run:
+    if store.artifact_path(task.task_id, ArtifactName.MODEL_SPEC).is_file():
+        spec = store.read_artifact(task.task_id, ArtifactName.MODEL_SPEC, ModelSpec)
+        print(f"\n{render_model_spec(spec)}\n\n{render_assumptions(spec)}")
+    if store.artifact_path(task.task_id, ArtifactName.PLAN).is_file():
+        plan = store.read_artifact(task.task_id, ArtifactName.PLAN, BuildPlan)
+        print(f"\n{render_plan(plan)}")
+    if task.status is None and dry_run:
+        print(f"\n干跑：到建模步骤为止，没有连接 HYSYS。运行目录：{store.run_dir(task.task_id)}")
         return EXIT_OK
-    print("规格生成（阶段 2B）还没有实现，已在选型之后停下，没有建模。", file=sys.stderr)
-    return EXIT_FAILED
+    return _print_outcome(store, task)
 
 
 def _trace_command(args: argparse.Namespace) -> int:

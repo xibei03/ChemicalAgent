@@ -18,7 +18,7 @@ from pydantic import BaseModel
 
 from reactor_agent.errors import ErrorCode, ReactorAgentError
 from reactor_agent.harness.budgets import SOLVE_TIMEOUT_S
-from reactor_agent.harness.failures import ToolStepError, rule_error
+from reactor_agent.harness.failures import ToolStepError, rule_error, terminal_status
 from reactor_agent.harness.recovery import decide
 from reactor_agent.harness.results import read_records, with_record, write_result
 from reactor_agent.observability.trace import EventBody, TraceWriter
@@ -269,8 +269,7 @@ class Engine:
             self._rebuild(task)
             return WorkflowState.PREFLIGHT
         self._preserve_case(task)
-        unsupported = error.code is ErrorCode.UNSUPPORTED
-        return TaskStatus.UNSUPPORTED if unsupported else TaskStatus.FAILED
+        return terminal_status(error)
 
     def _rebuild(self, task: TaskState) -> None:
         """丢弃当前的 Case，计划从头来。关闭失败不拦着：PREFLIGHT 会面对会话的真实状态。"""

@@ -8,7 +8,7 @@ from collections.abc import Sequence
 from pydantic import BaseModel
 
 from reactor_agent.errors import ErrorCode, ReactorAgentError
-from reactor_agent.spec.enums import ToolName
+from reactor_agent.spec.enums import TaskStatus, ToolName
 from reactor_agent.spec.results import Issue, issue_details
 from reactor_agent.spec.tool_results import ToolError
 
@@ -31,3 +31,19 @@ def rule_error(issues: Sequence[Issue]) -> ReactorAgentError:
     unsupported = any(issue.code is ErrorCode.UNSUPPORTED for issue in issues)
     code = ErrorCode.UNSUPPORTED if unsupported else ErrorCode.RULE
     return ReactorAgentError(code, f"规格有 {len(issues)} 处不合规", issue_details(issues))
+
+
+class NeedsInputError(ReactorAgentError):
+    """缺少关键信息，或者用户给的信息有问题：要用户补充或更正，不是系统出错。终态是 NEEDS_INPUT。"""
+
+    def __init__(self, issues: Sequence[Issue]) -> None:
+        asked = [issue for issue in issues if issue.user_fixable] or list(issues)
+        code = asked[0].code if asked else ErrorCode.RULE
+        super().__init__(code, f"需要用户补充或确认 {len(asked)} 处信息", issue_details(asked))
+
+
+def terminal_status(error: ReactorAgentError) -> TaskStatus:
+    """中止时的终态：要用户补充是 NEEDS_INPUT，系统做不了是 UNSUPPORTED，其余是 FAILED。"""
+    if isinstance(error, NeedsInputError):
+        return TaskStatus.NEEDS_INPUT
+    return TaskStatus.UNSUPPORTED if error.code is ErrorCode.UNSUPPORTED else TaskStatus.FAILED
