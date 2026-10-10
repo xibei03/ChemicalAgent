@@ -25,6 +25,8 @@ REACTOR_PRESSURE_PATH = "reactor_pressure"
 # 进料压力比反应器压力低这么多（bar）以内，当作相等；再低就是问题（反应器压力不能高于进料）。
 PRESSURE_TOLERANCE_BAR = 1e-6
 PACKAGE_SEPARATORS = re.compile(r"[\s_\-‐‑‒–—―−]")
+# “Peng-Robinson (PR)”：括号里的缩写和括号外的全名都是同一个包。
+PACKAGE_BRACKETS = re.compile(r"[()\[\]]")
 PACKAGE_NAMES = frozenset({"pr", "pengrobinson", "pengrob", "彭罗宾逊"})
 # 写在物性包名字后面的通用词，去掉再比较：“Peng-Robinson EOS”“PR 状态方程”。
 GENERIC_SUFFIXES = ("equationofstate", "propertypackage", "eos", "状态方程", "物性包", "方程")
@@ -97,18 +99,25 @@ def normalize_cases(ctx: Context, task: TaskSpec) -> CaseSet | None:
 
 
 def _drop_between(ctx: Context, task: TaskSpec) -> float | None:
-    """反应器压力和进料自己的压力都给了：压降是最低的进料压力减去反应器压力。"""
+    """反应器压力和进料自己的压力都给了：压降是最低的进料压力减去反应器压力。
+
+    没有自己压力的进料取反应器压力（见 normalize_feeds），所以有这样的进料时，最低的进料压力
+    就是反应器压力，压降是 0。
+    """
     reactor = task.reactor_pressure
     own = [(i, feed.pressure) for i, feed in enumerate(task.feeds) if feed.pressure is not None]
     if reactor is None or not own:
         return None
+    inherits = len(own) < len(task.feeds)
     # 进料自己的压力的基准假设已经登记在各自的字段上；反应器压力没有被进料用到时，登记在压降上。
-    assume_at = None if len(own) < len(task.feeds) else DROP_PATH
-    reactor_bar = convert_pressure(ctx, reactor, REACTOR_PRESSURE_PATH, assume_at)
-    feed_bars = [convert_pressure(ctx, q, f"feeds[{i}].pressure_bar") for i, q in own]
-    lowest = min((bar for bar in feed_bars if bar is not None), default=None)
-    if reactor_bar is None or lowest is None or None in feed_bars:
+    reactor_bar = convert_pressure(
+        ctx, reactor, REACTOR_PRESSURE_PATH, None if inherits else DROP_PATH
+    )
+    converted = [convert_pressure(ctx, q, f"feeds[{i}].pressure_bar") for i, q in own]
+    feed_bars = [bar for bar in converted if bar is not None]
+    if reactor_bar is None or len(feed_bars) != len(converted):
         return None
+    lowest = min([*feed_bars, reactor_bar] if inherits else feed_bars)
     if lowest < reactor_bar - PRESSURE_TOLERANCE_BAR:
         message = f"反应器压力 {reactor_bar:g} bar 高于进料压力 {lowest:g} bar，压降会是负的"
         ctx.notes.problem(ErrorCode.RULE, DROP_PATH, message, user_fixable=True)
@@ -148,7 +157,7 @@ def check_drop_fits(ctx: Context, drop: float | None, feeds: Sequence[FeedData])
 
 
 def _package_key(text: str) -> str:
-    key = PACKAGE_SEPARATORS.sub("", unicodedata.normalize("NFKC", text).casefold())
+    key = PACKAGE_SEPARATORS.sub("", text.casefold())
     stripped = True
     while stripped:
         stripped = False
@@ -158,12 +167,20 @@ def _package_key(text: str) -> str:
     return key
 
 
+def _is_peng_robinson(text: str) -> bool:
+    """写法的各部分（括号里的缩写算一部分，单独的“方程”“EOS”不算）都是 Peng-Robinson。"""
+    normalized = unicodedata.normalize("NFKC", text)
+    keys = [_package_key(part) for part in PACKAGE_BRACKETS.split(normalized) if part.strip()]
+    named = [key for key in keys if key not in GENERIC_SUFFIXES]
+    return bool(named) and all(key in PACKAGE_NAMES for key in named)
+
+
 def property_package(ctx: Context, requested: str | None) -> PropertyPackage | None:
     """物性包：没有指定取 Peng-Robinson（登记假设，目前唯一验证过的）；指定了别的是问题。"""
     if requested is None:
         reason = "原文没有指定物性包，取 Peng-Robinson（目前唯一验证过的）"
         return ctx.notes.default("property_package", PropertyPackage.PENG_ROBINSON, reason)
-    if _package_key(requested) in PACKAGE_NAMES:
+    if _is_peng_robinson(requested):
         return PropertyPackage.PENG_ROBINSON
     message = f"物性包 {requested!r} 目前不支持，只支持 Peng-Robinson"
     ctx.notes.problem(ErrorCode.RULE, "property_package", message, user_fixable=True)

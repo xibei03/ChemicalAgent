@@ -147,6 +147,15 @@ def test_the_lowest_feed_pressure_gives_the_pressure_drop():
     assert math.isclose(spec.pressure_drop_bar, 15.0)
 
 
+def test_a_feed_without_a_pressure_of_its_own_enters_at_the_reactor_pressure():
+    task = conversion_task(reactor_pressure=pressure(15.0, "bar"))
+    high = task.feeds[0].model_copy(update={"pressure": pressure(20.0, "bar")})
+    bare = task.feeds[0].model_copy(update={"name": "第二股", "pressure": None})
+    spec = spec_of(task.model_copy(update={"feeds": (high, bare)}))
+    assert math.isclose(spec.feeds[1].pressure_bar, 15.0)
+    assert math.isclose(spec.pressure_drop_bar, 0.0, abs_tol=1e-9)
+
+
 def test_a_feed_below_the_reactor_pressure_is_a_problem_even_when_it_is_not_the_first():
     task = conversion_task(reactor_pressure=pressure(20.0, "bar"))
     high = task.feeds[0].model_copy(update={"pressure": pressure(30.0, "bar")})
@@ -288,6 +297,8 @@ def test_the_property_package_defaults_to_peng_robinson_and_the_default_is_an_as
         "PR",
         "PR 状态方程",
         "彭罗宾逊",
+        "Peng-Robinson (PR)",
+        "Peng-Robinson（彭罗宾逊）方程",
     ],
 )
 def test_the_ways_of_writing_peng_robinson_are_the_same_package_and_need_no_assumption(written):
