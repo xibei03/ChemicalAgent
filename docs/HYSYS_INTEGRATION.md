@@ -1037,3 +1037,11 @@ R1 至 R12 在阶段 1A 已经按"已确认"的内容实现，`src/reactor_agent
   - **温度 0 不保证确定**：Q5 本来要测同一个请求重复 3 次是否相同，但思考开着时 3 次里至多只有 1 次完成（第 2 次运行是 [None, None, gibbs]），**“3 次的 JSON 完全相同”或“不完全相同”都不能当作证据**。真正的证据来自评测：同一个输入（场景 1）温度 0、关闭思考重复 5 次，`black_box_system` 有 4 次为是、1 次为否——输出会变。所以选型不能依赖单次抽取的稳定，要靠 Skill 里明确的定义和规则与推荐的对照。
 - **结论**：①供应商实现用 openai SDK、`temperature=0`、`response_format=json_schema`（strict）、`extra_body={"enable_thinking": False}`，**关闭思考是必须的**（否则 60 秒的超时下每次都失败）；②SDK 自带的重试 2 次，加 10 秒的连接超时；③SDK 的各种异常（`APIStatusError`、`APITimeoutError`、`APIConnectionError`）在供应商里统一转成 `E_LLM`，消息里带状态码、不带密钥；④`json_object` 加提示里写 Schema 的退路验证过也能用，但目前不需要。**没有测试**：流式输出、429 限流时的表现（评测 41 次调用没有遇到）、另外两个模型（`qwen3.8-flash`、`qwen3.7-plus`）的 `json_schema`。
 - **脚本与输出**：`spikes/e18_llm_structured.py`；`spikes/out/e18_llm_structured_run2.txt`。
+
+### L40 E19：TaskSpec 的 JSON Schema 能不能被 strict 的 json_schema 接受，模型看得见字段说明吗（2026-10-10，2B）
+
+- **目的**：2B 的 `TaskSpec` 比选型的 `SelectionDraft` 嵌套更深（进料 → 组成 → 各项；反应 → 拆分产物 → 配比），要先确认百炼的 strict 模式照样接受，再把客户端和 Skill 建在它上面；L39 只验证过 `SelectionDraft`。
+- **做法**：`spikes/e19_taskspec_schema.py`，用转化、平衡、Gibbs 三个 `TaskSpec` 类各自的 JSON Schema（`$defs`、`anyOf` 加 null、枚举、数组的数组，没有 `default`、`minLength`、联合、`Literal`），一个只有一句话的系统提示，加三个场景的原文，主模型 `qwen3.8-max`，温度 0，关闭思考。用户在终端里用 `evals/set_api_key.py` 保存的密钥，由助手的进程从用户级环境变量读入后运行（输出里没有密钥）。
+- **结果**：①**三个 Schema 都被接受**（没有 400），回复是合法的 JSON，用时 38 至 58 秒、回复 1400 至 2100 个 token（没有字段说明和 Skill，模型写了很长的理由）。②**提示的 token 数只有 200 至 234**，也就是 Schema 和字段的 `description` 没有进入模型看得见的提示（与 L39 一致）：模型靠 Schema 的约束解码，看不见字段说明，所以字段说明必须由代码渲染进上下文（`llm/schema_guide.py`）。③没有字段说明时，三次回复的 `composition.items` 都是空数组，进料被拆成两股，把流量乘进了摩尔比（做了算术），把“进料压力”和“出口压力”混在一起，给 `duty` 写了值为 0 的假设；这些正是字段说明和 Skill 要纠正的。④回复的 JSON 格式有多余的换行和逗号位置（约束解码的语法允许任意空白），不影响解析。
+- **结论**：①strict 的 `json_schema` 接受这一类嵌套结构，不需要退回 `json_object`；②字段说明和约定一定要放进提示（系统提示里的字段说明、Skill、组分命名参考）；③“数组写成空”是约束解码下常见的偷懒方式，校验放在代码里（不在 Field 约束里），并且空的 `items` 不是 E_LLM 的硬失败，而是规范化的一个问题，进入重写回路。
+- **脚本与输出**：`spikes/e19_taskspec_schema.py`；`spikes/out/e19_taskspec_schema_run1.txt`。
