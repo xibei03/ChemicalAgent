@@ -3,6 +3,9 @@
 纯函数，输出文本，不打印。数字都是代码从规格里取出来格式化的，不经过 LLM。
 """
 
+from collections.abc import Mapping
+from types import MappingProxyType
+
 from reactor_agent.spec.enums import HeatMode, KeqSource
 from reactor_agent.spec.model_spec import ConversionMetric, ModelSpec, RatioMetric, YieldMetric
 from reactor_agent.spec.plan import BuildPlan, BuildStep
@@ -18,11 +21,13 @@ from reactor_agent.spec.tool_args import (
 )
 
 INDENT = "  "
-HEAT_MODE_TEXT = {
-    HeatMode.SPECIFIED_OUTLET_TEMPERATURE: "规定出口温度",
-    HeatMode.ADIABATIC: "绝热",
-    HeatMode.SPECIFIED_DUTY: "规定热负荷",
-}
+HEAT_MODE_TEXT: Mapping[HeatMode, str] = MappingProxyType(
+    {
+        HeatMode.SPECIFIED_OUTLET_TEMPERATURE: "规定出口温度",
+        HeatMode.ADIABATIC: "绝热",
+        HeatMode.SPECIFIED_DUTY: "规定热负荷",
+    }
+)
 
 
 def _g(value: float) -> str:

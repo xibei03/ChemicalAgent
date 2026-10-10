@@ -1,8 +1,14 @@
 """执行器里失败的两种来源：工具调用失败时带上的工具名和入参，规格没有通过规则时用哪个错误码。"""
 
 from reactor_agent.errors import ErrorCode, ReactorAgentError
-from reactor_agent.harness.failures import MAX_ARGUMENTS_CHARS, ToolStepError, rule_error
-from reactor_agent.spec.enums import ToolName
+from reactor_agent.harness.failures import (
+    MAX_ARGUMENTS_CHARS,
+    NeedsInputError,
+    ToolStepError,
+    rule_error,
+    terminal_status,
+)
+from reactor_agent.spec.enums import TaskStatus, ToolName
 from reactor_agent.spec.results import make_issue
 from reactor_agent.spec.tool_args import EnsureCaseArgs, EnsureThermoArgs
 from reactor_agent.spec.tool_results import ToolError
@@ -52,3 +58,30 @@ def test_one_unsupported_issue_makes_the_whole_error_unsupported():
     )
     assert error.code is ErrorCode.UNSUPPORTED
     assert dict(error.details) == {"feeds": "a", "x": "b"}
+
+
+# ---- 需要用户补充或确认 ----
+
+
+def test_a_needs_input_error_lists_what_the_user_can_fix_and_what_the_system_cannot_do():
+    error = NeedsInputError(
+        [
+            make_issue(ErrorCode.RULE, "feeds[0].temperature_c", "没有给", user_fixable=True),
+            make_issue(ErrorCode.SCHEMA, "feeds[0].flow", "LLM 写法上的问题"),
+            make_issue(ErrorCode.UNSUPPORTED, "reactions[0]", "不支持串联"),
+        ]
+    )
+    assert error.code is ErrorCode.RULE and "1 处" in error.message
+    assert dict(error.details) == {
+        "feeds[0].temperature_c": "没有给",
+        "reactions[0]": "系统暂不支持：不支持串联",
+    }
+
+
+def test_the_terminal_status_tells_apart_asking_the_user_from_unsupported_and_failed():
+    ask = NeedsInputError([make_issue(ErrorCode.RULE, "x", "y", user_fixable=True)])
+    assert terminal_status(ask) is TaskStatus.NEEDS_INPUT
+    assert terminal_status(rule_error([make_issue(ErrorCode.UNSUPPORTED, "x", "y")])) is (
+        TaskStatus.UNSUPPORTED
+    )
+    assert terminal_status(rule_error([make_issue(ErrorCode.RULE, "x", "y")])) is TaskStatus.FAILED

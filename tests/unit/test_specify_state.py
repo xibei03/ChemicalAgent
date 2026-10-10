@@ -11,7 +11,8 @@ from fake_llm import FakeLlm
 from reactor_agent import cli
 from reactor_agent.errors import ErrorCode, ReactorAgentError
 from reactor_agent.harness.budgets import MAX_SPEC_REWRITES
-from reactor_agent.observability.trace import TRACE_FILE, read_events
+from reactor_agent.observability.render import render_failure, render_timeline
+from reactor_agent.observability.trace import SPEC_ISSUES_EVENT, TRACE_FILE, read_events
 from reactor_agent.spec.enums import (
     CallPoint,
     Checkpoint,
@@ -23,9 +24,18 @@ from reactor_agent.spec.enums import (
 from reactor_agent.spec.model_spec import ModelSpec, load_model_spec, spec_hash
 from reactor_agent.spec.results import SpecIssues
 from reactor_agent.spec.selection import FeatureName as F
-from reactor_agent.spec.task_spec import ConversionTaskSpec, MissingField, MissingItem
+from reactor_agent.spec.task_spec import (
+    AmountScale,
+    CompositionBasis,
+    CompositionTask,
+    ConversionTaskSpec,
+    MissingField,
+    MissingItem,
+    Source,
+)
 from reactor_agent.state.models import TaskState
 from reactor_agent.state.store import ArtifactName, StateStore
+from reactor_agent.tools.registry import ToolExecutor
 from selection_builders import evidence_text, make_draft, make_features
 from task_builders import composition, conversion_reaction, conversion_task, feed, q, split
 
@@ -70,7 +80,7 @@ class Run:
         self, tmp_path: Path, replies: list, stop_at: WorkflowState | None, text: str = TEXT
     ) -> None:
         self.llm = FakeLlm(replies)
-        built = cli.build_text_run(self.llm, tmp_path)
+        built = cli.build_text_run(self.llm, tmp_path, ToolExecutor({}))
         self.store: StateStore = built.store
         self.task: TaskState = built.selector.create_task(text)
         built.engine.run(self.task, stop_at=stop_at)
@@ -145,16 +155,18 @@ def test_a_rewrite_gets_the_previous_task_spec_and_the_issues_and_then_passes(tm
     assert "你上一次写的 TaskSpec" not in first_user
     assert "你上一次写的 TaskSpec" in rewrite_user and "feeds[0].flow" in rewrite_user
     assert "不要替用户改" in rewrite_user and TEXT in rewrite_user
-    issues = [e for e in run.events if e.name == "spec_issues"]
-    assert len(issues) == 1 and isinstance(issues[0].output, dict)
-    assert issues[0].output["rewrites_used"] == 0
+    issues = [e for e in run.events if e.name == SPEC_ISSUES_EVENT]
+    assert len(issues) == 1
+    assert SpecIssues.model_validate(issues[0].output).rewrites_used == 0
     assert run.issues().rewrites_used == 0 and run.issues().issues[0].field_path == "feeds[0].flow"
 
 
-def test_the_issue_list_is_saved_for_the_next_round_and_in_the_trace(tmp_path):
+def test_the_issue_list_in_the_trace_is_the_one_saved_for_the_next_round(tmp_path):
     run = specify(tmp_path, without_flow(), conversion_task())
-    sent = next(e for e in run.events if e.name == "spec_issues")
+    sent = next(e for e in run.events if e.name == SPEC_ISSUES_EVENT)
     assert sent.state is WorkflowState.VALIDATE
+    assert SpecIssues.model_validate(sent.output) == run.issues()
+    assert run.issues().issues[0].field_path == "feeds[0].flow"
 
 
 # ---- 轮数用完 ----
@@ -181,10 +193,16 @@ def test_problems_in_what_the_user_gave_end_in_needs_input_after_the_rewrites(tm
     assert run.task.current_state is WorkflowState.VALIDATE
 
 
-def test_something_the_system_cannot_do_ends_in_unsupported(tmp_path):
+def test_something_the_system_cannot_do_is_rewritten_like_any_problem_then_ends_in_unsupported(
+    tmp_path,
+):
+    # 系统不支持的问题里，有的是 LLM 写法造成的（比如把固体写成了候选产物），重写能解决；
+    # 所以和别的问题一样交回去重写，轮数用完了才以 UNSUPPORTED 结束。
     run = specify(tmp_path, *[chained()] * (MAX_SPEC_REWRITES + 1), text=CHAIN_TEXT)
     assert run.task.status is TaskStatus.UNSUPPORTED
     assert run.task.errors[-1].code is ErrorCode.UNSUPPORTED
+    assert run.llm.calls == 1 + MAX_SPEC_REWRITES + 1
+    assert "reactions[0]" in run.task.errors[-1].details
 
 
 def test_a_second_attempt_that_fixes_the_problem_stops_the_rewriting(tmp_path):
@@ -244,8 +262,6 @@ def test_a_feed_with_no_pressure_anywhere_is_a_missing_pressure_problem(tmp_path
 
 
 def test_the_timeline_shows_the_spec_issues_and_the_llm_calls(tmp_path):
-    from reactor_agent.observability.render import render_timeline
-
     run = specify(tmp_path, without_flow(), conversion_task())
     text = render_timeline(run.events)
     assert "规格有 1 个问题（已重写 0 轮）" in text
@@ -253,8 +269,6 @@ def test_the_timeline_shows_the_spec_issues_and_the_llm_calls(tmp_path):
 
 
 def test_a_needs_input_task_prints_what_to_supply_and_not_retries(tmp_path):
-    from reactor_agent.observability.render import render_failure
-
     run = specify(tmp_path, *[conversion_with(120.0)] * (MAX_SPEC_REWRITES + 1))
     report = run.task.failure_report(
         run.run_dir / "trace.jsonl",
@@ -267,9 +281,13 @@ def test_a_needs_input_task_prints_what_to_supply_and_not_retries(tmp_path):
 
 
 def test_a_declared_missing_composition_that_was_filled_in_anyway_is_rewritten(tmp_path):
-    from reactor_agent.spec.task_spec import CompositionTask
-
-    empty = CompositionTask(basis="mole", scale="ratio", items=(), source="user", rationale=None)
+    empty = CompositionTask(
+        basis=CompositionBasis.MOLE,
+        scale=AmountScale.RATIO,
+        items=(),
+        source=Source.USER,
+        rationale=None,
+    )
     first = (
         conversion_task().feeds[0].model_copy(update={"pure_component": None, "composition": empty})
     )

@@ -13,6 +13,7 @@ from reactor_agent.cli import EXIT_FAILED, EXIT_OK, EXIT_UNSUPPORTED, main, run_
 from reactor_agent.errors import ErrorCode, ReactorAgentError
 from reactor_agent.spec.enums import ReactorType
 from reactor_agent.spec.selection import FeatureName as F
+from reactor_agent.tools.registry import ToolExecutor
 from selection_builders import evidence_text, make_draft, make_features
 from task_builders import conversion_task, equilibrium_task
 
@@ -35,7 +36,7 @@ def only_run(runs_dir):
 
 
 def test_a_dry_run_prints_the_type_the_reasons_the_evidence_and_the_alternatives(tmp_path, capsys):
-    code = run_text(equilibrium_llm(), TEXT, tmp_path, dry_run=True)
+    code = run_text(equilibrium_llm(), TEXT, tmp_path, ToolExecutor({}), dry_run=True)
     out = capsys.readouterr().out
     assert code == EXIT_OK
     assert "选型结论：Equilibrium" in out and "规则的推导" in out and "LLM 的理由" in out
@@ -46,7 +47,7 @@ def test_a_dry_run_prints_the_type_the_reasons_the_evidence_and_the_alternatives
 
 
 def test_a_dry_run_stops_before_any_tool_is_called_and_ends_at_the_plan(tmp_path):
-    run = cli.build_text_run(equilibrium_llm(), tmp_path)
+    run = cli.build_text_run(equilibrium_llm(), tmp_path, ToolExecutor({}))
     task = run.selector.create_task(TEXT)
     run.engine.run(task, stop_at=cli.WorkflowState.PREFLIGHT)
     assert task.status is None and task.current_state is cli.WorkflowState.PREFLIGHT
@@ -57,7 +58,7 @@ def test_without_dry_run_the_task_goes_on_to_the_tools_and_completes(tmp_path, c
     scenario = conversion_scenario()
     llm = FakeLlm([make_draft(CONVERSION_FEATURES, ReactorType.CONVERSION), conversion_task()])
     tools = FakeTools([scenario.snapshot])
-    code = run_text(llm, CONVERSION_TEXT, tmp_path, dry_run=False, tools=tools)
+    code = run_text(llm, CONVERSION_TEXT, tmp_path, tools, dry_run=False)
     out = capsys.readouterr().out
     assert code == EXIT_OK
     assert "选型结论：Conversion" in out and "complete" in out
@@ -69,7 +70,7 @@ def test_a_request_that_is_not_a_reaction_prints_the_selection_and_exits_unsuppo
 ):
     features = make_features(reaction_process=False)
     llm = FakeLlm([make_draft(features, None)])
-    code = run_text(llm, "请模拟一座精馏塔", tmp_path, dry_run=True)
+    code = run_text(llm, "请模拟一座精馏塔", tmp_path, ToolExecutor({}), dry_run=True)
     captured = capsys.readouterr()
     assert code == EXIT_UNSUPPORTED
     assert "选型结论：无" in captured.out
@@ -183,7 +184,7 @@ def test_exactly_one_source_of_input_is_required(arguments, capsys):
 
 def test_an_llm_failure_prints_the_diagnosis_and_exits_non_zero(tmp_path, capsys):
     llm = FakeLlm([ReactorAgentError(ErrorCode.LLM, "网络不通")])
-    code = run_text(llm, TEXT, tmp_path, dry_run=True)
+    code = run_text(llm, TEXT, tmp_path, ToolExecutor({}), dry_run=True)
     captured = capsys.readouterr()
     assert code == EXIT_FAILED
     assert "E_LLM" in captured.err and "网络不通" in captured.err

@@ -16,10 +16,12 @@ from reactor_agent.spec.base import FrozenModel
 from reactor_agent.spec.enums import CheckId, Checkpoint, EventType, TaskStatus, WorkflowState
 from reactor_agent.spec.llm import LlmCallSummary
 from reactor_agent.spec.loading import parse_model, read_utf8
-from reactor_agent.spec.results import Issue
+from reactor_agent.spec.results import Issue, SpecIssues
 from reactor_agent.spec.selection import SelectionResult
 
 TRACE_FILE = "trace.jsonl"
+# 规格校验没通过的事件名；事件的 output 是 SpecIssues。
+SPEC_ISSUES_EVENT = "spec_issues"
 
 
 class EventBody(FrozenModel):
@@ -144,20 +146,8 @@ def selection_saved_event(result: SelectionResult) -> EventBody:
 
 
 def spec_issues_event(issues: Sequence[Issue], rewrites_used: int) -> EventBody:
-    """VALIDATE 没通过：问题清单和已经重写了几轮。"""
+    """VALIDATE 没通过：问题清单和已经重写了几轮（output 是 SpecIssues）。"""
+    saved = SpecIssues(rewrites_used=rewrites_used, issues=tuple(issues))
     return EventBody(
-        type=EventType.VALIDATION,
-        name="spec_issues",
-        output={
-            "rewrites_used": rewrites_used,
-            "issues": [
-                {
-                    "code": issue.code.value,
-                    "field_path": issue.field_path,
-                    "message": issue.message,
-                    "user_fixable": issue.user_fixable,
-                }
-                for issue in issues
-            ],
-        },
+        type=EventType.VALIDATION, name=SPEC_ISSUES_EVENT, output=saved.model_dump(mode="json")
     )

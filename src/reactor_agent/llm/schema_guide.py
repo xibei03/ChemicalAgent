@@ -6,12 +6,16 @@ Schema），所以字段的 description 模型是看不见的。这里把它们�
 """
 
 import types
+from collections.abc import Mapping
 from enum import Enum
+from types import MappingProxyType
 from typing import Union, get_args, get_origin
 
 from pydantic import BaseModel
 
-TYPE_NAMES: dict[type, str] = {str: "文字", float: "数", int: "整数", bool: "是/否"}
+TYPE_NAMES: Mapping[type, str] = MappingProxyType(
+    {str: "文字", float: "数", int: "整数", bool: "是/否"}
+)
 NULL_TEXT = "null"
 
 

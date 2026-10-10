@@ -7,10 +7,16 @@ from collections.abc import Mapping, Sequence
 from itertools import groupby
 
 from reactor_agent.errors import ErrorCode
-from reactor_agent.observability.trace import TraceEvent
+from reactor_agent.observability.trace import SPEC_ISSUES_EVENT, TraceEvent
 from reactor_agent.spec.enums import EventType, MetricUnit, TaskStatus
 from reactor_agent.spec.llm import LlmCallSummary
-from reactor_agent.spec.results import FailureReport, NormalizedResult, RunResult, StreamResult
+from reactor_agent.spec.results import (
+    FailureReport,
+    NormalizedResult,
+    RunResult,
+    SpecIssues,
+    StreamResult,
+)
 from reactor_agent.spec.selection import REACTOR_NAMES, Decision, SelectionResult
 
 LABEL_WIDTH = 18
@@ -68,14 +74,12 @@ def _llm_text(point: str, call: LlmCallSummary, duration_ms: int | None) -> str:
 
 def _spec_issues_text(event: TraceEvent) -> str:
     """规格校验没通过：几个问题，已经重写了几轮。"""
-    output = event.output if isinstance(event.output, dict) else {}
-    issues = output.get("issues")
-    count = len(issues) if isinstance(issues, list) else 0
-    return f"规格有 {count} 个问题（已重写 {output.get('rewrites_used', 0)} 轮）"
+    found = SpecIssues.model_validate(event.output)
+    return f"规格有 {len(found.issues)} 个问题（已重写 {found.rewrites_used} 轮）"
 
 
 def _validation_text(event: TraceEvent) -> str:
-    if event.name == "spec_issues":
+    if event.name == SPEC_ISSUES_EVENT:
         return _spec_issues_text(event)
     if not event.verdict:
         return "（没有检查结果）"

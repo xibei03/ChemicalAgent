@@ -3,8 +3,10 @@
 import pytest
 
 from reactor_agent.errors import RETRYABLE_ERROR_CODES, ErrorCode
-from reactor_agent.harness.recovery import ABORT_ONLY, POLICIES, decide
+from reactor_agent.harness.budgets import MAX_SPEC_REWRITES
+from reactor_agent.harness.recovery import ABORT_ONLY, POLICIES, SpecAction, decide, decide_spec
 from reactor_agent.spec.enums import RecoveryAction
+from reactor_agent.spec.results import make_issue
 
 RETRY = RecoveryAction.RETRY
 REBUILD = RecoveryAction.REBUILD
@@ -80,3 +82,30 @@ def test_nothing_is_rebuilt_before_a_case_exists(code):
     assert decide(code, retries, 0, case_exists=False) is ABORT
     if retries:
         assert decide(code, 0, 0, case_exists=False) is RETRY
+
+
+# ---- 规格没有通过校验之后 ----
+
+FIXABLE = make_issue(ErrorCode.RULE, "feeds[0].temperature_c", "没有给", user_fixable=True)
+NOT_FIXABLE = make_issue(ErrorCode.SCHEMA, "feeds[0].flow", "没有流量")
+UNSUPPORTED = make_issue(ErrorCode.UNSUPPORTED, "reactions[0]", "不支持")
+
+
+@pytest.mark.parametrize("used", range(MAX_SPEC_REWRITES + 1))
+def test_missing_information_that_cannot_be_assumed_asks_the_user_at_once(used):
+    assert decide_spec([NOT_FIXABLE], True, used) is SpecAction.ASK_USER
+
+
+@pytest.mark.parametrize("issue", [FIXABLE, NOT_FIXABLE, UNSUPPORTED])
+def test_every_problem_is_sent_back_for_a_rewrite_while_rounds_remain(issue):
+    for used in range(MAX_SPEC_REWRITES):
+        assert decide_spec([issue], False, used) is SpecAction.REWRITE
+
+
+def test_when_the_rounds_are_used_up_a_problem_in_what_the_user_gave_asks_the_user():
+    assert decide_spec([NOT_FIXABLE, FIXABLE], False, MAX_SPEC_REWRITES) is SpecAction.ASK_USER
+
+
+@pytest.mark.parametrize("issues", [[NOT_FIXABLE], [UNSUPPORTED], [NOT_FIXABLE, UNSUPPORTED]])
+def test_when_the_rounds_are_used_up_nothing_the_user_can_fix_aborts(issues):
+    assert decide_spec(issues, False, MAX_SPEC_REWRITES) is SpecAction.ABORT

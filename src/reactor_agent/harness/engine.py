@@ -75,7 +75,7 @@ class Dependencies:
     trace: TraceWriter
     recipes: Mapping[ReactorType, ReactorRecipe]
     components: ComponentTable
-    # 除了规格文件开始的任务要走的这几个状态之外，别的状态的处理函数（SELECT，之后还有 SPECIFY）。
+    # 从文字描述开始的任务多出来的状态（SELECT、SPECIFY、VALIDATE）的处理函数。
     extra_handlers: Mapping[WorkflowState, Handler] = field(default_factory=dict)
 
 

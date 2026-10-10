@@ -38,7 +38,7 @@ from reactor_agent.observability.render_spec import (
 )
 from reactor_agent.observability.trace import TRACE_FILE, TraceWriter, read_events
 from reactor_agent.recipes import RECIPES
-from reactor_agent.spec.components import load_component_table
+from reactor_agent.spec.components import ComponentTable, load_component_table
 from reactor_agent.spec.enums import TaskStatus, WorkflowState
 from reactor_agent.spec.loading import read_text_file
 from reactor_agent.spec.model_spec import ModelSpec, load_model_spec
@@ -113,6 +113,7 @@ def _engine(
     tools: ToolExecutor,
     store: StateStore,
     trace: TraceWriter,
+    components: ComponentTable,
     handlers: Mapping[WorkflowState, Handler],
 ) -> Engine:
     deps = Dependencies(
@@ -120,7 +121,7 @@ def _engine(
         store=store,
         trace=trace,
         recipes=RECIPES,
-        components=load_component_table(COMPONENTS_FILE),
+        components=components,
         extra_handlers=handlers,
     )
     return Engine(deps)
@@ -129,7 +130,8 @@ def _engine(
 def run_spec(tools: ToolExecutor, spec: ModelSpec, spec_path: Path, runs_dir: Path) -> int:
     """用这些工具把一份规格跑到终态，打印结果，返回退出码。"""
     store = StateStore(runs_dir)
-    engine = _engine(tools, store, TraceWriter(runs_dir), handlers={})
+    components = load_component_table(COMPONENTS_FILE)
+    engine = _engine(tools, store, TraceWriter(runs_dir), components, handlers={})
     task = engine.create_task(spec, spec_path)
     engine.run(task)
     return _print_outcome(store, task)
@@ -144,10 +146,10 @@ class TextRun:
     store: StateStore
 
 
-def build_text_run(llm: LlmClient, runs_dir: Path, tools: ToolExecutor | None = None) -> TextRun:
+def build_text_run(llm: LlmClient, runs_dir: Path, tools: ToolExecutor) -> TextRun:
     """装配文字描述的运行：选型、写规格、校验三个调用 LLM 或规格的状态，加上建模用的工具。
 
-    没有给工具时是空工具集：只能走到建模之前（干跑和评测用），不创建 Backend。
+    干跑和评测只走到建模之前，传空的 ToolExecutor，不创建 Backend。
     """
     store = StateStore(runs_dir)
     trace = TraceWriter(runs_dir)
@@ -161,12 +163,12 @@ def build_text_run(llm: LlmClient, runs_dir: Path, tools: ToolExecutor | None = 
         WorkflowState.SPECIFY: specifier.specify,
         WorkflowState.VALIDATE: specifier.validate,
     }
-    engine = _engine(tools or ToolExecutor({}), store, trace, handlers)
+    engine = _engine(tools, store, trace, components, handlers)
     return TextRun(selector, engine, store)
 
 
 def run_text(
-    llm: LlmClient, text: str, runs_dir: Path, *, dry_run: bool, tools: ToolExecutor | None = None
+    llm: LlmClient, text: str, runs_dir: Path, tools: ToolExecutor, *, dry_run: bool
 ) -> int:
     """文字描述的任务：干跑停在建模之前（PLAN 之后），否则跑到终态；打印并返回退出码。"""
     run = build_text_run(llm, runs_dir, tools)
@@ -198,10 +200,10 @@ def _run_command(args: argparse.Namespace) -> int:
     text = _text_of(args)  # 先读描述，再去连 LLM
     llm = create_llm_client(load_settings(SETTINGS_FILE).llm)
     if args.dry_run:
-        return run_text(llm, text, runs_dir, dry_run=True)
+        return run_text(llm, text, runs_dir, ToolExecutor({}), dry_run=True)  # 干跑不创建 Backend
     with _hysys() as backend:
         tools = ToolExecutor(register_tools(backend))
-        return run_text(llm, text, runs_dir, dry_run=False, tools=tools)
+        return run_text(llm, text, runs_dir, tools, dry_run=False)
 
 
 def _print_outcome(store: StateStore, task: TaskState) -> int:
@@ -253,7 +255,9 @@ def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="reactor-agent", description="自然语言驱动的反应器建模")
     commands = parser.add_subparsers(dest="command", required=True)
     runs_help = f"运行目录的位置（默认 {DEFAULT_RUNS_DIR}）"
-    run = commands.add_parser("run", help="按规格文件建模，或者读一段描述做选型")
+    run = commands.add_parser(
+        "run", help="按规格文件建模，或者读一段描述：选型、写规格、建模、验证"
+    )
     source = run.add_mutually_exclusive_group(required=True)
     source.add_argument("--spec", help="规格文件（YAML 或 JSON，包括某次运行的 model_spec.json）")
     source.add_argument("--text-file", help="一段反应过程的描述，UTF-8 编码的文本文件")
@@ -265,7 +269,7 @@ def _parser() -> argparse.ArgumentParser:
     run.add_argument(
         "--dry-run",
         action="store_true",
-        help="只选型，打印结果后停下，不碰 HYSYS（只用于文字描述）",
+        help="干跑：选型、写规格、列出建模步骤，打印后停下，不碰 HYSYS（只用于文字描述）",
     )
     run.add_argument("--runs-dir", default=str(DEFAULT_RUNS_DIR), help=runs_help)
     trace = commands.add_parser("trace", help="打印一次运行的时间线")

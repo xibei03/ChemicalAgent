@@ -31,17 +31,20 @@ from reactor_agent.cli import (
 )
 from reactor_agent.errors import ReactorAgentError
 from reactor_agent.harness.selection import SELECTION_SKILL
+from reactor_agent.harness.specify import MODELING_SKILL
 from reactor_agent.llm.client import LlmClient
-from reactor_agent.observability.trace import TRACE_FILE, read_events
+from reactor_agent.observability.trace import SPEC_ISSUES_EVENT, TRACE_FILE, read_events
 from reactor_agent.skill_loader import Skill, load_rules, load_skill
 from reactor_agent.spec.enums import WorkflowState
 from reactor_agent.spec.llm import LlmCallRecord
 from reactor_agent.spec.model_spec import ModelSpec
+from reactor_agent.spec.results import SpecIssues
 from reactor_agent.spec.selection import SelectionDraft, SelectionResult, SelectionRules
 from reactor_agent.spec.selection_rules import check_rules
 from reactor_agent.spec.settings import LlmSettings, load_settings
 from reactor_agent.state.models import TaskState
 from reactor_agent.state.store import ArtifactName, StateStore
+from reactor_agent.tools.registry import ToolExecutor
 
 CASES_DIR = REPO_ROOT / "evals" / "cases"
 DEFAULT_OUTPUT = REPO_ROOT / "docs" / "EVAL_RESULTS.md"
@@ -61,13 +64,9 @@ def spec_record_of(task: TaskState, store: StateStore) -> SpecRecord:
     if store.artifact_path(task.task_id, ArtifactName.MODEL_SPEC).is_file():
         spec = store.read_artifact(task.task_id, ArtifactName.MODEL_SPEC, ModelSpec)
     events = read_events(store.run_dir(task.task_id) / TRACE_FILE)
-    first = next((e for e in events if e.name == "spec_issues"), None)
-    listed = first.output.get("issues", []) if first and isinstance(first.output, dict) else []
-    issues = tuple(
-        IssueKey(code=item["code"], field_path=item["field_path"])
-        for item in listed
-        if isinstance(item, dict)
-    )
+    first = next((e for e in events if e.name == SPEC_ISSUES_EVENT), None)
+    listed = SpecIssues.model_validate(first.output).issues if first is not None else ()
+    issues = tuple(IssueKey(code=item.code, field_path=item.field_path) for item in listed)
     stopped = task.status in STOPPED and bool(task.errors)
     paths = tuple(task.errors[-1].details) if stopped else ()
     return SpecRecord(
@@ -118,7 +117,7 @@ def run_one(
     llm: LlmClient, case: EvalCase, repeat: int, runs_dir: Path, rules: SelectionRules
 ) -> RunRecord:
     """跑一次选型（有期望参数或期望问题的用例接着写规格），返回打分需要的记录。"""
-    run = build_text_run(llm, runs_dir)
+    run = build_text_run(llm, runs_dir, ToolExecutor({}))
     started = time.monotonic()
     task = run.selector.create_task(case.input)
     stop_at = WorkflowState.PREFLIGHT if case.runs_spec else WorkflowState.SPECIFY
@@ -172,11 +171,15 @@ def git_state() -> str:
     return f"{git('rev-parse', '--short', 'HEAD')}{dirty}"
 
 
-def metadata(settings: LlmSettings, skill: Skill, runs_dir: Path) -> dict[str, str]:
-    """写进结果文件开头的信息：模型、Skill 的版本和哈希、提交、时间、运行目录。"""
+def describe_skill(skill: Skill) -> str:
+    return f"{skill.name} {skill.version}（内容哈希 {skill.content_hash[:12]}）"
+
+
+def metadata(settings: LlmSettings, skills: list[Skill], runs_dir: Path) -> dict[str, str]:
+    """写进结果文件开头的信息：模型、各个 Skill 的版本和哈希、提交、时间、运行目录。"""
     return {
         "模型": settings.model,
-        "Skill": f"{skill.name} {skill.version}（内容哈希 {skill.content_hash[:12]}）",
+        "Skill": "；".join(describe_skill(skill) for skill in skills),
         "提交": git_state(),
         "时间": datetime.now().astimezone().strftime("%Y-%m-%d %H:%M:%S %z"),
         "运行目录": runs_dir.relative_to(REPO_ROOT).as_posix(),
@@ -217,11 +220,12 @@ def main() -> int:
     if args.repeats:
         cases = [c.model_copy(update={"repeats": min(c.repeats, args.repeats)}) for c in cases]
     skill = load_skill(SKILLS_DIR, SELECTION_SKILL)
+    modeling = load_skill(SKILLS_DIR, MODELING_SKILL)
     runs_dir = REPO_ROOT / "runs" / f"evals-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
     runs_dir.mkdir(parents=True)
     records = run_all(llm, cases, runs_dir, load_rules(skill, SelectionRules))
     output = output_file(args.output, runs_dir, partial=wanted is not None)
-    report = render_report(cases, records, metadata(settings, skill, runs_dir))
+    report = render_report(cases, records, metadata(settings, [skill, modeling], runs_dir))
     output.write_text(report + render_spec_report(cases, records), encoding="utf-8")
     passed = summarize(cases, records).gate_passed and spec_gate(cases, records)
     print(f"\n{'门槛通过' if passed else '门槛没有通过'}，结果写在 {output}")
