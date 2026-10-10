@@ -1,0 +1,69 @@
+# 单位表：原文里常见的单位写法 → 规范单位。
+#
+# 规范单位：温度 °C，压力 bar（绝压），摩尔流量 kmol/h，质量流量 kg/h，热负荷 kW（吸热为正），
+# 转化率 %（百分数）。换算是 value * factor + offset。写法比较前做 NFKC（℃ 变成 °C，Nm³ 变成 Nm3）、
+# 去掉空白、不分大小写，所以这里只写一种写法。不认识的单位是一个问题，代码不会去猜。
+#
+# 压力的 basis：单位自带基准的（barg、bara、atm）写在这里；bar、MPa、kPa 这类没有，基准由原文说明，
+# 没有说明时按绝压并登记一条假设。表压换算成绝压时加一个标准大气压。
+standard_molar_volume_nm3_per_kmol: 22.414   # 0 °C、101.325 kPa 下的理想气体
+atmosphere_bar: 1.01325
+
+temperature_c:
+  - {names: ["°C", "摄氏度", "度", "C", "degC", "celsius"], factor: 1.0}
+  - {names: ["K", "开尔文", "开", "kelvin"], factor: 1.0, offset: -273.15}
+  - {names: ["°F", "华氏度", "degF", "fahrenheit"], factor: 0.5555555556, offset: -17.7777777778}
+
+pressure_bar:
+  - {names: ["bar", "巴"], factor: 1.0}
+  - {names: ["bara", "bar(a)", "bar abs"], factor: 1.0, basis: absolute}
+  - {names: ["barg", "bar(g)"], factor: 1.0, basis: gauge}
+  - {names: ["MPa", "兆帕"], factor: 10.0}
+  - {names: ["MPaa", "MPa(a)"], factor: 10.0, basis: absolute}
+  - {names: ["MPag", "MPa(g)"], factor: 10.0, basis: gauge}
+  - {names: ["kPa", "千帕"], factor: 0.01}
+  - {names: ["kPaa", "kPa(a)"], factor: 0.01, basis: absolute}
+  - {names: ["kPag", "kPa(g)"], factor: 0.01, basis: gauge}
+  - {names: ["Pa", "帕", "帕斯卡"], factor: 0.00001}
+  - {names: ["atm", "标准大气压", "大气压"], factor: 1.01325, basis: absolute}
+  - {names: ["psi"], factor: 0.0689475729}
+  - {names: ["psia"], factor: 0.0689475729, basis: absolute}
+  - {names: ["psig"], factor: 0.0689475729, basis: gauge}
+  - {names: ["mmHg", "torr"], factor: 0.00133322368, basis: absolute}
+
+molar_flow_kmol_h:
+  - {names: ["kmol/h", "kmol/hr", "千摩尔/小时", "千摩尔每小时", "kgmol/h"], factor: 1.0}
+  - {names: ["mol/h", "mol/hr", "摩尔/小时"], factor: 0.001}
+  - {names: ["kmol/min"], factor: 60.0}
+  - {names: ["kmol/s"], factor: 3600.0}
+  - {names: ["mol/s"], factor: 3.6}
+
+mass_flow_kg_h:
+  - {names: ["kg/h", "kg/hr", "公斤/小时", "千克/小时", "千克每小时"], factor: 1.0}
+  - {names: ["t/h", "t/hr", "吨/小时", "吨每小时", "吨/时", "ton/h", "tonne/h"], factor: 1000.0}
+  - {names: ["g/h", "g/hr", "克/小时"], factor: 0.001}
+  - {names: ["kg/min"], factor: 60.0}
+  - {names: ["kg/s"], factor: 3600.0}
+  - {names: ["g/s"], factor: 3.6}
+
+# 标准体积流量：先换算成 Nm3/h，再按上面的标准摩尔体积换算成 kmol/h。
+standard_volume_flow_nm3_h:
+  - {names: ["Nm3/h", "Nm3/hr", "m3(n)/h", "标方/小时", "标立方米/小时", "标准立方米/小时"], factor: 1.0}
+  - {names: ["万Nm3/h", "万标方/小时"], factor: 10000.0}
+  - {names: ["Nm3/min"], factor: 60.0}
+  - {names: ["Nm3/s"], factor: 3600.0}
+
+duty_kw:
+  - {names: ["kW", "千瓦"], factor: 1.0}
+  - {names: ["MW", "兆瓦"], factor: 1000.0}
+  - {names: ["W", "瓦"], factor: 0.001}
+  - {names: ["kJ/s"], factor: 1.0}
+  - {names: ["kJ/h"], factor: 0.000277777778}
+  - {names: ["MJ/h"], factor: 0.277777778}
+  - {names: ["GJ/h"], factor: 277.777778}
+  - {names: ["kcal/h"], factor: 0.00116222222}
+
+# 转化率：写成百分数的，或者写成 0 到 1 的小数的。
+conversion_percent:
+  - {names: ["%", "percent", "百分比", "百分数", "mol%"], factor: 1.0}
+  - {names: ["", "fraction", "分数", "小数", "无量纲", "-", "1"], factor: 100.0}

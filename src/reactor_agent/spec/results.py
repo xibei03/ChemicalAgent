@@ -72,6 +72,13 @@ def issue_details(issues: Sequence[Issue]) -> dict[str, str]:
     return {path: "；".join(messages) for path, messages in grouped.items()}
 
 
+class SpecIssues(FrozenModel):
+    """VALIDATE 发现的问题清单，写在 artifacts/spec_issues.json，重写时读回给 LLM。"""
+
+    rewrites_used: int
+    issues: tuple[Issue, ...]
+
+
 class CheckResult(FrozenModel):
     """一项结果检查的结论。期望值和实测值是代码格式化好的文字，不同的检查单位各不相同。"""
 

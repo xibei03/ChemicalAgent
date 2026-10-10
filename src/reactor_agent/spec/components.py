@@ -4,6 +4,7 @@
 供元素守恒检查使用。文件路径由调用方传入，这里不猜路径。
 """
 
+import difflib
 import re
 import unicodedata
 from collections.abc import Mapping
@@ -22,6 +23,15 @@ from reactor_agent.spec.tool_args import FeedConditions
 WATER_FORMULA = "H2O"
 # 元素符号加个数，或者括号的开和闭（闭括号后面可以跟倍数）。
 FORMULA_TOKEN = re.compile(r"([A-Z][a-z]?)(\d*)|(\()|(\))(\d*)")
+# “甲烷 (CH4)”这类带说明的写法，按这些符号拆开再找。
+NAME_SEPARATORS = re.compile(r"[()（）/、,;；]")
+MAX_CANDIDATES = 3
+CANDIDATE_CUTOFF = 0.5
+PHASE_TEXT: Mapping[ComponentPhase, str] = {
+    ComponentPhase.GAS: "气",
+    ComponentPhase.LIQUID: "液",
+    ComponentPhase.SOLID: "固",
+}
 
 
 def _merge(target: dict[str, int], source: Mapping[str, int], factor: int) -> None:
@@ -97,6 +107,34 @@ def find_component(table: ComponentTable, text: str) -> ComponentEntry | None:
         if key in {normalize_name(name) for name in (entry.name, *entry.aliases)}:
             return entry
     return None
+
+
+def resolve_component(table: ComponentTable, text: str) -> ComponentEntry | None:
+    """找组分：整个写法先找；带说明的写法（“甲烷 (CH4)”）拆开后各部分指向同一个组分也算。"""
+    entry = find_component(table, text)
+    if entry is not None:
+        return entry
+    parts = (part for part in NAME_SEPARATORS.split(text) if part.strip())
+    found = {entry.name: entry for part in parts if (entry := find_component(table, part))}
+    return next(iter(found.values())) if len(found) == 1 else None
+
+
+def closest_names(table: ComponentTable, text: str) -> tuple[str, ...]:
+    """名字最接近 text 的几个组分的规范名，解析不了时给人和 LLM 看。可能一个都没有。"""
+    spellings = {normalize_name(n): e.name for e in table.components for n in (e.name, *e.aliases)}
+    close = difflib.get_close_matches(
+        normalize_name(text), list(spellings), n=MAX_CANDIDATES * 2, cutoff=CANDIDATE_CUTOFF
+    )
+    return tuple(dict.fromkeys(spellings[spelling] for spelling in close))[:MAX_CANDIDATES]
+
+
+def component_reference(table: ComponentTable) -> str:
+    """给 LLM 的组分命名参考：每个组分的规范名、分子式、常温常压下的相态和常见称呼。"""
+    lines = ["| 规范名 | 分子式 | 相态 | 常见称呼 |", "|---|---|---|---|"]
+    for entry in table.components:
+        phase, aliases = PHASE_TEXT[entry.phase], "、".join(entry.aliases)
+        lines.append(f"| {entry.name} | {entry.formula} | {phase} | {aliases} |")
+    return "\n".join(lines)
 
 
 def names_with_formula(table: ComponentTable, formula: str) -> tuple[str, ...]:

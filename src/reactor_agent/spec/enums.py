@@ -47,6 +47,14 @@ class PropertyPackage(StrEnum):
     PENG_ROBINSON = "peng_robinson"
 
 
+class PressureBasis(StrEnum):
+    """压力的基准：绝压、表压，或者原文没有说明。"""
+
+    ABSOLUTE = "absolute"
+    GAUGE = "gauge"
+    UNSTATED = "unstated"
+
+
 class ReactionKind(StrEnum):
     """反应类型。"""
 
@@ -182,7 +190,8 @@ class WorkflowState(StrEnum):
 
     INIT = "INIT"
     SELECT = "SELECT"
-    SPECIFY = "SPECIFY"  # 阶段 2B 的状态，现在还没有处理函数：选型之后任务停在这里
+    SPECIFY = "SPECIFY"
+    VALIDATE = "VALIDATE"
     PLAN = "PLAN"
     PREFLIGHT = "PREFLIGHT"
     BUILD_BASIS = "BUILD_BASIS"
@@ -213,16 +222,18 @@ class EventType(StrEnum):
 
 
 class CallPoint(StrEnum):
-    """调用 LLM 的地方，名字用在 llm/ 日志的文件名和 Trace 事件里。之后往这里加写规格、写解读。"""
+    """调用 LLM 的地方，名字用在 llm/ 日志的文件名和 Trace 事件里。之后往这里加写解读。"""
 
     SELECT = "select"
+    SPECIFY = "specify"
 
 
 class Checkpoint(StrEnum):
-    """检查点事件的名字：输入保存、选型保存、规格冻结、计划保存、工况的 Case 保存、结果保存。"""
+    """检查点事件的名字：输入、选型、TaskSpec 保存，规格冻结，计划保存，工况的 Case 和结果保存。"""
 
     INPUT_SAVED = "input_saved"
     SELECTION_SAVED = "selection_saved"
+    TASK_SPEC_SAVED = "task_spec_saved"
     SPEC_FROZEN = "spec_frozen"
     PLAN_SAVED = "plan_saved"
     CASE_SAVED = "case_saved"

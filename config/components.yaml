@@ -11,7 +11,7 @@ components:
     phase: gas
 
   - name: H2O
-    aliases: [水, 水蒸气, 蒸汽, water, steam]
+    aliases: [水, 水蒸气, 水蒸汽, 蒸汽, water, steam, water vapor, water vapour]
     formula: H2O
     molecular_weight_kg_per_kmol: 18.015
     phase: liquid
@@ -29,13 +29,13 @@ components:
     phase: gas
 
   - name: Hydrogen
-    aliases: [氢气, 氢, H2, hydrogen]
+    aliases: [氢气, 氢, H2, hydrogen, hydrogen gas]
     formula: H2
     molecular_weight_kg_per_kmol: 2.016
     phase: gas
 
   - name: Toluene
-    aliases: [甲苯, C7H8, toluene]
+    aliases: [甲苯, C7H8, toluene, methylbenzene]
     formula: C7H8
     molecular_weight_kg_per_kmol: 92.141
     phase: liquid
@@ -65,7 +65,7 @@ components:
     phase: liquid
 
   - name: Carbon
-    aliases: [碳, 固体碳, 煤, 石墨, C, coal, graphite, carbon]
+    aliases: [碳, 固体碳, 煤, 石墨, 焦炭, C, coal, graphite, carbon, coke]
     formula: C
     molecular_weight_kg_per_kmol: 12.011
     phase: solid

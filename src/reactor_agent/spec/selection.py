@@ -11,6 +11,7 @@ from typing import Self
 
 from pydantic import model_validator
 
+from reactor_agent.errors import ErrorCode, ReactorAgentError
 from reactor_agent.spec.base import FrozenModel
 from reactor_agent.spec.enums import ReactorType
 
@@ -269,3 +270,9 @@ class SelectionResult(FrozenModel):
     def summary(self) -> SelectionSummary:
         """状态文件里存的那部分。"""
         return SelectionSummary(reactor_type=self.reactor_type, decision=self.decision)
+
+    def chosen_type(self) -> ReactorType:
+        """选出的类型。结论是“不是反应过程”时没有类型，是 E_UNSUPPORTED。"""
+        if self.reactor_type is None:
+            raise ReactorAgentError(ErrorCode.UNSUPPORTED, "选型结论是“不是反应过程”")
+        return self.reactor_type
